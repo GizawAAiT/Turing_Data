@@ -1,0 +1,12 @@
+[
+  {"timestamp": "2024-09-08 09:00:00.001", "stock_symbol": "AAPL", "price": 189.50, "volume": 100},
+  {"timestamp": "2024-09-08 09:00:00.003", "stock_symbol": "AAPL", "price": 189.52, "volume": 150},
+  {"timestamp": "2024-09-08 09:00:00.005", "stock_symbol": "AAPL", "price": 189.48, "volume": 200},
+  {"timestamp": "2024-09-08 09:00:00.007", "stock_symbol": "AAPL", "price": 189.51, "volume": 120},
+  {"timestamp": "2024-09-08 09:00:00.010", "stock_symbol": "AAPL", "price": 189.53, "volume": 50},
+  {"timestamp": "2024-09-08 09:00:00.012", "stock_symbol": "AAPL", "price": 189.55, "volume": 300},
+  {"timestamp": "2024-09-08 09:00:00.015", "stock_symbol": "AAPL", "price": 189.50, "volume": 180},
+  {"timestamp": "2024-09-08 09:00:00.018", "stock_symbol": "AAPL", "price": 189.49, "volume": 170},
+  {"timestamp": "2024-09-08 09:00:00.020", "stock_symbol": "AAPL", "price": 189.51, "volume": 100},
+  {"timestamp": "2024-09-08 09:00:00.023", "stock_symbol": "AAPL", "price": 189.54, "volume": 200}
+]
