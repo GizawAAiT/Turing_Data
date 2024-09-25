@@ -1,0 +1,50 @@
+Reinsurer,Blockchain_Adoption,Blockchain_Use_Case,Smart_Contract_Platform,Revenue,Business_Size
+Reinsurer A,Yes,Claims Management,Ethereum,100000000,Large
+Reinsurer B,Yes,Smart Contracts,Hyperledger,150000000,Large
+Reinsurer C,No,,None,80000000,Medium
+Reinsurer D,Yes,Risk Assessment,Quorum,50000000,Small
+Reinsurer E,No,,None,120000000,Large
+Reinsurer F,Yes,Claims Management,Hyperledger,200000000,Large
+Reinsurer G,No,,None,90000000,Medium
+Reinsurer H,Yes,Catastrophe Risk Modeling,Ethereum,180000000,Large
+Reinsurer I,No,,None,40000000,Small
+Reinsurer J,Yes,Data Security,Quorum,70000000,Medium
+Reinsurer K,No,,None,95000000,Medium
+Reinsurer L,Yes,Smart Contracts,Hyperledger,60000000,Medium
+Reinsurer M,No,,None,110000000,Large
+Reinsurer N,Yes,Claims Management,Quorum,130000000,Large
+Reinsurer O,Yes,Risk Assessment,Hyperledger,140000000,Large
+Reinsurer P,No,,None,85000000,Medium
+Reinsurer Q,Yes,Catastrophe Risk Modeling,Ethereum,105000000,Large
+Reinsurer R,No,,None,95000000,Medium
+Reinsurer S,Yes,Smart Contracts,Ethereum,170000000,Large
+Reinsurer T,Yes,Claims Management,Hyperledger,180000000,Large
+Reinsurer U,No,,None,65000000,Medium
+Reinsurer V,Yes,Catastrophe Risk Modeling,Quorum,90000000,Medium
+Reinsurer W,Yes,Risk Assessment,Hyperledger,60000000,Medium
+Reinsurer X,No,,None,50000000,Small
+Reinsurer Y,Yes,Data Security,Quorum,75000000,Medium
+Reinsurer Z,No,,None,130000000,Large
+Reinsurer AA,Yes,Claims Management,Hyperledger,155000000,Large
+Reinsurer AB,Yes,Smart Contracts,Quorum,140000000,Large
+Reinsurer AC,No,,None,90000000,Medium
+Reinsurer AD,Yes,Catastrophe Risk Modeling,Hyperledger,145000000,Large
+Reinsurer AE,Yes,Data Security,Ethereum,80000000,Medium
+Reinsurer AF,No,,None,45000000,Small
+Reinsurer AG,Yes,Risk Assessment,Quorum,130000000,Large
+Reinsurer AH,No,,None,80000000,Medium
+Reinsurer AI,Yes,Smart Contracts,Hyperledger,120000000,Large
+Reinsurer AJ,No,,None,110000000,Large
+Reinsurer AK,Yes,Claims Management,Quorum,90000000,Medium
+Reinsurer AL,Yes,Catastrophe Risk Modeling,Ethereum,95000000,Medium
+Reinsurer AM,No,,None,130000000,Large
+Reinsurer AN,Yes,Smart Contracts,Hyperledger,155000000,Large
+Reinsurer AO,Yes,Claims Management,Quorum,170000000,Large
+Reinsurer AP,No,,None,120000000,Large
+Reinsurer AQ,Yes,Risk Assessment,Hyperledger,90000000,Medium
+Reinsurer AR,Yes,Catastrophe Risk Modeling,Ethereum,75000000,Medium
+Reinsurer AS,No,,None,85000000,Medium
+Reinsurer AT,Yes,Data Security,Quorum,70000000,Medium
+Reinsurer AU,Yes,Smart Contracts,Hyperledger,140000000,Large
+Reinsurer AV,No,,None,105000000,Large
+Reinsurer AW,Yes,Claims Management,Quorum,150000000,Large
