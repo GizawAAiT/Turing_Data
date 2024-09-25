@@ -1,50 +1,39 @@
-Reinsurer,Blockchain_Adoption,Blockchain_Use_Case,Smart_Contract_Platform,Revenue,Business_Size
-Reinsurer A,Yes,Claims Management,Ethereum,100000000,Large
-Reinsurer B,Yes,Smart Contracts,Hyperledger,150000000,Large
-Reinsurer C,No,,None,80000000,Medium
-Reinsurer D,Yes,Risk Assessment,Quorum,50000000,Small
-Reinsurer E,No,,None,120000000,Large
-Reinsurer F,Yes,Claims Management,Hyperledger,200000000,Large
-Reinsurer G,No,,None,90000000,Medium
-Reinsurer H,Yes,Catastrophe Risk Modeling,Ethereum,180000000,Large
-Reinsurer I,No,,None,40000000,Small
-Reinsurer J,Yes,Data Security,Quorum,70000000,Medium
-Reinsurer K,No,,None,95000000,Medium
-Reinsurer L,Yes,Smart Contracts,Hyperledger,60000000,Medium
-Reinsurer M,No,,None,110000000,Large
-Reinsurer N,Yes,Claims Management,Quorum,130000000,Large
-Reinsurer O,Yes,Risk Assessment,Hyperledger,140000000,Large
-Reinsurer P,No,,None,85000000,Medium
-Reinsurer Q,Yes,Catastrophe Risk Modeling,Ethereum,105000000,Large
-Reinsurer R,No,,None,95000000,Medium
-Reinsurer S,Yes,Smart Contracts,Ethereum,170000000,Large
-Reinsurer T,Yes,Claims Management,Hyperledger,180000000,Large
-Reinsurer U,No,,None,65000000,Medium
-Reinsurer V,Yes,Catastrophe Risk Modeling,Quorum,90000000,Medium
-Reinsurer W,Yes,Risk Assessment,Hyperledger,60000000,Medium
-Reinsurer X,No,,None,50000000,Small
-Reinsurer Y,Yes,Data Security,Quorum,75000000,Medium
-Reinsurer Z,No,,None,130000000,Large
-Reinsurer AA,Yes,Claims Management,Hyperledger,155000000,Large
-Reinsurer AB,Yes,Smart Contracts,Quorum,140000000,Large
-Reinsurer AC,No,,None,90000000,Medium
-Reinsurer AD,Yes,Catastrophe Risk Modeling,Hyperledger,145000000,Large
-Reinsurer AE,Yes,Data Security,Ethereum,80000000,Medium
-Reinsurer AF,No,,None,45000000,Small
-Reinsurer AG,Yes,Risk Assessment,Quorum,130000000,Large
-Reinsurer AH,No,,None,80000000,Medium
-Reinsurer AI,Yes,Smart Contracts,Hyperledger,120000000,Large
-Reinsurer AJ,No,,None,110000000,Large
-Reinsurer AK,Yes,Claims Management,Quorum,90000000,Medium
-Reinsurer AL,Yes,Catastrophe Risk Modeling,Ethereum,95000000,Medium
-Reinsurer AM,No,,None,130000000,Large
-Reinsurer AN,Yes,Smart Contracts,Hyperledger,155000000,Large
-Reinsurer AO,Yes,Claims Management,Quorum,170000000,Large
-Reinsurer AP,No,,None,120000000,Large
-Reinsurer AQ,Yes,Risk Assessment,Hyperledger,90000000,Medium
-Reinsurer AR,Yes,Catastrophe Risk Modeling,Ethereum,75000000,Medium
-Reinsurer AS,No,,None,85000000,Medium
-Reinsurer AT,Yes,Data Security,Quorum,70000000,Medium
-Reinsurer AU,Yes,Smart Contracts,Hyperledger,140000000,Large
-Reinsurer AV,No,,None,105000000,Large
-Reinsurer AW,Yes,Claims Management,Quorum,150000000,Large
+Reinsurer,PolicyAmount,ClaimAmount,Blockchain_Adoption,BlockchainTransactionDate,Blockchain_Use_Case,BlockchainAddress,BlockchainStatus
+Reinsurer A,1000000,500000,Yes,2023-07-15,Claims Management,0x123abc,Completed
+Reinsurer B,2000000,1500000,Yes,2023-08-20,Smart Contracts,0x234bcd,Completed
+Reinsurer C,1500000,700000,No,,,,
+Reinsurer D,3000000,2500000,Yes,2023-09-05,Risk Assessment,0x345cde,Pending
+Reinsurer E,2500000,2000000,No,,,,
+Reinsurer F,1800000,1200000,Yes,2023-09-12,Catastrophe Risk Modeling,0x456def,Failed
+Reinsurer G,2200000,1700000,No,,,,
+Reinsurer H,4000000,3500000,Yes,2023-08-30,Data Security,0x567efg,Completed
+Reinsurer I,1200000,800000,No,,,,
+Reinsurer J,3000000,2200000,Yes,2023-09-18,Smart Contracts,0x678fgh,Pending
+Reinsurer K,2500000,2000000,Yes,2023-06-11,Claims Management,0x234aad,Completed
+Reinsurer L,1700000,950000,No,,,,
+Reinsurer M,2800000,1300000,Yes,2023-05-25,Data Security,0x111abc,Completed
+Reinsurer N,2300000,1700000,No,,,,
+Reinsurer O,3200000,2900000,Yes,2023-07-02,Risk Assessment,0x789ghi,Pending
+Reinsurer P,1500000,900000,No,,,,
+Reinsurer Q,1900000,1200000,Yes,2023-07-10,Smart Contracts,0x124abc,Failed
+Reinsurer R,2500000,1500000,Yes,2023-06-18,Claims Management,0x125cbd,Completed
+Reinsurer S,2750000,2000000,Yes,2023-08-15,Catastrophe Risk Modeling,0x126abc,Pending
+Reinsurer T,1800000,1000000,No,,,,
+Reinsurer U,2900000,2400000,Yes,2023-08-12,Risk Assessment,0x345def,Completed
+Reinsurer V,1700000,900000,No,,,,
+Reinsurer W,2100000,1300000,Yes,2023-06-19,Smart Contracts,0x789cde,Failed
+Reinsurer X,2250000,1750000,Yes,2023-09-05,Data Security,0x543ghi,Completed
+Reinsurer Y,2400000,2000000,No,,,,
+Reinsurer Z,2500000,1500000,Yes,2023-07-22,Claims Management,0x234lmn,Pending
+Reinsurer AA,1700000,1200000,Yes,2023-08-28,Catastrophe Risk Modeling,0x345pqr,Completed
+Reinsurer AB,3100000,2900000,Yes,2023-09-10,Risk Assessment,0x126stu,Pending
+Reinsurer AC,1800000,1300000,No,,,,
+Reinsurer AD,3300000,2600000,Yes,2023-09-15,Smart Contracts,0x127vwx,Completed
+Reinsurer AE,2400000,1500000,Yes,2023-07-05,Claims Management,0x128yz,Failed
+Reinsurer AW,2500000,2100000,Yes,2023-09-18,Data Security,0x129abc,Pending
+Reinsurer AX,1900000,1000000,No,,,,
+Reinsurer AY,2800000,1700000,Yes,2023-08-27,Catastrophe Risk Modeling,0x789ghi,Completed
+Reinsurer AZ,3200000,2500000,Yes,2023-08-23,Smart Contracts,0x234aad,Failed
+Reinsurer BA,3000000,2000000,No,,,,
+Reinsurer BB,2500000,1300000,Yes,2023-09-12,Claims Management,0x345def,Completed
+Reinsurer BC,2700000,1600000,No,,,,
