@@ -1,0 +1,114 @@
+{
+  "task_id": "task_20251107_132437_167_e81f6083_d992a8a6",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "selected_tools": [],
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+  "created_at": "2025-11-07T13:24:37.152056+00:00",
+  "created_by": "e81f6083-5d31-4b04-bb81-47f3fe2a48b3",
+  "scenario_config": {
+    "scenario_name": "Calendar Sharing and Team Coordination Setup",
+    "scenario_description": "Sharing the team calendar and configuring access controls.",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Please share my 'Team Coordination' calendar with the team members and configure the appropriate access controls. Grant Bob Smith (bob.smith@techcorp.com) writer access so he can add development milestones, and provide Carol White (carol.white@techcorp.com) reader access for design coordination. Also, create a webhook at https://api.techcorp.com/webhooks/acl-monitor with the identifier 'team-acl-watch' to track any future permission changes. Move the event in the 'Project Management' calendar that includes the word 'sprint' to the 'Team Coordination' calendar. Additionally, check the current free/busy times for both my 'Project Management' and 'Team Coordination' calendars between November 10th and November 15th to find a good time for our next planning meeting.",
+    "restricted_tools": [
+      "get_calendar_list",
+      "get_user_by_email",
+      "insert_acl_rule",
+      "watch_acl",
+      "list_events",
+      "move_event",
+      "query_freebusy"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "get_user_by_email",
+      "insert_acl_rule",
+      "watch_acl",
+      "list_events",
+      "move_event",
+      "query_freebusy"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "acls_count_user1",
+      "description": "acls_count_user1",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM acls a JOIN scopes s ON a.scope_id = s.id WHERE a.calendar_id = 'alice-team' AND a.role = 'writer' AND s.value = 'bob.smith@techcorp.com'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "acls_count_user2",
+      "description": "acls_count_user2",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM acls a JOIN scopes s ON a.scope_id = s.id WHERE a.calendar_id = 'alice-team' AND a.role = 'reader' AND s.value = 'carol.white@techcorp.com'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "watch_channels_count",
+      "description": "watch_channels_count",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM watch_channels WHERE id = 'team-acl-watch' AND calendar_id = 'alice-team' AND resource_type = 'acl' AND webhook_address = 'https://api.techcorp.com/webhooks/acl-monitor'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "events_count",
+      "description": "events_count",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM events where event_id = 'event-corrected-001' AND calendar_id = 'alice-team' AND summary LIKE '%sprint%'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "event_exist_check",
+      "description": "event_exist_check",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT NOT EXISTS (SELECT 1 FROM events WHERE event_id = 'event-corrected-001' AND calendar_id = 'alice-projects' AND summary LIKE '%sprint%') AS result",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "CALENDER_INTERNAL_PROD",
+      "database_id": "db_1762416257729_c169e7a78"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": false,
+    "enableGroundTruthComments": true,
+    "enableReview": false,
+    "enableToolCall": true
+  }
+}

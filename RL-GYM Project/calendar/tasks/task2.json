@@ -1,0 +1,87 @@
+{
+  "scenario_config": {
+    "scenario_name": "apollo_calendar_setup",
+    "scenario_description": "Calendar Creation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "We're launching a new project called \"Apollo\". Please create a secondary calendar named \"Apollo Project Timeline\" in the Europe/London timezone. Add it to my calendar list with background color #ac725e and foreground color #1d1d1d. Provide edit access to Carol White (carol.white@techcorp.com) and view-only access to Bob Smith (bob.smith@techcorp.com). Then schedule an initial planning meeting for January 5th, 2026, at 10:00 AM GMT, lasting 90 minutes with Meet conferencing enabled.",
+    "restricted_tools": [
+      "create_calendar",
+      "add_calendar_to_list",
+      "insert_acl_rule",
+      "create_event"
+    ],
+    "expected_tools": [
+      "create_calendar",
+      "add_calendar_to_list",
+      "insert_acl_rule",
+      "create_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Created",
+      "description": "Verify calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Apollo Project Timeline' AND time_zone = 'Europe/London' AND background_color = '#ac725e' AND foreground_color = '#1d1d1d'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob Access",
+      "description": "Check Bob's access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND scope_id LIKE '%bob%' AND role = 'reader'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carol Access",
+      "description": "Check Carol's access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND scope_id LIKE '%carol%' AND role = 'writer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Scheduled",
+      "description": "Verify meeting event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Initial Planning Meeting%' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND start_datetime = '2026-01-05 10:00:00.000000' AND end_datetime = '2026-01-05 11:30:00.000000'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "CALENDER_INTERNAL_PROD",
+      "database_id": "db_1762429018464_8jfwyiswu",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Apollo Calendar Setup",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": false,
+    "enableGroundTruthComments": true,
+    "enableReview": false,
+    "enableToolCall": true
+  }
+}

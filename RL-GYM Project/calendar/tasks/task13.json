@@ -1,0 +1,106 @@
+{
+  "scenario_config": {
+    "scenario_name": "product_strategy_engineering_setup",
+    "scenario_description": "Product & Engineering Calendars",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "",
+    "I need to organize a few events. Please create two new calendars for me - one named 'Product Strategy 2026' in the America/New_York timezone and another named 'Engineering Standups 2026' in the Europe/London timezone — and make both visible and selected in my list. Then, schedule three meetings across these calendars: 'Q1 Product Roadmap Review' on January 10, 2026, from 10:00 AM to 11:00 AM (IST) in the 'Product Strategy 2026' calendar with background color #dbadff and foreground #1d1d1d; 'Weekly Engineering Standup' event for next monday from 9:00 AM to 9:30 AM (GMT) in the 'Engineering Standups 2026' calendar with background color #ff887c and foreground #1d1d1d; and 'Cross-Team Sync' on February 5, 2026, from 3:00 PM to 4:00 PM (UTC) in the 'Product Strategy 2026' calendar with background color #fbd75b and foreground #1d1d1d. Please ensure all meetings have a 30-minute email reminder.restricted_tools": [],
+    "selected_tools": [
+      "create_calendar",
+      "create_calendar",
+      "get_colors",
+      "create_event",
+      "create_event",
+      "create_event"
+    ],
+    "expected_tools": [
+      "create_calendar",
+      "create_calendar",
+      "get_colors",
+      "create_event",
+      "create_event",
+      "create_event"
+    ],
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Create Product Calendar",
+      "description": "Creating the Product Strategy 2026 calendar",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM calendars WHERE summary = 'Product Strategy 2026' AND time_zone = 'America/New_York'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Create Eng Calendar",
+      "description": "Creating the Engineering Standups 2026",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM calendars WHERE summary = 'Engineering Standups 2026' AND time_zone = 'Europe/London'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Product Roadmap Event",
+      "description": "Creating Q1 Product Roadmap Review event",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM events WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Product Strategy 2026') AND summary = 'Q1 Product Roadmap Review' AND start_timezone like '%asia%' AND color_id = 3",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Weekly Standup Event",
+      "description": "Creating Weekly Engineering Standup event",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM events WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Engineering Standups 2026') AND summary = 'Weekly Engineering Standup' AND (start_timezone LIKE '%London%' OR start_timezone LIKE '%GMT%') AND color_id = 4",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Cross Team Sync",
+      "description": "Creating Product Strategy 2026 event",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM events WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Product Strategy 2026') AND summary = 'Cross-Team Sync' AND start_timezone like '%UTC%' AND color_id = 5",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764009552843_dtjxuzni6",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 2,
+  "task_descriptions": "Create two calendars and schedule three events with reminders.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

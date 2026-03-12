@@ -1,0 +1,34 @@
+{
+  "system_prompt": "You are a helpful assistant for Microsoft Teams workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Reply to a message in a general channel of a team.",
+      "conversation_mode": true,
+      "context": {
+          "x-teams-access-token": "ya29.A0ARrdaM-b7Hc5Vn2Qm8R1sT4pL0xY9wK3uF6jZ2eRc1.QaWsEdRfTgHyJuIkOlPzXcVbNmKjHgf_21-098"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Hello, I'm Carol White, a UX Designer in the \"TechCorp Solutions Team\" (team_id: team_techcorp_001). I just received a notification that the Project Manager (Alice) has sent a welcome message in the General channel. Please reply to that message with the text: \"Thanks Alice! Excited to be part of the team\".",
+          "expected_tools": [
+            "get_primary_channel",
+            "list_channel_messages",
+            "send_channel_message_reply"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) AS count FROM channel_messages WHERE team_id = 'team_techcorp_001' AND (reply_to_id IS NOT NULL AND reply_to_id <> '') AND json_extract(body_json, '$.content') = 'Thanks Alice! Excited to be part of the team'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "scenario_config": {
+    "scenario_name": "engineering_sprint_coord",
+    "scenario_description": "Sprint coordination setup",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Please verify if an 'Engineering Sprint Coordination' calendar exists, and create it if missing. Schedule three sessions titled 'Monthly Sprint Alignment #1, #2, and #3,' respectively, from 2:00 PM to 4:30 PM on the 20th, 21st, and 22nd of October and November 2025, marking each with background (#e1e1e1) and foreground (#1d1d1d) colors. Ensure both the calendar and sessions use the America/New_York timezone. Check my existing schedules first: if there's a conflict with an emergency or sickness event, reschedule the affected 'Monthly Sprint Alignment' session to the next day (23rd) at the same time. If the conflicting schedule isn't emergency-related, move it to start immediately after the alignment session ends on the same day.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "list_events",
+      "list_events",
+      "create_calendar",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "list_events",
+      "list_events",
+      "create_calendar",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Exists",
+      "description": "Verify ESCoord calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Engineering Sprint Coordination' AND time_zone = 'America/New_York' AND user_id = 'adrian_burton'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Align #1 Sessions",
+      "description": "Verify #1 sessions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Monthly Sprint Alignment #1' AND user_id = 'adrian_burton' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Engineering Sprint Coordination') AND color_id = 8 AND ((start_datetime = '2025-10-20 14:00:00.000000' AND end_datetime = '2025-10-20 16:30:00.000000') OR (start_datetime = '2025-11-20 14:00:00.000000' AND end_datetime = '2025-11-20 16:30:00.000000')) AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Align #2 Sessions",
+      "description": "Verify #2 sessions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Monthly Sprint Alignment #2' AND user_id = 'adrian_burton' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Engineering Sprint Coordination') AND color_id = 8 AND ((start_datetime = '2025-10-21 14:00:00.000000' AND end_datetime = '2025-10-21 16:30:00.000000') OR (start_datetime = '2025-11-21 14:00:00.000000' AND end_datetime = '2025-11-21 16:30:00.000000')) AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Align #3 Sessions",
+      "description": "Verify #3 sessions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Monthly Sprint Alignment #3' AND user_id = 'adrian_burton' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Engineering Sprint Coordination') AND color_id = 8 AND ((start_datetime = '2025-10-22 14:00:00.000000' AND end_datetime = '2025-10-22 16:30:00.000000') OR (start_datetime = '2025-11-23 14:00:00.000000' AND end_datetime = '2025-11-23 16:30:00.000000')) AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Focus Rescheduled",
+      "description": "Verify focus time move",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'adrian_burton-evt-1020-1-focusTime' AND start_datetime = '2025-10-20 16:30:00.000000' AND end_datetime = '2025-10-20 17:30:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Sick Leave Unchanged",
+      "description": "Verify sick leave intact",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'adrian_burton-evt-1122-2-outOfOffice' AND start_datetime = '2025-11-22T14:00:00+00:00' AND end_datetime = '2025-11-22T15:00:00+00:00' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_b638af1abd2b9c4477a9321dff0e5939c1514c3f648f9dc4"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Set up sprint coordination calendar and adjust sessions around conflicts.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

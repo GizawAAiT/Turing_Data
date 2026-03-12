@@ -1,0 +1,661 @@
+{
+  "scenario_config": {
+    "scenario_name": "project_2026_migration",
+    "scenario_description": "Migrate sprint event to Project 2026 calendar",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "To prepare my project calendars for the upcoming season, please create a new calendar titled \"Project 2026,\" matching the timezone and color of my existing projects calendar. Then replicate the \"Sprint Planning & Architecture Review\" event from the old calendar onto this new calendar, scheduling it for January 4 from 9:00 AM to 11:00 AM (original timezone). Preserve all event details, but exclude any attendees who do not have an email address listed.\nAfter replicating the event, archive the old project calendar by deleting the event init and associated attachments, adding a suffix \"-[ARCHIVED]\" to its description, and removing all ACL permissions except my own. This will finalize the restructuring for the new project calendar.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "create_event",
+      "patch_calendar",
+      "delete_event",
+      "list_acl_rules",
+      "delete_acl_rule",
+      "delete_acl_rule"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "create_event",
+      "patch_calendar",
+      "delete_event",
+      "list_acl_rules",
+      "delete_acl_rule",
+      "delete_acl_rule"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Project2026 Calendar",
+      "description": "Verify new Project 2026 calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Project 2026' AND time_zone = 'America/New_York' AND color_id = 7",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Event Fields",
+      "description": "Verify replicated sprint event fields",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND user_id = 'alice_manager' AND summary = 'Sprint Planning & Architecture Review' AND description LIKE 'Detailed sprint planning session with architecture discussion for Q4 features.%' AND description LIKE '%plan the technical approach.' AND location = 'Conference Room A, Building 1' AND color_id = 7 AND start_datetime = '2026-01-04 09:00:00.000000' AND end_datetime = '2026-01-04 11:00:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York' AND guestscaninviteothers = 1 AND guestscanmodify = 0 AND guestscanseeotherguests = 1 AND json_extract(source, '$.url') = 'https://jira.techcorp.com/sprint-planning-q4' AND json_extract(source, '$.title') = 'Sprint Planning Board' AND sequence = 1 AND visibility = 'default'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Attendees",
+      "description": "Verify attendees copied to new event",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN (SELECT COUNT(*) FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')) = 3 AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Alice Johnson') AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Bob Smith') AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Carol White') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Ext Props",
+      "description": "Verify extended properties copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND scope = 'shared' AND json_extract(properties, '$.meetingType') = 'sprint_planning' AND json_extract(properties, '$.priority') = 'high') AND EXISTS (SELECT 1 FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND scope = 'private' AND json_extract(properties, '$.departmentBudget') = 'engineering' AND json_extract(properties, '$.projectCode') = 'PROJ-2024-Q4') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Conference",
+      "description": "Verify conference data copied",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM conference_data WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Reminders",
+      "description": "Verify reminders copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND method = 'email' AND minutes = 1440) AND EXISTS (SELECT 1 FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND method = 'popup' AND minutes = 30) THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Attachments",
+      "description": "Verify attachments copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN (SELECT COUNT(*) FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')) = 2 AND EXISTS (SELECT 1 FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND file_url = 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view') AND EXISTS (SELECT 1 FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND file_url = 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Old Cal Archived",
+      "description": "Verify old projects calendar archived",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE calendar_id = 'alice-projects' AND description LIKE '%[ARCHIVED]%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Old Event Deleted",
+      "description": "Verify old sprint event deleted",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-001'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "ACLs Cleared",
+      "description": "Verify non-owner ACLs removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'alice-projects' AND scope_id NOT LIKE '%alice%'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "2",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Owner ACL Kept",
+      "description": "Verify owner ACL retained",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'alice-projects' AND role = 'owner'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_calendar_list",
+    "arguments": {},
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "get_calendar_list",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1764493889049_iuydddoc0\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNS0xMi0wNFQxNDo1NjowMy43NjEzOTc=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-primary-2025-12-04T14:55:21\",\n      \"id\": \"alice-primary\",\n      \"summary\": \"Alice Johnson\",\n      \"description\": \"Primary calendar for Alice Johnson - Project Manager\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"1\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-projects-2025-12-04T14:55:21\",\n      \"id\": \"alice-projects\",\n      \"summary\": \"Project Management\",\n      \"description\": \"Project meetings, deadlines, and milestones\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"7\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-team-2025-12-04T14:55:21\",\n      \"id\": \"alice-team\",\n      \"summary\": \"Team Coordination\",\n      \"description\": \"Team meetings, 1-on-1s, and team events\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"11\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 180,
+      "executed_at": "2025-12-04T14:56:03.786914"
+    }
+  },
+  {
+    "name": "create_calendar",
+    "arguments": {
+      "summary": "Project 2026",
+      "timeZone": "America/New_York"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_calendar",
+      "parameters": {
+        "summary": "Project 2026",
+        "timeZone": "America/New_York"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-4e155be5-57f2-41bc-9adb-48413215c373-2025-12-04T14:56:33.536828\",\n  \"id\": \"4e155be5-57f2-41bc-9adb-48413215c373\",\n  \"summary\": \"Project 2026\",\n  \"description\": null,\n  \"location\": null,\n  \"timeZone\": \"America/New_York\",\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": null\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 444,
+      "executed_at": "2025-12-04T14:56:33.677867"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "alice-projects"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "alice-projects"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-alice-projects\",\n  \"summary\": \"Project Management\",\n  \"description\": \"Project meetings, deadlines, and milestones\",\n  \"updated\": \"2025-12-04T14:57:10.605015+00:00\",\n  \"timeZone\": \"America/New_York\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": [\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1764860121.0\\\"\",\n      \"id\": \"event-corrected-001\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-001\",\n      \"created\": \"2025-12-04T14:55:21\",\n      \"updated\": \"2025-12-04T14:55:21\",\n      \"summary\": \"Sprint Planning & Architecture Review\",\n      \"description\": \"Detailed sprint planning session with architecture discussion for Q4 features. We'll review user stories, estimate effort, and plan the technical approach.\",\n      \"location\": \"Conference Room A, Building 1\",\n      \"colorId\": \"7\",\n      \"creator\": {\n        \"id\": \"alice_manager\",\n        \"email\": \"alice.manager@techcorp.com\",\n        \"displayName\": \"Alice Johnson\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"alice_manager\",\n        \"email\": \"alice.manager@techcorp.com\",\n        \"displayName\": \"Alice Johnson\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2025-10-06T09:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2025-10-06T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [],\n      \"recurringEventId\": null,\n      \"originalStartTime\": null,\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": null,\n      \"sequence\": 1,\n      \"attendees\": [\n        {\n          \"id\": \"att-corrected-001\",\n          \"email\": \"alice.manager@techcorp.com\",\n          \"displayName\": \"Alice Johnson\",\n          \"self\": true,\n          \"organizer\": true,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Looking forward to planning Q4!\",\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-002\",\n          \"email\": \"bob.smith@techcorp.com\",\n          \"displayName\": \"Bob Smith\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"accepted\",\n          \"comment\": null,\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-003\",\n          \"email\": \"carol.white@techcorp.com\",\n          \"displayName\": \"Carol White\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"tentative\",\n          \"comment\": \"Will join if no conflicts with user research session\",\n          \"additionalGuests\": 0,\n          \"optional\": true,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-004\",\n          \"email\": null,\n          \"displayName\": \"Conference Room A\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"accepted\",\n          \"comment\": null,\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": true\n        }\n      ],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": {\n        \"private\": {\n          \"departmentBudget\": \"engineering\",\n          \"projectCode\": \"PROJ-2024-Q4\"\n        },\n        \"shared\": {\n          \"meetingType\": \"sprint_planning\",\n          \"priority\": \"high\"\n        }\n      },\n      \"hangoutLink\": null,\n      \"conferenceData\": {\n        \"conferenceSolution\": {\n          \"iconUri\": null,\n          \"key\": {\n            \"type\": \"hangoutsMeet\"\n          },\n          \"name\": null\n        },\n        \"createRequest\": {\n          \"conferenceSolutionKey\": null,\n          \"requestId\": \"req-sprint-planning-001\",\n          \"status\": {\n            \"statusCode\": \"success\"\n          }\n        },\n        \"entryPoints\": [\n          {\n            \"accessCode\": null,\n            \"entryPointType\": \"video\",\n            \"label\": null,\n            \"meetingCode\": null,\n            \"passcode\": null,\n            \"password\": null,\n            \"pin\": null,\n            \"uri\": \"https://meet.google.com/abc-defg-hij\"\n          }\n        ],\n        \"notes\": null,\n        \"signature\": null\n      },\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": true,\n      \"guestsCanModify\": false,\n      \"guestsCanSeeOtherGuests\": true,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [\n          {\n            \"method\": \"email\",\n            \"minutes\": 1440\n          },\n          {\n            \"method\": \"popup\",\n            \"minutes\": 30\n          }\n        ],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://jira.techcorp.com/sprint-planning-q4\",\n        \"title\": \"Sprint Planning Board\"\n      },\n      \"attachments\": [\n        {\n          \"fileUrl\": \"https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view\",\n          \"title\": \"view\"\n        },\n        {\n          \"fileUrl\": \"https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit\",\n          \"title\": \"edit\"\n        }\n      ],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 348,
+      "executed_at": "2025-12-04T14:57:10.632816"
+    }
+  },
+  {
+    "name": "add_calendar_to_list",
+    "arguments": {
+      "id": "4e155be5-57f2-41bc-9adb-48413215c373",
+      "colorId": "7",
+      "colorRgbFormat": true
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "add_calendar_to_list",
+      "parameters": {
+        "id": "4e155be5-57f2-41bc-9adb-48413215c373",
+        "colorId": "7",
+        "colorRgbFormat": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarListEntry\",\n  \"etag\": \"etag-list-4e155be5-57f2-41bc-9adb-48413215c373-2025-12-04T14:57:48.928969\",\n  \"id\": \"4e155be5-57f2-41bc-9adb-48413215c373\",\n  \"summary\": \"Project 2026\",\n  \"description\": null,\n  \"location\": null,\n  \"timeZone\": \"America/New_York\",\n  \"summaryOverride\": null,\n  \"colorId\": \"7\",\n  \"backgroundColor\": \"#4986e7\",\n  \"foregroundColor\": \"#1d1d1d\",\n  \"hidden\": false,\n  \"selected\": true,\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": null,\n  \"notificationSettings\": null,\n  \"primary\": false,\n  \"deleted\": false,\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": []\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 216,
+      "executed_at": "2025-12-04T14:57:49.004309"
+    }
+  },
+  {
+    "name": "create_event",
+    "arguments": {
+      "calendarId": "4e155be5-57f2-41bc-9adb-48413215c373",
+      "summary": "Sprint Planning & Architecture Review",
+      "description": "Detailed sprint planning session with architecture discussion for Q4 features. We'll review user stories, estimate effort, and plan the technical approach.",
+      "location": "Conference Room A, Building 1",
+      "colorId": "7",
+      "start": {
+        "dateTime": "2026-01-04T09:00:00",
+        "timeZone": "America/New_York"
+      },
+      "end": {
+        "dateTime": "2026-01-04T11:00:00",
+        "timeZone": "America/New_York"
+      },
+      "attendees": [
+        {
+          "email": "alice.manager@techcorp.com",
+          "displayName": "Alice Johnson",
+          "responseStatus": "accepted",
+          "comment": "Looking forward to planning Q4!",
+          "additionalGuests": 0,
+          "optional": false,
+          "resource": false
+        },
+        {
+          "email": "bob.smith@techcorp.com",
+          "displayName": "Bob Smith",
+          "responseStatus": "accepted",
+          "additionalGuests": 0,
+          "optional": false,
+          "resource": false
+        },
+        {
+          "email": "carol.white@techcorp.com",
+          "displayName": "Carol White",
+          "responseStatus": "tentative",
+          "comment": "Will join if no conflicts with user research session",
+          "additionalGuests": 0,
+          "optional": true,
+          "resource": false
+        }
+      ],
+      "extendedProperties": {
+        "private": {
+          "departmentBudget": "engineering",
+          "projectCode": "PROJ-2024-Q4"
+        },
+        "shared": {
+          "meetingType": "sprint_planning",
+          "priority": "high"
+        }
+      },
+      "conferenceData": {
+        "createRequest": {
+          "requestId": "req-sprint-planning-2026-001",
+          "conferenceSolutionKey": {
+            "type": "hangoutsMeet"
+          }
+        }
+      },
+      "guestsCanInviteOthers": true,
+      "guestsCanModify": false,
+      "guestsCanSeeOtherGuests": true,
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "email",
+            "minutes": 1440
+          },
+          {
+            "method": "popup",
+            "minutes": 30
+          }
+        ]
+      },
+      "source": {
+        "url": "https://jira.techcorp.com/sprint-planning-q4",
+        "title": "Sprint Planning Board"
+      },
+      "attachments": [
+        {
+          "fileUrl": "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view"
+        },
+        {
+          "fileUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+        }
+      ],
+      "sequence": 1,
+      "visibility": "default",
+      "conferenceDataVersion": 1,
+      "supportsAttachments": true
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_event",
+      "parameters": {
+        "calendarId": "4e155be5-57f2-41bc-9adb-48413215c373",
+        "summary": "Sprint Planning & Architecture Review",
+        "description": "Detailed sprint planning session with architecture discussion for Q4 features. We'll review user stories, estimate effort, and plan the technical approach.",
+        "location": "Conference Room A, Building 1",
+        "colorId": "7",
+        "start": {
+          "dateTime": "2026-01-04T09:00:00",
+          "timeZone": "America/New_York"
+        },
+        "end": {
+          "dateTime": "2026-01-04T11:00:00",
+          "timeZone": "America/New_York"
+        },
+        "attendees": [
+          {
+            "email": "alice.manager@techcorp.com",
+            "displayName": "Alice Johnson",
+            "responseStatus": "accepted",
+            "comment": "Looking forward to planning Q4!",
+            "additionalGuests": 0,
+            "optional": false,
+            "resource": false
+          },
+          {
+            "email": "bob.smith@techcorp.com",
+            "displayName": "Bob Smith",
+            "responseStatus": "accepted",
+            "additionalGuests": 0,
+            "optional": false,
+            "resource": false
+          },
+          {
+            "email": "carol.white@techcorp.com",
+            "displayName": "Carol White",
+            "responseStatus": "tentative",
+            "comment": "Will join if no conflicts with user research session",
+            "additionalGuests": 0,
+            "optional": true,
+            "resource": false
+          }
+        ],
+        "extendedProperties": {
+          "private": {
+            "departmentBudget": "engineering",
+            "projectCode": "PROJ-2024-Q4"
+          },
+          "shared": {
+            "meetingType": "sprint_planning",
+            "priority": "high"
+          }
+        },
+        "conferenceData": {
+          "createRequest": {
+            "requestId": "req-sprint-planning-2026-001",
+            "conferenceSolutionKey": {
+              "type": "hangoutsMeet"
+            }
+          }
+        },
+        "guestsCanInviteOthers": true,
+        "guestsCanModify": false,
+        "guestsCanSeeOtherGuests": true,
+        "reminders": {
+          "useDefault": false,
+          "overrides": [
+            {
+              "method": "email",
+              "minutes": 1440
+            },
+            {
+              "method": "popup",
+              "minutes": 30
+            }
+          ]
+        },
+        "source": {
+          "url": "https://jira.techcorp.com/sprint-planning-q4",
+          "title": "Sprint Planning Board"
+        },
+        "attachments": [
+          {
+            "fileUrl": "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view"
+          },
+          {
+            "fileUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+          }
+        ],
+        "sequence": 1,
+        "visibility": "default",
+        "conferenceDataVersion": 1,
+        "supportsAttachments": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764860331.887138\\\"\",\n  \"id\": \"3d77cd68-9387-4fe7-8a3c-6faf1279e5f7\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=3d77cd68-9387-4fe7-8a3c-6faf1279e5f7\",\n  \"created\": \"2025-12-04T14:58:51.887133\",\n  \"updated\": \"2025-12-04T14:58:51.887138\",\n  \"summary\": \"Sprint Planning & Architecture Review\",\n  \"description\": \"Detailed sprint planning session with architecture discussion for Q4 features. We'll review user stories, estimate effort, and plan the technical approach.\",\n  \"location\": \"Conference Room A, Building 1\",\n  \"colorId\": \"7\",\n  \"creator\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-04T09:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-04T11:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-04T09:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": \"opaque\",\n  \"visibility\": \"default\",\n  \"iCalUID\": \"3d77cd68-9387-4fe7-8a3c-6faf1279e5f7@calendar.google.com\",\n  \"sequence\": 1,\n  \"attendees\": [\n    {\n      \"id\": \"7b45a1aa-b1cb-4bec-9987-231a17e18959\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": true,\n      \"organizer\": true,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Looking forward to planning Q4!\",\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"931c6631-9083-46df-9d8a-654cf71bd92d\",\n      \"email\": \"bob.smith@techcorp.com\",\n      \"displayName\": \"Bob Smith\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"b3e7f210-5bfc-461c-b062-a79574c72e63\",\n      \"email\": \"carol.white@techcorp.com\",\n      \"displayName\": \"Carol White\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"tentative\",\n      \"comment\": \"Will join if no conflicts with user research session\",\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"departmentBudget\": \"engineering\",\n      \"projectCode\": \"PROJ-2024-Q4\"\n    },\n    \"shared\": {\n      \"meetingType\": \"sprint_planning\",\n      \"priority\": \"high\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": {\n    \"conferenceSolution\": null,\n    \"createRequest\": {\n      \"conferenceSolutionKey\": {\n        \"type\": \"hangoutsMeet\"\n      },\n      \"requestId\": \"req-sprint-planning-2026-001\",\n      \"status\": {\n        \"statusCode\": \"success\"\n      }\n    },\n    \"entryPoints\": null,\n    \"notes\": null,\n    \"signature\": null\n  },\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": false,\n  \"locked\": false,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"email\",\n        \"minutes\": 1440\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 30\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://jira.techcorp.com/sprint-planning-q4\",\n    \"title\": \"Sprint Planning Board\"\n  },\n  \"attachments\": [\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit\",\n      \"title\": \"edit\"\n    }\n  ],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 339,
+      "executed_at": "2025-12-04T14:58:52.032349"
+    }
+  },
+  {
+    "name": "patch_calendar",
+    "arguments": {
+      "calendarId": "alice-projects",
+      "description": "Project meetings, deadlines, and milestones-[ARCHIVED]"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "patch_calendar",
+      "parameters": {
+        "calendarId": "alice-projects",
+        "description": "Project meetings, deadlines, and milestones-[ARCHIVED]"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-alice-projects-2025-12-04T14:59:27.759937\",\n  \"id\": \"alice-projects\",\n  \"summary\": \"Project Management\",\n  \"description\": \"Project meetings, deadlines, and milestones-[ARCHIVED]\",\n  \"location\": null,\n  \"timeZone\": \"America/New_York\",\n  \"conferenceProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 225,
+      "executed_at": "2025-12-04T14:59:27.820564"
+    }
+  },
+  {
+    "name": "delete_event",
+    "arguments": {
+      "calendarId": "alice-projects",
+      "eventId": "event-corrected-001"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "delete_event",
+      "parameters": {
+        "calendarId": "alice-projects",
+        "eventId": "event-corrected-001"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Operation completed successfully"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 345,
+      "executed_at": "2025-12-04T14:59:52.477157"
+    }
+  },
+  {
+    "name": "list_acl_rules",
+    "arguments": {
+      "calendarId": "alice-projects"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "list_acl_rules",
+      "parameters": {
+        "calendarId": "alice-projects"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#acl\",\n  \"etag\": \"\\\"89e069bc-08da-4441-adc8-259e356518b9\\\"\",\n  \"items\": [\n    {\n      \"id\": \"acl-alice-projects\",\n      \"calendar_id\": \"alice-projects\",\n      \"user_id\": \"alice_manager\",\n      \"role\": \"owner\",\n      \"etag\": \"etag-alice-projects\",\n      \"scope\": {\n        \"type\": \"user\",\n        \"value\": \"alice.manager@techcorp.com\"\n      }\n    },\n    {\n      \"id\": \"acl-shared-1\",\n      \"calendar_id\": \"alice-projects\",\n      \"user_id\": \"alice_manager\",\n      \"role\": \"writer\",\n      \"etag\": \"etag-shared-1\",\n      \"scope\": {\n        \"type\": \"user\",\n        \"value\": \"bob.smith@techcorp.com\"\n      }\n    },\n    {\n      \"id\": \"acl-shared-2\",\n      \"calendar_id\": \"alice-projects\",\n      \"user_id\": \"alice_manager\",\n      \"role\": \"reader\",\n      \"etag\": \"etag-shared-2\",\n      \"scope\": {\n        \"type\": \"user\",\n        \"value\": \"carol.white@techcorp.com\"\n      }\n    }\n  ],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 196,
+      "executed_at": "2025-12-04T15:00:32.198732"
+    }
+  },
+  {
+    "name": "delete_acl_rule",
+    "arguments": {
+      "calendarId": "alice-projects",
+      "ruleId": "acl-shared-1"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "delete_acl_rule",
+      "parameters": {
+        "calendarId": "alice-projects",
+        "ruleId": "acl-shared-1"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Operation completed successfully"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 234,
+      "executed_at": "2025-12-04T15:01:20.386727"
+    }
+  },
+  {
+    "name": "delete_acl_rule",
+    "arguments": {
+      "calendarId": "alice-projects",
+      "ruleId": "acl-shared-2"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "delete_acl_rule",
+      "parameters": {
+        "calendarId": "alice-projects",
+        "ruleId": "acl-shared-2"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Operation completed successfully"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 249,
+      "executed_at": "2025-12-04T15:01:35.060313"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create Project 2026 calendar, replicate sprint event, and archive old projects calendar.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }, 
+"L1":"Calendar Management",
+"L2":"Calendar Structure",
+"L3":"Primary Calendar Lifecycle"
+}

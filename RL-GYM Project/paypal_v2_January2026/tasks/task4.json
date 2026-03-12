@@ -1,0 +1,460 @@
+{
+  "scenario_config": {
+    "scenario_name": "consulting_retainer_invoice_feb_2026",
+    "scenario_description": "Generate invoice number, create invoice template, issue invoice, send, and generate payment QR code",
+    "system_prompt": "You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I need to generate the next invoice number first, then create a template called \"Consulting Retainer - 2026\" configured for hourly billing, hide the item discount and subtotal discount fields for a clean look, and set 30-day payment terms with the note \"Payment due within 30 days. Wire transfer or ACH preferred\". Next, create an invoice for Michael Brown at Michael Brown Consulting (michael.brown@consulting-firm.com) dated February 1, 2026, using the reserved invoice number; include two line items: \"February 2026 Monthly Retainer\" at $5,000 and \"Initial Onboarding Workshop\" at $2,500 (total $7,500 USD). Before sending, retrieve the full invoice details to verify everything is accurate, then send it immediately with a professional message. Finally, generate a 500x500px payment QR code that directs to the payment page so he can scan and pay from his phone.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "generate_invoice_number",
+      "create_invoice_template",
+      "create_invoice",
+      "get_invoice_details",
+      "send_invoice",
+      "generate_invoice_qr_code"
+    ],
+    "expected_tools": [
+      "generate_invoice_number",
+      "create_invoice_template",
+      "create_invoice",
+      "get_invoice_details",
+      "send_invoice",
+      "generate_invoice_qr_code"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Invoice Number Generated",
+      "description": "Verify invoice number generation request recorded",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM generated_invoice_numbers WHERE merchant_id = 'DEFAULT-MERCHANT' AND generated_by = 'DEFAULT-MERCHANT' AND sequence_id = 1 AND request_type = 'invoice_number'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Invoice Template Created",
+      "description": "Verify consulting retainer invoice template configuration",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM invoice_templates it WHERE it.name = 'Consulting Retainer - 2026' AND it.unit_of_measure = 'HOURS' AND json_extract(it.template_info, '$.detail.currency_code') = 'USD' AND json_extract(it.template_info, '$.detail.note') = 'Payment due within 30 days. Wire transfer or ACH preferred' AND json_extract(it.template_info, '$.detail.payment_term.term_type') = 'NET_30'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Invoice Created",
+      "description": "Verify invoice created with correct invoicer, recipient, details, and total amount",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM invoices i WHERE json_extract(i.invoicer, '$.name.given_name') = 'John' AND json_extract(i.invoicer, '$.name.surname') = 'Anderson' AND json_extract(i.invoicer, '$.email_address') = 'john.anderson@techstartup.com' AND json_extract(i.detail, '$.currency_code') = 'USD' AND json_extract(i.detail, '$.note') = 'Payment due within 30 days. Wire transfer or ACH preferred' AND json_extract(i.detail, '$.payment_term.term_type') = 'NET_30' AND EXISTS (SELECT 1 FROM json_each(i.primary_recipients) pr WHERE json_extract(pr.value, '$.billing_info.business_name') = 'Michael Brown Consulting' AND json_extract(pr.value, '$.billing_info.email_address') = 'michael.brown@consulting-firm.com' AND json_extract(pr.value, '$.billing_info.name.given_name') = 'Michael' AND json_extract(pr.value, '$.billing_info.name.surname') = 'Brown') AND json_extract(i.amount, '$.currency_code') = 'USD' AND json_extract(i.amount, '$.value') = '7500.00'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Onboarding Workshop Line Item Created",
+      "description": "Verify onboarding workshop invoice line item exists",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM invoice_items WHERE name = 'Initial Onboarding Workshop' AND description IS NOT NULL AND quantity = 1 AND unit_amount_value = 2500 AND unit_amount_currency = 'USD'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Monthly Retainer Line Item Created",
+      "description": "Verify February 2026 Monthly Retainer invoice line item exists",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM invoice_items WHERE name = 'February 2026 Monthly Retainer' AND quantity = 1 AND unit_amount_value = 5000 AND unit_amount_currency = 'USD'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "generate_invoice_number",
+    "arguments": {},
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "generate_invoice_number",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 200,\n  \"body\": {\n    \"invoice_number\": \"INV-0001\"\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 377,
+      "executed_at": "2026-01-14T00:26:21.936965"
+    }
+  },
+  {
+    "name": "create_invoice_template",
+    "arguments": {
+      "name": "Consulting Retainer - 2026",
+      "unit_of_measure": "HOURS",
+      "default_template": false,
+      "settings": {
+        "template_item_settings": [
+          {
+            "field_name": "ITEMS_DISCOUNT",
+            "display_preference": {
+              "hidden": true
+            }
+          }
+        ],
+        "template_subtotal_settings": [
+          {
+            "field_name": "DISCOUNT",
+            "display_preference": {
+              "hidden": true
+            }
+          }
+        ]
+      },
+      "template_info": {
+        "detail": {
+          "currency_code": "USD",
+          "note": "Payment due within 30 days. Wire transfer or ACH preferred",
+          "payment_term": {
+            "term_type": "NET_30"
+          }
+        },
+        "configuration": {
+          "tax_calculated_after_discount": true,
+          "tax_inclusive": false,
+          "allow_tip": false
+        }
+      }
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "create_invoice_template",
+      "parameters": {
+        "name": "Consulting Retainer - 2026",
+        "unit_of_measure": "HOURS",
+        "default_template": false,
+        "settings": {
+          "template_item_settings": [
+            {
+              "field_name": "ITEMS_DISCOUNT",
+              "display_preference": {
+                "hidden": true
+              }
+            }
+          ],
+          "template_subtotal_settings": [
+            {
+              "field_name": "DISCOUNT",
+              "display_preference": {
+                "hidden": true
+              }
+            }
+          ]
+        },
+        "template_info": {
+          "detail": {
+            "currency_code": "USD",
+            "note": "Payment due within 30 days. Wire transfer or ACH preferred",
+            "payment_term": {
+              "term_type": "NET_30"
+            }
+          },
+          "configuration": {
+            "tax_calculated_after_discount": true,
+            "tax_inclusive": false,
+            "allow_tip": false
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"TEMP-260114-6PC5UW8A\",\n  \"name\": \"Consulting Retainer - 2026\",\n  \"default_template\": false,\n  \"template_info\": {\n    \"detail\": {\n      \"currency_code\": \"USD\",\n      \"note\": \"Payment due within 30 days. Wire transfer or ACH preferred\",\n      \"payment_term\": {\n        \"term_type\": \"NET_30\"\n      }\n    },\n    \"configuration\": {\n      \"tax_calculated_after_discount\": true,\n      \"tax_inclusive\": false,\n      \"allow_tip\": false,\n      \"has_conditional_rule\": false\n    }\n  },\n  \"settings\": {\n    \"template_item_settings\": [\n      {\n        \"field_name\": \"ITEMS_DISCOUNT\",\n        \"display_preference\": {\n          \"hidden\": true\n        }\n      }\n    ],\n    \"template_subtotal_settings\": [\n      {\n        \"field_name\": \"DISCOUNT\",\n        \"display_preference\": {\n          \"hidden\": true\n        }\n      }\n    ]\n  },\n  \"unit_of_measure\": \"HOURS\",\n  \"standard_template\": false,\n  \"links\": [\n    {\n      \"href\": \"/v2/invoicing/templates/TEMP-260114-6PC5UW8A\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"/v2/invoicing/templates/TEMP-260114-6PC5UW8A\",\n      \"rel\": \"edit\",\n      \"method\": \"PUT\"\n    },\n    {\n      \"href\": \"/v2/invoicing/templates/TEMP-260114-6PC5UW8A\",\n      \"rel\": \"delete\",\n      \"method\": \"DELETE\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 301,
+      "executed_at": "2026-01-14T00:27:18.008876"
+    }
+  },
+  {
+    "name": "create_invoice",
+    "arguments": {
+      "detail": {
+        "invoice_number": "INV-0001",
+        "currency_code": "USD",
+        "note": "Payment due within 30 days. Wire transfer or ACH preferred",
+        "payment_term": {
+          "term_type": "NET_30"
+        },
+        "invoice_date": "2026-02-01",
+        "memo": "February 2026 Consulting Services",
+        "reference": "Consulting Retainer - Feb 2026"
+      },
+      "invoicer": {
+        "name": {
+          "given_name": "John",
+          "surname": "Anderson"
+        },
+        "email_address": "john.anderson@techstartup.com"
+      },
+      "primary_recipients": [
+        {
+          "billing_info": {
+            "business_name": "Michael Brown Consulting",
+            "email_address": "michael.brown@consulting-firm.com",
+            "name": {
+              "given_name": "Michael",
+              "surname": "Brown"
+            }
+          }
+        }
+      ],
+      "items": [
+        {
+          "name": "February 2026 Monthly Retainer",
+          "description": "Monthly consulting retainer services for February 2026",
+          "quantity": "1",
+          "unit_amount": {
+            "currency_code": "USD",
+            "value": "5000.00"
+          },
+          "unit_of_measure": "QUANTITY"
+        },
+        {
+          "name": "Initial Onboarding Workshop",
+          "description": "One-time comprehensive onboarding workshop session",
+          "quantity": "1",
+          "unit_amount": {
+            "currency_code": "USD",
+            "value": "2500.00"
+          },
+          "unit_of_measure": "QUANTITY"
+        }
+      ],
+      "configuration": {
+        "tax_calculated_after_discount": true,
+        "tax_inclusive": false,
+        "allow_tip": false
+      },
+      "amount": {
+        "currency_code": "USD",
+        "value": "7500.00",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "7500.00"
+          }
+        }
+      }
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "create_invoice",
+      "parameters": {
+        "detail": {
+          "invoice_number": "INV-0001",
+          "currency_code": "USD",
+          "note": "Payment due within 30 days. Wire transfer or ACH preferred",
+          "payment_term": {
+            "term_type": "NET_30"
+          },
+          "invoice_date": "2026-02-01",
+          "memo": "February 2026 Consulting Services",
+          "reference": "Consulting Retainer - Feb 2026"
+        },
+        "invoicer": {
+          "name": {
+            "given_name": "John",
+            "surname": "Anderson"
+          },
+          "email_address": "john.anderson@techstartup.com"
+        },
+        "primary_recipients": [
+          {
+            "billing_info": {
+              "business_name": "Michael Brown Consulting",
+              "email_address": "michael.brown@consulting-firm.com",
+              "name": {
+                "given_name": "Michael",
+                "surname": "Brown"
+              }
+            }
+          }
+        ],
+        "items": [
+          {
+            "name": "February 2026 Monthly Retainer",
+            "description": "Monthly consulting retainer services for February 2026",
+            "quantity": "1",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "5000.00"
+            },
+            "unit_of_measure": "QUANTITY"
+          },
+          {
+            "name": "Initial Onboarding Workshop",
+            "description": "One-time comprehensive onboarding workshop session",
+            "quantity": "1",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "2500.00"
+            },
+            "unit_of_measure": "QUANTITY"
+          }
+        ],
+        "configuration": {
+          "tax_calculated_after_discount": true,
+          "tax_inclusive": false,
+          "allow_tip": false
+        },
+        "amount": {
+          "currency_code": "USD",
+          "value": "7500.00",
+          "breakdown": {
+            "item_total": {
+              "currency_code": "USD",
+              "value": "7500.00"
+            }
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"INV2-8A2T-WZP6-SQGK-AE5U\",\n  \"status\": \"DRAFT\",\n  \"detail\": {\n    \"reference\": \"Consulting Retainer - Feb 2026\",\n    \"currency_code\": \"USD\",\n    \"note\": \"Payment due within 30 days. Wire transfer or ACH preferred\",\n    \"memo\": \"February 2026 Consulting Services\",\n    \"invoice_number\": \"INV-0001\",\n    \"invoice_date\": \"2026-02-01\",\n    \"payment_term\": {\n      \"term_type\": \"NET_30\"\n    }\n  },\n  \"invoicer\": {\n    \"name\": {\n      \"given_name\": \"John\",\n      \"surname\": \"Anderson\"\n    },\n    \"email_address\": \"john.anderson@techstartup.com\"\n  },\n  \"primary_recipients\": [\n    {\n      \"billing_info\": {\n        \"business_name\": \"Michael Brown Consulting\",\n        \"name\": {\n          \"given_name\": \"Michael\",\n          \"surname\": \"Brown\"\n        },\n        \"email_address\": \"michael.brown@consulting-firm.com\"\n      }\n    }\n  ],\n  \"items\": [\n    {\n      \"name\": \"February 2026 Monthly Retainer\",\n      \"description\": \"Monthly consulting retainer services for February 2026\",\n      \"quantity\": \"1\",\n      \"unit_amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"5000.00\"\n      },\n      \"unit_of_measure\": \"QUANTITY\"\n    },\n    {\n      \"name\": \"Initial Onboarding Workshop\",\n      \"description\": \"One-time comprehensive onboarding workshop session\",\n      \"quantity\": \"1\",\n      \"unit_amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"2500.00\"\n      },\n      \"unit_of_measure\": \"QUANTITY\"\n    }\n  ],\n  \"configuration\": {\n    \"tax_calculated_after_discount\": true,\n    \"tax_inclusive\": false,\n    \"allow_tip\": false,\n    \"has_conditional_rule\": false\n  },\n  \"amount\": {\n    \"currency_code\": \"USD\",\n    \"value\": \"7500.00\",\n    \"breakdown\": {\n      \"item_total\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"7500.00\"\n      },\n      \"tax_total\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"0.00\"\n      }\n    }\n  },\n  \"due_amount\": {\n    \"currency_code\": \"USD\",\n    \"value\": \"7500.00\"\n  },\n  \"links\": [\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"update\",\n      \"method\": \"PUT\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"delete\",\n      \"method\": \"DELETE\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/send\",\n      \"rel\": \"send\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/cancel\",\n      \"rel\": \"cancel\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/remind\",\n      \"rel\": \"remind\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/payments\",\n      \"rel\": \"record-payment\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/refunds\",\n      \"rel\": \"record-refund\",\n      \"method\": \"POST\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 396,
+      "executed_at": "2026-01-14T00:28:49.424832"
+    }
+  },
+  {
+    "name": "get_invoice_details",
+    "arguments": {
+      "invoice_id": "INV2-8A2T-WZP6-SQGK-AE5U"
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "get_invoice_details",
+      "parameters": {
+        "invoice_id": "INV2-8A2T-WZP6-SQGK-AE5U"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"INV2-8A2T-WZP6-SQGK-AE5U\",\n  \"status\": \"DRAFT\",\n  \"detail\": {\n    \"invoice_number\": \"INV-0001\",\n    \"invoice_date\": \"2026-02-01\",\n    \"currency_code\": \"USD\",\n    \"reference\": \"Consulting Retainer - Feb 2026\",\n    \"note\": \"Payment due within 30 days. Wire transfer or ACH preferred\",\n    \"terms_and_conditions\": null,\n    \"memo\": \"February 2026 Consulting Services\",\n    \"attachments\": [],\n    \"payment_term\": {\n      \"term_type\": \"NET_30\",\n      \"due_date\": null\n    },\n    \"viewed_by_recipient\": false,\n    \"group_draft\": false,\n    \"metadata\": {\n      \"create_time\": \"2026-01-14T00:28:49\",\n      \"last_update_time\": null\n    }\n  },\n  \"invoicer\": {\n    \"business_name\": null,\n    \"name\": {\n      \"prefix\": null,\n      \"given_name\": \"John\",\n      \"surname\": \"Anderson\",\n      \"middle_name\": null,\n      \"suffix\": null,\n      \"alternate_full_name\": null,\n      \"full_name\": null\n    },\n    \"address\": null,\n    \"phones\": null,\n    \"website\": null,\n    \"tax_id\": null,\n    \"additional_notes\": null,\n    \"logo_url\": null,\n    \"email_address\": \"john.anderson@techstartup.com\"\n  },\n  \"primary_recipients\": [\n    {\n      \"billing_info\": {\n        \"business_name\": \"Michael Brown Consulting\",\n        \"name\": {\n          \"prefix\": null,\n          \"given_name\": \"Michael\",\n          \"surname\": \"Brown\",\n          \"middle_name\": null,\n          \"suffix\": null,\n          \"alternate_full_name\": null,\n          \"full_name\": null\n        },\n        \"address\": null,\n        \"phones\": null,\n        \"additional_info\": null,\n        \"email_address\": \"michael.brown@consulting-firm.com\",\n        \"language\": null\n      },\n      \"shipping_info\": null\n    }\n  ],\n  \"additional_recipients\": [],\n  \"items\": [\n    {\n      \"id\": \"INV2-8A2T-WZP6-SQGK-AE5U_item_0\",\n      \"name\": \"February 2026 Monthly Retainer\",\n      \"description\": \"Monthly consulting retainer services for February 2026\",\n      \"quantity\": \"1\",\n      \"unit_amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"5000.000000\"\n      },\n      \"unit_of_measure\": \"QUANTITY\"\n    },\n    {\n      \"id\": \"INV2-8A2T-WZP6-SQGK-AE5U_item_1\",\n      \"name\": \"Initial Onboarding Workshop\",\n      \"description\": \"One-time comprehensive onboarding workshop session\",\n      \"quantity\": \"1\",\n      \"unit_amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"2500.000000\"\n      },\n      \"unit_of_measure\": \"QUANTITY\"\n    }\n  ],\n  \"configuration\": {\n    \"tax_calculated_after_discount\": true,\n    \"tax_inclusive\": false,\n    \"allow_tip\": false,\n    \"partial_payment\": null,\n    \"has_conditional_rule\": false,\n    \"template_id\": null\n  },\n  \"template_id\": \"PayPal system template\",\n  \"amount\": {\n    \"currency_code\": \"USD\",\n    \"value\": \"7500.00\",\n    \"breakdown\": {\n      \"subtotal\": \"7500.00\",\n      \"tax_total\": \"0.00\",\n      \"discount_total\": \"0.00\",\n      \"total\": \"7500.00\"\n    }\n  },\n  \"due_amount\": {\n    \"currency_code\": \"USD\",\n    \"value\": \"7500.00\"\n  },\n  \"links\": [\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"edit\",\n      \"method\": \"PUT\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"delete\",\n      \"method\": \"DELETE\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/send\",\n      \"rel\": \"send\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/cancel\",\n      \"rel\": \"cancel\",\n      \"method\": \"POST\"\n    },\n    {\n      \"href\": \"/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U/payments\",\n      \"rel\": \"record-payment\",\n      \"method\": \"POST\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 224,
+      "executed_at": "2026-01-14T00:30:27.037169"
+    }
+  },
+  {
+    "name": "send_invoice",
+    "arguments": {
+      "invoice_id": "INV2-8A2T-WZP6-SQGK-AE5U",
+      "subject": "Invoice INV-0001: February 2026 Consulting Services",
+      "note": "Dear Michael, Thank you for your continued partnership. Please find attached your invoice for February 2026 consulting services, which includes your monthly retainer and the initial onboarding workshop. Payment is due within 30 days via wire transfer or ACH. We've also included a QR code for convenient mobile payment. Please don't hesitate to reach out if you have any questions. Best regards, John",
+      "send_to_recipient": true,
+      "send_to_invoicer": false
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "send_invoice",
+      "parameters": {
+        "invoice_id": "INV2-8A2T-WZP6-SQGK-AE5U",
+        "subject": "Invoice INV-0001: February 2026 Consulting Services",
+        "note": "Dear Michael, Thank you for your continued partnership. Please find attached your invoice for February 2026 consulting services, which includes your monthly retainer and the initial onboarding workshop. Payment is due within 30 days via wire transfer or ACH. We've also included a QR code for convenient mobile payment. Please don't hesitate to reach out if you have any questions. Best regards, John",
+        "send_to_recipient": true,
+        "send_to_invoicer": false
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"links\": [\n    {\n      \"href\": \"http://localhost:8003/v2/invoicing/invoices/INV2-8A2T-WZP6-SQGK-AE5U\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 348,
+      "executed_at": "2026-01-14T00:31:23.056684"
+    }
+  },
+  {
+    "name": "generate_invoice_qr_code",
+    "arguments": {},
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "paypal-internal-prod",
+      "database_id": "db_1768220792504_n570wu021",
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Generate invoice number, create consulting invoice template, issue invoice, send it, and generate payment QR code.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

@@ -1,0 +1,306 @@
+{
+  "scenario_config": {
+    "scenario_name": "search_algo_kickoff",
+    "scenario_description": "Technical Kickoff Setup",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I’m planning to have a technical kickoff session with Carol. Create a secondary calendar called “Search Algorithm Beta.” Allow Carol(carol.white@techcorp.com) to edit. Starting from November 14, 2025, find the first day when I have no scheduled events, and schedule “Search Algorithm Beta – Technical Kickoff” for 60 minutes at 3:00 PM UTC with Google Meet.",
+    "restricted_tools": [],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "insert_acl_rule",
+      "query_freebusy",
+      "create_event"
+    ],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "insert_acl_rule",
+      "query_freebusy",
+      "create_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Creation",
+      "description": "Verify secondary calendar created",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Search Algorithm Beta' AND is_primary = 0 AND user_id = 'bob_developer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carol Edit Access",
+      "description": "Check Carol's edit permissions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE user_id = 'bob_developer' AND scope_id LIKE '%carol%' AND role = 'writer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Scheduled",
+      "description": "Verify event created on available day",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE user_id = 'bob_developer' AND summary LIKE '%Search Algorithm Beta – Technical Kickoff%' AND start_datetime = '2025-11-16 15:00:00.000000' AND end_datetime = '2025-11-16 16:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_calendar_list",
+    "arguments": {},
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "get_calendar_list",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1762868439331_kf914hbmw\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNi0wMS0wMlQyMDo1NDo0OC4zNjcxMDM=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-bob-development-2026-01-02T20:54:38\",\n      \"id\": \"bob-development\",\n      \"summary\": \"Development Schedule\",\n      \"description\": \"Sprint planning, code reviews, and development tasks\",\n      \"location\": null,\n      \"timeZone\": \"America/Los_Angeles\",\n      \"summaryOverride\": null,\n      \"colorId\": \"9\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-bob-personal-2026-01-02T20:54:38\",\n      \"id\": \"bob-personal\",\n      \"summary\": \"Personal Time\",\n      \"description\": \"Personal appointments and time off\",\n      \"location\": null,\n      \"timeZone\": \"America/Los_Angeles\",\n      \"summaryOverride\": null,\n      \"colorId\": \"14\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-bob-primary-2026-01-02T20:54:38\",\n      \"id\": \"bob-primary\",\n      \"summary\": \"Bob Smith\",\n      \"description\": \"Primary calendar for Bob Smith - Senior Developer\",\n      \"location\": null,\n      \"timeZone\": \"America/Los_Angeles\",\n      \"summaryOverride\": null,\n      \"colorId\": \"2\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 141,
+      "executed_at": "2026-01-02T20:54:48.387813"
+    }
+  },
+  {
+    "name": "create_calendar",
+    "arguments": {
+      "summary": "Search Algorithm Beta"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_calendar",
+      "parameters": {
+        "summary": "Search Algorithm Beta"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf-2026-01-02T20:54:57.634440\",\n  \"id\": \"657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf\",\n  \"summary\": \"Search Algorithm Beta\",\n  \"description\": null,\n  \"location\": null,\n  \"timeZone\": \"UTC\",\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": null\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 187,
+      "executed_at": "2026-01-02T20:54:57.729500"
+    }
+  },
+  {
+    "name": "insert_acl_rule",
+    "arguments": {
+      "calendarId": "657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf",
+      "scope": {
+        "type": "user",
+        "value": "carol.white@techcorp.com"
+      },
+      "role": "writer"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "insert_acl_rule",
+      "parameters": {
+        "calendarId": "657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf",
+        "scope": {
+          "type": "user",
+          "value": "carol.white@techcorp.com"
+        },
+        "role": "writer"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#aclRule\",\n  \"etag\": \"\\\"27426ec0-02c2-418a-a967-30f50d5f017d\\\"\",\n  \"id\": \"d376cf19-4cdc-44d8-8c46-e25cd686940b\",\n  \"scope\": {\n    \"type\": \"user\",\n    \"value\": \"carol.white@techcorp.com\"\n  },\n  \"role\": \"writer\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 165,
+      "executed_at": "2026-01-02T20:55:30.219096"
+    }
+  },
+  {
+    "name": "query_freebusy",
+    "arguments": {
+      "timeMin": "2025-11-14T00:00:00Z",
+      "timeMax": "2025-11-30T23:59:59Z",
+      "items": [
+        {
+          "id": "bob-primary"
+        },
+        {
+          "id": "bob-development"
+        },
+        {
+          "id": "bob-personal"
+        }
+      ]
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "query_freebusy",
+      "parameters": {
+        "timeMin": "2025-11-14T00:00:00Z",
+        "timeMax": "2025-11-30T23:59:59Z",
+        "items": [
+          {
+            "id": "bob-primary"
+          },
+          {
+            "id": "bob-development"
+          },
+          {
+            "id": "bob-personal"
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#freeBusy\",\n  \"timeMin\": \"2025-11-14T00:00:00Z\",\n  \"timeMax\": \"2025-11-30T23:59:59Z\",\n  \"calendars\": {\n    \"bob-primary\": {\n      \"errors\": null,\n      \"busy\": [\n        {\n          \"start\": \"2025-11-15T09:00:00+00:00\",\n          \"end\": \"2025-11-15T17:00:00+00:00\"\n        }\n      ]\n    },\n    \"bob-development\": {\n      \"errors\": null,\n      \"busy\": [\n        {\n          \"start\": \"2025-11-14T10:00:00+00:00\",\n          \"end\": \"2025-11-14T13:00:00+00:00\"\n        }\n      ]\n    },\n    \"bob-personal\": {\n      \"errors\": null,\n      \"busy\": []\n    }\n  },\n  \"groups\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 193,
+      "executed_at": "2026-01-02T20:55:37.832971"
+    }
+  },
+  {
+    "name": "create_event",
+    "arguments": {
+      "calendarId": "657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf",
+      "summary": "Search Algorithm Beta – Technical Kickoff",
+      "start": {
+        "dateTime": "2025-11-16T15:00:00Z",
+        "timeZone": "UTC"
+      },
+      "end": {
+        "dateTime": "2025-11-16T16:00:00Z",
+        "timeZone": "UTC"
+      },
+      "conferenceDataVersion": 1,
+      "conferenceData": {
+        "createRequest": {
+          "requestId": "search-algo-kickoff-001",
+          "conferenceSolutionKey": {
+            "type": "hangoutsMeet"
+          }
+        }
+      },
+      "attendees": [
+        {
+          "email": "carol.white@techcorp.com",
+          "responseStatus": "needsAction"
+        }
+      ]
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_event",
+      "parameters": {
+        "calendarId": "657dc3a4-c6b5-46c0-8fc2-e788c5f7e2bf",
+        "summary": "Search Algorithm Beta – Technical Kickoff",
+        "start": {
+          "dateTime": "2025-11-16T15:00:00Z",
+          "timeZone": "UTC"
+        },
+        "end": {
+          "dateTime": "2025-11-16T16:00:00Z",
+          "timeZone": "UTC"
+        },
+        "conferenceDataVersion": 1,
+        "conferenceData": {
+          "createRequest": {
+            "requestId": "search-algo-kickoff-001",
+            "conferenceSolutionKey": {
+              "type": "hangoutsMeet"
+            }
+          }
+        },
+        "attendees": [
+          {
+            "email": "carol.white@techcorp.com",
+            "responseStatus": "needsAction"
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1767387535.799678\\\"\",\n  \"id\": \"b54f915a-5306-4fbb-983d-a2da0460b472\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=b54f915a-5306-4fbb-983d-a2da0460b472\",\n  \"created\": \"2026-01-02T20:58:55.799668\",\n  \"updated\": \"2026-01-02T20:58:55.799678\",\n  \"summary\": \"Search Algorithm Beta \\u2013 Technical Kickoff\",\n  \"description\": null,\n  \"location\": null,\n  \"colorId\": null,\n  \"creator\": {\n    \"id\": \"bob_developer\",\n    \"email\": \"bob.smith@techcorp.com\",\n    \"displayName\": \"Bob Smith\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"bob_developer\",\n    \"email\": \"bob.smith@techcorp.com\",\n    \"displayName\": \"Bob Smith\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-11-16T15:00:00\",\n    \"date\": null,\n    \"timeZone\": \"UTC\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-11-16T16:00:00\",\n    \"date\": null,\n    \"timeZone\": \"UTC\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": {\n    \"dateTime\": \"2025-11-16T15:00:00\",\n    \"date\": null,\n    \"timeZone\": \"UTC\"\n  },\n  \"transparency\": \"opaque\",\n  \"visibility\": \"default\",\n  \"iCalUID\": \"b54f915a-5306-4fbb-983d-a2da0460b472@calendar.google.com\",\n  \"sequence\": 0,\n  \"attendees\": [\n    {\n      \"id\": \"da0dbaab-ec1a-4994-bed9-9ae00689c8f2\",\n      \"email\": \"carol.white@techcorp.com\",\n      \"displayName\": null,\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": {\n    \"conferenceSolution\": null,\n    \"createRequest\": {\n      \"conferenceSolutionKey\": {\n        \"type\": \"hangoutsMeet\"\n      },\n      \"requestId\": \"search-algo-kickoff-001\",\n      \"status\": {\n        \"statusCode\": \"success\"\n      }\n    },\n    \"entryPoints\": null,\n    \"notes\": null,\n    \"signature\": null\n  },\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": false,\n  \"locked\": false,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": null,\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 284,
+      "executed_at": "2026-01-02T20:58:55.920183"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create calendar and schedule technical kickoff session with Carol.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+  "L1": "Event Management",
+  "L2": "Event Details",
+  "L3": "Event Title & Description"
+}

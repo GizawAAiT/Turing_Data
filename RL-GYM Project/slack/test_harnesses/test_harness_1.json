@@ -1,0 +1,33 @@
+{
+  "system_prompt": "You are a helpful assistant for Slack workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Create a private project channel, invite members, set details, and post a welcome.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm Ethan (id: U985OUO9ZYKT), team lead for the new 'rideshare' project. Please create a new private channel for project 'rideshare' with the name 'project-rideshare', add William (id: UJJNWQVLHQS9) and Noah (id: UG7I699IBCTE), set its topic and purpose accordingly, and post the message “Hi, welcome all @here” for me.",
+          "expected_tools": [
+            "conversations_create",
+            "conversations_invite",
+            "conversations_set_topic",
+            "conversations_set_purpose",
+            "chat_post_message"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) AS count FROM slack_channels WHERE name = 'project-rideshare' AND members LIKE '%U985OUO9ZYKT%' AND members LIKE '%UJJNWQVLHQS9%' AND members LIKE '%UG7I699IBCTE%'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

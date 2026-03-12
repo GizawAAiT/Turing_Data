@@ -1,0 +1,682 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_password_incidents_kb_link_validation",
+    "scenario_description": "Ensure all password reset and account lock incidents since Nov 20, 2025 are linked to the password reset knowledge article and marked as resolution where applicable.",
+    "system_prompt": "You are a helpful Customer Service Drive Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I need to ensure our password reset and account lock incidents are properly linked to the password reset article. Check all password-related incidents created since November 20th, 2025, and verify if they're linked to that knowledge article. For any incidents missing the link, add it and mark the usage as 'resolution' if the article helped solve the issue.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user",
+      "retrieve_knowledge_articles",
+      "list_incidents",
+      "find_incident_knowledge_links",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident"
+    ],
+    "expected_tools": [
+      "get_user",
+      "retrieve_knowledge_articles",
+      "list_incidents",
+      "find_incident_knowledge_links",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident"
+    ]
+  },
+  "verifier_configs": [
+  {
+    "name": "INC_046 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_046 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_046' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_050 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_050 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_050' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_063 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_063 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_063' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_067 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_067 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_067' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_071 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_071 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_071' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_074 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_074 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_074' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_081 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_081 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_081' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_088 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_088 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_088' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_094 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_094 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_094' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "INC_097 Linked To Password Reset KB As Resolution",
+    "description": "Verify incident INC_097 is linked to the password reset knowledge article KB_001 with usage marked as resolution.",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_097' AND knowledge_id = 'KB_001' AND used_as = 'resolution'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  }
+],
+  "tools": [
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_039"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_039"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_039\",\n  \"user_name\": \"karen.watkins\",\n  \"first_name\": \"Karen\",\n  \"last_name\": \"Watkins\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"phone\": \"+441613971941\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:45:46\",\n  \"updated_on\": \"2026-02-10T13:31:36\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 156,
+      "executed_at": "2025-12-24T06:16:17.380508"
+    }
+  },
+  {
+    "name": "retrieve_knowledge_articles",
+    "arguments": {
+      "title": "password reset"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "retrieve_knowledge_articles",
+      "parameters": {
+        "title": "password reset"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"knowledges\": [\n    {\n      \"knowledge_id\": \"KB_001\",\n      \"kb_number\": \"KB0000001\",\n      \"title\": \"Self-Service Password Reset\",\n      \"body\": \"Go to the portal and click Forgot Password. You will need your MFA token.\",\n      \"state\": \"published\",\n      \"visibility\": \"external\",\n      \"owner_id\": \"USER_001\",\n      \"created_on\": \"2023-01-01T09:00:00\",\n      \"updated_on\": \"2023-01-01T09:00:00\"\n    }\n  ],\n  \"total_count\": 1\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 181,
+      "executed_at": "2025-12-24T06:16:19.867009"
+    }
+  },
+  {
+    "name": "list_incidents",
+    "arguments": {
+      "category": "password-reset",
+      "created_after": "2025-11-01"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_incidents",
+      "parameters": {
+        "category": "password-reset",
+        "created_after": "2025-11-01"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"incident_id\": \"INC_010\",\n    \"number\": \"INC-000010\",\n    \"caller_id\": \"USER_002\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_003\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_001\",\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"User locked out.\",\n    \"worknotes\": \"Reset link sent.\",\n    \"resolution_notes\": \"User confirmed access.\",\n    \"close_notes\": \"Closed via portal.\",\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"low\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-12-01T10:00:00\",\n    \"created_at\": \"2025-12-01T09:00:00\",\n    \"updated_at\": \"2025-12-01T10:05:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_046\",\n    \"number\": \"INC-000046\",\n    \"caller_id\": \"USER_090\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_024\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_024\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-29T09:05:00\",\n    \"created_at\": \"2025-11-29T09:00:00\",\n    \"updated_at\": \"2025-11-29T09:05:00\",\n    \"org_id\": \"ORG_009\"\n  },\n  {\n    \"incident_id\": \"INC_088\",\n    \"number\": \"INC-000088\",\n    \"caller_id\": \"USER_071\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_013\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_013\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"email\",\n    \"contact_type\": \"email\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-26T09:05:00\",\n    \"created_at\": \"2025-11-26T09:00:00\",\n    \"updated_at\": \"2025-11-26T09:05:00\",\n    \"org_id\": \"ORG_016\"\n  },\n  {\n    \"incident_id\": \"INC_081\",\n    \"number\": \"INC-000081\",\n    \"caller_id\": \"USER_027\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_015\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_015\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-23T09:05:00\",\n    \"created_at\": \"2025-11-23T09:00:00\",\n    \"updated_at\": \"2025-11-23T09:05:00\",\n    \"org_id\": \"ORG_013\"\n  },\n  {\n    \"incident_id\": \"INC_094\",\n    \"number\": \"INC-000094\",\n    \"caller_id\": \"USER_010\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_012\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_012\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"email\",\n    \"contact_type\": \"email\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-22T09:05:00\",\n    \"created_at\": \"2025-11-22T09:00:00\",\n    \"updated_at\": \"2025-11-22T09:05:00\",\n    \"org_id\": \"ORG_005\"\n  },\n  {\n    \"incident_id\": \"INC_071\",\n    \"number\": \"INC-000071\",\n    \"caller_id\": \"USER_071\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_023\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_023\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-22T09:05:00\",\n    \"created_at\": \"2025-11-22T09:00:00\",\n    \"updated_at\": \"2025-11-22T09:05:00\",\n    \"org_id\": \"ORG_016\"\n  },\n  {\n    \"incident_id\": \"INC_050\",\n    \"number\": \"INC-000050\",\n    \"caller_id\": \"USER_100\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_012\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_012\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-18T09:05:00\",\n    \"created_at\": \"2025-11-18T09:00:00\",\n    \"updated_at\": \"2025-11-18T09:05:00\",\n    \"org_id\": \"ORG_014\"\n  },\n  {\n    \"incident_id\": \"INC_100\",\n    \"number\": \"INC-000100\",\n    \"caller_id\": \"USER_077\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_003\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-15T09:05:00\",\n    \"created_at\": \"2025-11-15T09:00:00\",\n    \"updated_at\": \"2025-11-15T09:05:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_067\",\n    \"number\": \"INC-000067\",\n    \"caller_id\": \"USER_053\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_013\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_013\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-12T09:05:00\",\n    \"created_at\": \"2025-11-12T09:00:00\",\n    \"updated_at\": \"2025-11-12T09:05:00\",\n    \"org_id\": \"ORG_006\"\n  },\n  {\n    \"incident_id\": \"INC_091\",\n    \"number\": \"INC-000091\",\n    \"caller_id\": \"USER_088\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_023\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_023\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-11T09:05:00\",\n    \"created_at\": \"2025-11-11T09:00:00\",\n    \"updated_at\": \"2025-11-11T09:05:00\",\n    \"org_id\": \"ORG_008\"\n  },\n  {\n    \"incident_id\": \"INC_085\",\n    \"number\": \"INC-000085\",\n    \"caller_id\": \"USER_055\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_024\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_024\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-09T09:05:00\",\n    \"created_at\": \"2025-11-09T09:00:00\",\n    \"updated_at\": \"2025-11-09T09:05:00\",\n    \"org_id\": \"ORG_007\"\n  },\n  {\n    \"incident_id\": \"INC_063\",\n    \"number\": \"INC-000063\",\n    \"caller_id\": \"USER_035\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_022\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_022\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-08T09:05:00\",\n    \"created_at\": \"2025-11-08T09:00:00\",\n    \"updated_at\": \"2025-11-08T09:05:00\",\n    \"org_id\": \"ORG_017\"\n  },\n  {\n    \"incident_id\": \"INC_078\",\n    \"number\": \"INC-000078\",\n    \"caller_id\": \"USER_008\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_003\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-07T09:05:00\",\n    \"created_at\": \"2025-11-07T09:00:00\",\n    \"updated_at\": \"2025-11-07T09:05:00\",\n    \"org_id\": \"ORG_004\"\n  },\n  {\n    \"incident_id\": \"INC_059\",\n    \"number\": \"INC-000059\",\n    \"caller_id\": \"USER_007\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_015\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_015\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-05T09:05:00\",\n    \"created_at\": \"2025-11-05T09:00:00\",\n    \"updated_at\": \"2025-11-05T09:05:00\",\n    \"org_id\": \"ORG_003\"\n  },\n  {\n    \"incident_id\": \"INC_097\",\n    \"number\": \"INC-000097\",\n    \"caller_id\": \"USER_048\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_015\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_015\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-04T09:05:00\",\n    \"created_at\": \"2025-11-04T09:00:00\",\n    \"updated_at\": \"2025-11-04T09:05:00\",\n    \"org_id\": \"ORG_004\"\n  },\n  {\n    \"incident_id\": \"INC_074\",\n    \"number\": \"INC-000074\",\n    \"caller_id\": \"USER_086\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_025\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_025\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-03T09:05:00\",\n    \"created_at\": \"2025-11-03T09:00:00\",\n    \"updated_at\": \"2025-11-03T09:05:00\",\n    \"org_id\": \"ORG_007\"\n  },\n  {\n    \"incident_id\": \"INC_041\",\n    \"number\": \"INC-000041\",\n    \"caller_id\": \"USER_078\",\n    \"service\": \"SVC_042\",\n    \"service_offering\": \"SVCOFF_051\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_025\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_025\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Password Reset\",\n    \"description\": \"Reset.\",\n    \"worknotes\": \"Done.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-01T09:05:00\",\n    \"created_at\": \"2025-11-01T09:00:00\",\n    \"updated_at\": \"2025-11-01T09:05:00\",\n    \"org_id\": \"ORG_003\"\n  }\n]",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 167,
+      "executed_at": "2025-12-24T06:16:22.733662"
+    }
+  },
+  {
+    "name": "find_incident_knowledge_links",
+    "arguments": {
+      "knowledge_id": "KB_001"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_incident_knowledge_links",
+      "parameters": {
+        "knowledge_id": "KB_001"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"incident_kb_id\": \"IKB_003\",\n    \"incident_id\": \"INC_010\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-25T14:10:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_004\",\n    \"incident_id\": \"INC_041\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-01T09:05:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_005\",\n    \"incident_id\": \"INC_059\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-05T09:05:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_006\",\n    \"incident_id\": \"INC_078\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-07T09:05:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_007\",\n    \"incident_id\": \"INC_085\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-09T09:05:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_008\",\n    \"incident_id\": \"INC_091\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-11T09:05:00\",\n    \"updated_on\": null\n  },\n  {\n    \"incident_kb_id\": \"IKB_009\",\n    \"incident_id\": \"INC_100\",\n    \"knowledge_id\": \"KB_001\",\n    \"used_as\": \"resolution\",\n    \"created_on\": \"2025-11-15T09:05:00\",\n    \"updated_on\": null\n  }\n]",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 157,
+      "executed_at": "2025-12-24T06:16:25.195888"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_046",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_046",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_046\",\n  \"incident_id\": \"INC_046\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:27.536818\",\n  \"updated_on\": \"2025-12-24T06:16:27.536818\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 198,
+      "executed_at": "2025-12-24T06:16:27.590131"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_088",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_088",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_047\",\n  \"incident_id\": \"INC_088\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:30.431862\",\n  \"updated_on\": \"2025-12-24T06:16:30.431862\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 169,
+      "executed_at": "2025-12-24T06:16:30.479070"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_081",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_081",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_048\",\n  \"incident_id\": \"INC_081\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:32.858147\",\n  \"updated_on\": \"2025-12-24T06:16:32.858147\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 163,
+      "executed_at": "2025-12-24T06:16:32.906205"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_094",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_094",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_049\",\n  \"incident_id\": \"INC_094\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:35.457545\",\n  \"updated_on\": \"2025-12-24T06:16:35.457545\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 182,
+      "executed_at": "2025-12-24T06:16:35.511404"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_071",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_071",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_050\",\n  \"incident_id\": \"INC_071\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:37.896346\",\n  \"updated_on\": \"2025-12-24T06:16:37.896346\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 165,
+      "executed_at": "2025-12-24T06:16:37.946746"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_050",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_050",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_051\",\n  \"incident_id\": \"INC_050\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:43.108292\",\n  \"updated_on\": \"2025-12-24T06:16:43.108292\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 169,
+      "executed_at": "2025-12-24T06:16:43.156086"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_067",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_067",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_052\",\n  \"incident_id\": \"INC_067\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:45.657521\",\n  \"updated_on\": \"2025-12-24T06:16:45.657521\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 177,
+      "executed_at": "2025-12-24T06:16:45.710552"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_063",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_063",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_053\",\n  \"incident_id\": \"INC_063\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:48.092946\",\n  \"updated_on\": \"2025-12-24T06:16:48.092946\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 189,
+      "executed_at": "2025-12-24T06:16:48.145600"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_097",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_097",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_054\",\n  \"incident_id\": \"INC_097\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:50.595005\",\n  \"updated_on\": \"2025-12-24T06:16:50.595005\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 201,
+      "executed_at": "2025-12-24T06:16:50.643082"
+    }
+  },
+  {
+    "name": "link_knowledge_to_incident",
+    "arguments": {
+      "incident_id": "INC_074",
+      "knowledge_id": "KB_001",
+      "used_as": "resolution"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_knowledge_to_incident",
+      "parameters": {
+        "incident_id": "INC_074",
+        "knowledge_id": "KB_001",
+        "used_as": "resolution"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_kb_id\": \"IKB_055\",\n  \"incident_id\": \"INC_074\",\n  \"knowledge_id\": \"KB_001\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-24T06:16:53.248980\",\n  \"updated_on\": \"2025-12-24T06:16:53.248980\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 193,
+      "executed_at": "2025-12-24T06:16:53.310759"
+    }
+  }
+],
+"gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1766472421998_ofwk9tsse",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Validate and enforce linkage between password-related incidents and the password reset knowledge article, marking usage as resolution where applicable.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"Knowledge",
+"L2":"Incident ↔ KB Links",
+"L3":"Knowledge Application Engine"
+}

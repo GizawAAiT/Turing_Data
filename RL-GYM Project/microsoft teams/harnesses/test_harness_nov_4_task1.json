@@ -1,0 +1,41 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation agent with full administrative permissions to manage users, teams, channels, roles, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow. When retrieving webinars created by the user, always use get_webinars_by_user_role to avoid permission issues.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Convert a webinar into a town hall while preserving the original schedule.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "The webinar titled 'The Impact of Tech on Our Lives' needs to be converted into a town hall format to encourage more interactive discussions and Q&A. Please replace the existing webinar with a town hall, maintaining the original date and time.",
+          "expected_tools": [
+            "get_webinars_by_user_role",
+            "cancel_virtual_event_webinar",
+            "create_virtual_event_townhall"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_webinars WHERE display_name = 'The Impact of Tech on Our Lives' AND status = 'canceled'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_townhall WHERE display_name LIKE '%The Impact of Tech on Our Lives%'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

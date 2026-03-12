@@ -1,0 +1,113 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_reassign_high_priority_to_aisha",
+    "scenario_description": "Reassign the two oldest high-priority incidents in Service Desk Operations to Aisha for workload balancing and notify the original callers.",
+    "system_prompt": "You are a helpful Customer Service Drive Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Find out the two oldest incidents currently assigned to Service Desk Operations that still have high or above-high priority. Add Aisha Williams to the Service Desk Operations group if he/she isn’t already a member. Reassign those incidents to Aisha Williams, move each to in_progress if not, and add work notes stating that the reassignment is for workload balancing. Notify the original callers about the new assignee and provide Aisha’s contact details.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user_using_name",
+      "find_group_by_name",
+      "list_group_members",
+      "get_incidents_assigned_to",
+      "add_new_group_member",
+      "get_user",
+      "get_user",
+      "update_incident",
+      "update_incident",
+      "send_notification",
+      "send_notification"
+    ],
+    "expected_tools": [
+      "get_user_using_name",
+      "find_group_by_name",
+      "list_group_members",
+      "get_incidents_assigned_to",
+      "add_new_group_member",
+      "get_user",
+      "get_user",
+      "update_incident",
+      "update_incident",
+      "send_notification",
+      "send_notification"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Aisha Added To Service Desk Operations Group",
+      "description": "Verify that Aisha Williams is a member of the Service Desk Operations group (GROUP_002).",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM user_group_member WHERE group_id = 'GROUP_002' AND user_id = 'USER_004'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "First Oldest Incident Reassigned To Aisha",
+      "description": "Verify that incident INC_002 is reassigned to Aisha, in progress, and has non-empty work notes for workload balancing.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_002' AND assigned_to = 'USER_004' AND assignment_group = 'GROUP_002' AND status = 'in_progress' AND COALESCE(worknotes, '') <> ''",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Second Oldest Incident Reassigned To Aisha",
+      "description": "Verify that incident INC_006 is reassigned to Aisha, in progress, and has non-empty work notes for workload balancing.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_006' AND assigned_to = 'USER_004' AND assignment_group = 'GROUP_002' AND status = 'in_progress' AND COALESCE(worknotes, '') <> ''",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Notification Sent For First Incident Caller",
+      "description": "Verify that the caller of the first incident (INC_002) was notified with Aisha's contact details.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE incident_id = 'INC_002' AND email = 'benjamin.chen@techcorp.com' AND (message LIKE '%+1-415-555-0104%' OR message LIKE '%aisha.williams@techcorp.com%')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Notification Sent For Second Incident Caller",
+      "description": "Verify that the caller of the second incident (INC_006) was notified with Aisha's contact details.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE incident_id = 'INC_006' AND email = 'marcus.thompson@techcorp.com' AND (message LIKE '%+1-415-555-0104%' OR message LIKE '%aisha.williams@techcorp.com%')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1765339104189_2ky55eu9v",
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Reassign the two oldest high-priority Service Desk Operations incidents to Aisha and notify the callers.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

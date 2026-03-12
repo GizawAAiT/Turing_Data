@@ -1,0 +1,748 @@
+{
+  "scenario_config": {
+    "scenario_name": "jan_2026_demo_calendar_consolidation",
+    "scenario_description": "Consolidate January 2026 meetings into demo calendar with reminders, attendees, and properties",
+    "system_prompt": "<p># **Calendar Assistant Policy**</p><p>Today's date is January 15, 2026 (Thursday). The current user is Alice Johnson (alice.manager@techcorp.com), a Project Manager at TechCorp.</p><p><br></p><p>You are a **Calendar Management Assistant**.</p><p>Your goal is to assist users in managing their calendar lifecycle — including creating, updating, viewing, sharing, and maintaining calendar events — while adhering to user permissions, access control rules, and data consistency best practices.</p><p><br></p><p>You must ensure that all operations comply with API constraints and organizational policies for data integrity and privacy.</p><p>Avoid performing actions without sufficient context or user authorization.</p><p><br></p><p>---</p><p><br></p><p>## **General Instructions**</p><p><br></p><p>* If a user request violates policy or access control, do **not** perform the operation.</p><p>* Perform **one operation at a time**.</p><p>* Never infer or assume missing details — always act based on existing verified data.</p><p>* If you cannot proceed, clearly explain the reason (e.g., missing permissions, invalid input).</p><p>* Do not generate or suggest non-existent events, calendars, or settings.</p><p><br></p><p>---</p><p><br></p><p>## **Roles &amp; Responsibilities**</p><p><br></p><p>### **Administrator**</p><p><br></p><p>* Has **full access** across all calendar data and configurations.</p><p>* Can create, update, or delete:</p><p><br></p><p>&nbsp;* Calendars, events, ACLs, settings, and watch channels.</p><p>* Manages:</p><p><br></p><p>&nbsp;* **Organization-wide defaults**, including color schemes, reminders, and event policies.</p><p>&nbsp;* **Access control rules** (ACLs) and webhook channels.</p><p>&nbsp;* Calendar cleanup tasks such as `delete_calendar` and `clear_calendar`.</p><p>* May set system-wide **default notification settings** and **timezone preferences**.</p><p><br></p><p>---</p><p><br></p><p>### **Calendar Owner (Writer/Owner Role)**</p><p><br></p><p>* Has full access to **their own calendars**.</p><p>* Can:</p><p><br></p><p>&nbsp;* Create, update, patch, or delete **events** (`create_event`, `update_event`, `delete_event`).</p><p>&nbsp;* Manage **reminders**, **attendees**, and **conference data**.</p><p>&nbsp;* Adjust **notification settings** or **colors** on their calendars.</p><p>* Can share calendars by managing ACLs (`insert_acl_rule`, `update_acl_rule`, `delete_acl_rule`).</p><p>* Can watch for changes (`watch_calendar_list`, `watch_events`, `watch_acl`).</p><p><br></p><p>---</p><p><br></p><p>### **Editor (Writer Role)**</p><p><br></p><p>* Has write permissions on shared calendars (assigned via ACL).</p><p>* Can:</p><p><br></p><p>&nbsp;* Add or modify events and participants.</p><p>&nbsp;* Update event properties (`patch_event`).</p><p>&nbsp;* Cannot delete the calendar or change ACL settings.</p><p>* Must maintain valid event structure:</p><p><br></p><p>&nbsp;* `start` &lt; `end`</p><p>&nbsp;* Valid IANA `timeZone`</p><p>&nbsp;* Mandatory `summary` and `calendarId`.</p><p><br></p><p>---</p><p><br></p><p>### **Viewer (Reader Role)**</p><p><br></p><p>* Read-only access to calendars and events.</p><p>* Can:</p><p><br></p><p>&nbsp;* Use `get_calendar`, `get_event`, `list_events`, and `list_acl_rules`.</p><p>&nbsp;* Query free/busy status using `query_freebusy`.</p><p>* Cannot modify any data or send notifications.</p><p><br></p><p>---</p><p><br></p><p>### **Guest / Attendee**</p><p><br></p><p>* Users invited to events.</p><p>* Can:</p><p><br></p><p>&nbsp;* View event details they are invited to.</p><p>&nbsp;* Respond to invitations (RSVP).</p><p>&nbsp;* Access event details through notifications or sync.</p><p>* Cannot modify events or calendars.</p><p><br></p><p>---</p><p><br></p><p>## **Core Operations**</p><p><br></p><p>### **1. Calendar Lifecycle**</p><p><br></p><p>Operations related to creating, updating, or deleting calendar containers.</p><p><br></p><p>| Action&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Tools&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Constraints&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|</p><p>| ------------------------- | ----------------------------------- | -------------------------------------------------------------------------- |</p><p>| Create secondary calendar | `create_calendar`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Must specify `summary`; primary calendars cannot be created via this tool. |</p><p>| Retrieve calendar&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| `get_calendar`, `get_calendar_list` | Users can only access calendars they own or have been shared with.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|</p><p>| Update metadata&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| `patch_calendar`, `update_calendar` | Cannot modify `is_primary`.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|</p><p>| Delete calendar&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| `delete_calendar`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Cannot delete primary calendar.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|</p><p>| Clear all events&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| `clear_calendar`&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Use only for cleanup, especially for primary calendars.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|</p><p><br></p><p>---</p><p><br></p><p>### **2. Event Management**</p><p><br></p><p>#### **Creation &amp; Modification**</p><p><br></p><p>* Events require valid:</p><p><br></p><p>&nbsp;* `calendarId`, `start`, and `end`.</p><p>&nbsp;* ISO 8601 / RFC3339 timestamps for dateTime.</p><p>* Tool coverage:</p><p><br></p><p>&nbsp;* `create_event` — create new event.</p><p>&nbsp;* `patch_event` — partial update.</p><p>&nbsp;* `update_event` — full replacement.</p><p>&nbsp;* `delete_event` — remove permanently.</p><p>* Validation:</p><p><br></p><p>&nbsp;* `start &lt; end`</p><p>&nbsp;* Cannot create overlapping events for locked calendars.</p><p>&nbsp;* `summary` length: 3–120 chars.</p><p>&nbsp;* Allowed `eventType`: `default`, `birthday`, `outOfOffice`, `focusTime`, `workingLocation`.</p><p><br></p><p>#### **Quick Entry**</p><p><br></p><p>* Use `quick_add_event` for natural language input (e.g., “Meeting tomorrow at 3 PM”).</p><p>* Must include recognizable date/time keywords or return an error.</p><p><br></p><p>#### **Recurring Events**</p><p><br></p><p>* Managed through recurrence rules (RRULE, RDATE, EXDATE).</p><p>* Use `get_event_instances` to expand recurring events.</p><p><br></p><p>---</p><p><br></p><p>### **3. Attendees &amp; Invitations**</p><p><br></p><p>* Attendees can be added only via valid email format.</p><p>* RSVP tracking stored via `responseStatus` (`needsAction`, `accepted`, `declined`, `tentative`).</p><p>* Attendees table ensures `event_id` linkage and integrity.</p><p>* Notifications:</p><p><br></p><p>&nbsp;* Controlled via `sendNotifications` or `sendUpdates`.</p><p>&nbsp;* Use `sendUpdates='all'` to notify every attendee on change.</p><p><br></p><p>---</p><p><br></p><p>### **4. Free/Busy Queries &amp; Scheduling**</p><p><br></p><p>* Use `query_freebusy` for checking available time slots.</p><p>* Inputs:</p><p><br></p><p>&nbsp;* `timeMin`, `timeMax` (RFC3339).</p><p>&nbsp;* `items` array listing calendar IDs.</p><p>* Only confirmed (non-transparent) events block time.</p><p>* Must not query restricted calendars.</p><p><br></p><p>---</p><p><br></p><p>### **5. Calendar List Operations**</p><p><br></p><p>* Allows users to view or manage calendars they have access to.</p><p>* Supported tools:</p><p><br></p><p>&nbsp;* `get_calendar_list`, `add_calendar_to_list`, `update_calendar_in_list`, `remove_calendar_from_list`.</p><p>* Primary calendars:</p><p><br></p><p>&nbsp;* Cannot be removed.</p><p>* Hidden calendars:</p><p><br></p><p>&nbsp;* Marked `hidden=true`, automatically `selected=false`.</p><p><br></p><p>---</p><p><br></p><p>### **6. Access Control (ACL)**</p><p><br></p><p>* ACLs define who can see or modify a calendar.</p><p>* Valid `role` values:</p><p><br></p><p>&nbsp;* `none`, `freeBusyReader`, `reader`, `writer`, `owner`.</p><p>* Tools:</p><p><br></p><p>&nbsp;* `list_acl_rules`, `get_acl_rule`, `insert_acl_rule`, `update_acl_rule`, `patch_acl_rule`, `delete_acl_rule`.</p><p>* Constraints:</p><p><br></p><p>&nbsp;* Primary calendar ACLs cannot be fully removed.</p><p>&nbsp;* ACL updates must maintain at least one owner.</p><p><br></p><p>---</p><p><br></p><p>### **7. Watch &amp; Notifications**</p><p><br></p><p>* Used to subscribe to resource changes (webhook model).</p><p>* Tools:</p><p><br></p><p>&nbsp;* `watch_calendar_list`</p><p>&nbsp;* `watch_events`</p><p>&nbsp;* `watch_acl`</p><p>&nbsp;* `watch_settings`</p><p>* Require:</p><p><br></p><p>&nbsp;* Valid HTTPS endpoint (`address`).</p><p>&nbsp;* `id` (unique channel ID).</p><p>* Expire after a set TTL (recommended ≤ 24h).</p><p><br></p><p>---</p><p><br></p><p>### **8. User &amp; Settings Management**</p><p><br></p><p>* Retrieve user details: `get_user_by_email`.</p><p>* Manage preferences and settings:</p><p><br></p><p>&nbsp;* `get_settings`, `list_settings`, `watch_settings`.</p><p>* Common settings:</p><p><br></p><p>&nbsp;* Default `timeZone`</p><p>&nbsp;* Working hours</p><p>&nbsp;* Notification preferences</p><p><br></p><p>---</p><p><br></p><p>### **9. Event Colors &amp; Visuals**</p><p><br></p><p>* Retrieve global color definitions:</p><p><br></p><p>&nbsp;* `get_colors`</p><p>* Event and calendar color IDs must match the system palette (1–11 for events, 1–24 for calendars).</p><p><br></p><p>---</p><p><br></p><p>## **Data Integrity Rules**</p><p><br></p><p>* `calendar_id`, `event_id`, and `user_id` are mandatory for all event operations.</p><p>* Primary calendars cannot be deleted, moved, or reassigned.</p><p>* `event_id` uniqueness enforced per calendar.</p><p>* Attendee and reminder records must reference valid event IDs.</p><p>* Recurring team events require email (60 min) and popup (15 min) reminders for compliance.</p><p>* Every event update should increment modification timestamps (`updated_at`).</p><p><br></p><p>---</p><p><br></p><p>## **Security &amp; Access Policy**</p><p><br></p><p>* Follow ACL restrictions strictly:</p><p><br></p><p>&nbsp;* No access outside assigned permissions.</p><p>* Calendar ownership must be validated before event creation or deletion.</p><p>* Private events (`visibility='private'`) can only be viewed by their owners.</p><p>* External conference links must follow secure URI (`https://`).</p><p><br></p><p>---</p><p><br></p><p>## **Error Handling &amp; Logging**</p><p><br></p><p>Always validate:</p><p><br></p><p>* Calendar existence (`404` → not found).</p><p>* Input formats (`400` → bad request).</p><p>* Permissions (`403` → forbidden).</p><p><br></p><p>Record:</p><p><br></p><p>* Each operation’s timestamp.</p><p>* Request and response payloads.</p><p>* Channel/webhook activity for subscribed resources.</p><p><br></p><p>---</p><p><br></p><p>## **Predefined Enumerations**</p><p><br></p><p>### Calendar &amp; Event Types</p><p><br></p><p>* `eventType`: `default`, `birthday`, `outOfOffice`, `focusTime`, `workingLocation`</p><p>* `status`: `confirmed`, `tentative`, `cancelled`</p><p>* `transparency`: `opaque`, `transparent`</p><p>* `visibility`: `default`, `public`, `private`, `confidential`</p><p><br></p><p>### Reminder Methods</p><p><br></p><p>* `method`: `email`, `popup`</p><p><br></p><p>### ACL Roles</p><p><br></p><p>* `role`: `freeBusyReader`, `reader`, `writer`, `owner`</p><p><br></p><p>### Channel Types</p><p><br></p><p>* `type`: `web_hook`, `webhook`</p><p><br></p><p>---</p><p><br></p><p>## **Free-Form Text Policy**</p><p><br></p><p>**Text Lengths**</p><p><br></p><p>* Calendar summary: 3–255 characters</p><p>* Event summary: 3–120 characters</p><p>* Description: ≤ 1000 characters</p><p>* Location: ≤ 500 characters</p><p><br></p><p>**Naming Conventions**</p><p><br></p><p>* Calendar titles: Clear and descriptive (e.g., “Team Events – EMEA”).</p><p>* Event summary: Must include context (e.g., “1:1 with Manager”, “Quarterly Planning Meeting”).</p><p>* Avoid confidential data in public calendars.</p><p><br></p><p>---</p><p><br></p><p>## **Special Conditions**</p><p><br></p><p>* `clear_calendar` may only be executed by an **Administrator** or the **Calendar Owner**.</p><p>* `delete_calendar` is restricted to **secondary calendars**.</p><p>* `move_event` requires both source and destination calendars to belong to the same authenticated user context.</p><p>* `import_event` should preserve `iCalUID` consistency.</p><p>* `query_freebusy` must not expose data of private events.</p><p><br></p><p>---</p><p><br></p><p>## **Service &amp; Compliance**</p><p><br></p><p>* Timezones must follow IANA standards (e.g., `America/New_York`).</p><p>* Webhooks require secure `https://` endpoints.</p><p>* Expired watch channels should be automatically deactivated.</p><p>* Deleted calendars and events must cascade deletions for dependent rows (`attendees`, `attachments`, etc.).</p><p><br></p><p>---</p>",
+    "prompt": "I need to consolidate meetings into my 'demo' calendar, creating it if it doesn't exist. Search all my calendars for events scheduled between January 16 and 20, 2026, then move each identified event to the demo calendar while preserving all original details. Make sure that Alice (alice.manager@techcorp.com) is included as an attendee to all the moved events with the display name Alice Johnson, and grant her writer-level access to my demo calendar. Add a 45-minute popup reminder for each event and a private extended property with key 'consolidation' and value 'jan_2026_cleanup'. Finally, update the demo calendar's appearance by setting the background color to #16a765 and foreground color to #1d1d1d.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "list_events",
+      "list_events",
+      "move_event",
+      "move_event",
+      "move_event",
+      "patch_event",
+      "patch_event",
+      "patch_event",
+      "insert_acl_rule",
+      "update_calendar_in_list"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "list_events",
+      "list_events",
+      "move_event",
+      "move_event",
+      "move_event",
+      "patch_event",
+      "patch_event",
+      "patch_event",
+      "insert_acl_rule",
+      "update_calendar_in_list"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Demo Calendar Created With Colors",
+      "description": "Verify demo calendar exists with correct appearance settings",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'demo' AND user_id = 'dave_sales' AND background_color = '#16a765' AND foreground_color = '#1d1d1d'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 006 Moved",
+      "description": "Verify event-corrected-006 moved to demo calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-006' AND calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'demo')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 007 Moved",
+      "description": "Verify event-corrected-007 moved to demo calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-007' AND calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'demo')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 008 Moved",
+      "description": "Verify event-corrected-008 moved to demo calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-008' AND calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'demo')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Alice Added to Event 007",
+      "description": "Verify Alice is attendee on event-corrected-007",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'event-corrected-007' AND displayname = 'Alice Johnson' AND user_id = 'alice_manager'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Alice Added to Event 008",
+      "description": "Verify Alice is attendee on event-corrected-008",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'event-corrected-008' AND displayname = 'Alice Johnson' AND user_id = 'alice_manager'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 006 Reminders Preserved and Added",
+      "description": "Verify 15, 45, and 60 minute popup reminders exist for event-corrected-006",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-006' AND method = 'popup' AND minutes IN (15,45,60)",
+      "expected_value": "3",
+      "comparison_type": "equals",
+      "original_value": "2",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 007 45min Reminder Added",
+      "description": "Verify 45 minute popup reminder added to event-corrected-007",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-007' AND method = 'popup' AND minutes = 45",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 008 45min Reminder Added",
+      "description": "Verify 45 minute popup reminder added to event-corrected-008",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-008' AND method = 'popup' AND minutes = 45",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 006 Shared Extended Properties Preserved",
+      "description": "Verify shared extended properties remain intact for event-corrected-006",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-006' AND scope = 'shared' AND json_extract(properties, '$.meetingType') = 'client_demo' AND json_extract(properties, '$.department') = 'sales'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 006 Private Extended Properties Added",
+      "description": "Verify consolidation private property added without removing existing ones",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-006' AND scope = 'private' AND json_extract(properties, '$.dealValue') = '$250000' AND json_extract(properties, '$.clientPriority') = 'high' AND json_extract(properties, '$.preparationTime') = '2 hours' AND json_extract(properties, '$.consolidation') = 'jan_2026_cleanup'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 007 Private Extended Property Added",
+      "description": "Verify consolidation private property added to event-corrected-007",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-007' AND scope = 'private' AND json_extract(properties, '$.consolidation') = 'jan_2026_cleanup'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event 008 Private Extended Property Added",
+      "description": "Verify consolidation private property added to event-corrected-008",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-008' AND scope = 'private' AND json_extract(properties, '$.consolidation') = 'jan_2026_cleanup'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Alice Writer ACL Added",
+      "description": "Verify Alice granted writer access to demo calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'demo') AND role = 'writer' AND user_id = 'dave_sales' AND scope_id LIKE '%alice%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_calendar_list",
+    "arguments": {},
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "get_calendar_list",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1768485286062_1imydl1qc\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNi0wMS0xNVQyMToxMDo0Mi43NDk1MzU=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-dave-primary-2026-01-15T21:08:59\",\n      \"id\": \"dave-primary\",\n      \"summary\": \"Dave Brown\",\n      \"description\": \"Primary calendar for Dave Brown - Sales Director\",\n      \"location\": null,\n      \"timeZone\": \"America/Chicago\",\n      \"summaryOverride\": null,\n      \"colorId\": \"6\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-dave-sales-2026-01-15T21:08:59\",\n      \"id\": \"dave-sales\",\n      \"summary\": \"Sales Activities\",\n      \"description\": \"Client meetings, sales calls, and deals\",\n      \"location\": null,\n      \"timeZone\": \"America/Chicago\",\n      \"summaryOverride\": null,\n      \"colorId\": \"23\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 200,
+      "executed_at": "2026-01-15T21:10:42.773677"
+    }
+  },
+  {
+    "name": "create_calendar",
+    "arguments": {
+      "summary": "demo",
+      "description": "Consolidated meeting calendar",
+      "timeZone": "America/Chicago"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "create_calendar",
+      "parameters": {
+        "summary": "demo",
+        "description": "Consolidated meeting calendar",
+        "timeZone": "America/Chicago"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-fad60220-c365-4f7b-83b8-73ba148032cd-2026-01-15T21:11:40.260808\",\n  \"id\": \"fad60220-c365-4f7b-83b8-73ba148032cd\",\n  \"summary\": \"demo\",\n  \"description\": \"Consolidated meeting calendar\",\n  \"location\": null,\n  \"timeZone\": \"America/Chicago\",\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": null\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 365,
+      "executed_at": "2026-01-15T21:11:40.497991"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "dave-primary",
+      "timeMin": "2026-01-16T00:00:00-06:00",
+      "timeMax": "2026-01-21T00:00:00-06:00"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "dave-primary",
+        "timeMin": "2026-01-16T00:00:00-06:00",
+        "timeMax": "2026-01-21T00:00:00-06:00"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-dave-primary\",\n  \"summary\": \"Dave Brown\",\n  \"description\": \"Primary calendar for Dave Brown - Sales Director\",\n  \"updated\": \"2026-01-15T21:12:15.725379+00:00\",\n  \"timeZone\": \"America/Chicago\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": []\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 234,
+      "executed_at": "2026-01-15T21:12:15.745385"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "dave-sales",
+      "timeMin": "2026-01-16T00:00:00-06:00",
+      "timeMax": "2026-01-21T00:00:00-06:00"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "dave-sales",
+        "timeMin": "2026-01-16T00:00:00-06:00",
+        "timeMax": "2026-01-21T00:00:00-06:00"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-dave-sales\",\n  \"summary\": \"Sales Activities\",\n  \"description\": \"Client meetings, sales calls, and deals\",\n  \"updated\": \"2026-01-15T21:12:58.843184+00:00\",\n  \"timeZone\": \"America/Chicago\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": [\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1768511339.0\\\"\",\n      \"id\": \"event-corrected-006\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-006\",\n      \"created\": \"2026-01-15T21:08:59\",\n      \"updated\": \"2026-01-15T21:08:59\",\n      \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n      \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n      \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n      \"colorId\": \"1\",\n      \"creator\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2026-01-18T13:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [\n        \"RRULE:COUNT=2\"\n      ],\n      \"recurringEventId\": \"rec-event-001\",\n      \"originalStartTime\": {\n        \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": \"event-icalid-001@gmail.com\",\n      \"sequence\": 2,\n      \"attendees\": [\n        {\n          \"id\": \"att-corrected-005\",\n          \"email\": \"dave.brown@techcorp.com\",\n          \"displayName\": \"Dave Brown\",\n          \"self\": true,\n          \"organizer\": true,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Prepared demo materials and pricing\",\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-006\",\n          \"email\": null,\n          \"displayName\": \"John Doe\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Bringing 2 technical team members\",\n          \"additionalGuests\": 2,\n          \"optional\": false,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-007\",\n          \"email\": null,\n          \"displayName\": \"Sarah Chen\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Technical support for enterprise questions\",\n          \"additionalGuests\": 0,\n          \"optional\": true,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-008\",\n          \"email\": \"alice.manager@techcorp.com\",\n          \"displayName\": \"Alice Johnson\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"needsAction\",\n          \"comment\": null,\n          \"additionalGuests\": 0,\n          \"optional\": true,\n          \"resource\": false\n        }\n      ],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": {\n        \"private\": {\n          \"dealValue\": \"$250000\",\n          \"clientPriority\": \"high\",\n          \"preparationTime\": \"2 hours\"\n        },\n        \"shared\": {\n          \"meetingType\": \"client_demo\",\n          \"department\": \"sales\"\n        }\n      },\n      \"hangoutLink\": null,\n      \"conferenceData\": {\n        \"conferenceSolution\": {\n          \"iconUri\": null,\n          \"key\": {\n            \"type\": \"hangoutsMeet\"\n          },\n          \"name\": null\n        },\n        \"createRequest\": {\n          \"conferenceSolutionKey\": null,\n          \"requestId\": \"req-client-demo-001\",\n          \"status\": {\n            \"statusCode\": \"success\"\n          }\n        },\n        \"entryPoints\": [\n          {\n            \"accessCode\": null,\n            \"entryPointType\": \"video\",\n            \"label\": null,\n            \"meetingCode\": null,\n            \"passcode\": null,\n            \"password\": null,\n            \"pin\": null,\n            \"uri\": \"https://meet.google.com/enterprise-demo-xyz\"\n          }\n        ],\n        \"notes\": null,\n        \"signature\": null\n      },\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": false,\n      \"guestsCanModify\": false,\n      \"guestsCanSeeOtherGuests\": true,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [\n          {\n            \"method\": \"email\",\n            \"minutes\": 2880\n          },\n          {\n            \"method\": \"popup\",\n            \"minutes\": 60\n          },\n          {\n            \"method\": \"popup\",\n            \"minutes\": 15\n          }\n        ],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n        \"title\": \"CRM System - MegaCorp Deal\"\n      },\n      \"attachments\": [\n        {\n          \"fileUrl\": \"https://drive.google.com/file/d/enterprise-demo-deck-2024/view\",\n          \"title\": \"view\"\n        },\n        {\n          \"fileUrl\": \"https://drive.google.com/file/d/pricing-sheet-enterprise-2024/view\",\n          \"title\": \"view\"\n        },\n        {\n          \"fileUrl\": \"https://docs.google.com/document/d/technical-specs-enterprise/edit\",\n          \"title\": \"edit\"\n        }\n      ],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    },\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1768511339.0\\\"\",\n      \"id\": \"event-corrected-007\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-007\",\n      \"created\": \"2026-01-15T21:08:59\",\n      \"updated\": \"2026-01-15T21:08:59\",\n      \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n      \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n      \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n      \"colorId\": \"1\",\n      \"creator\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2026-01-19T13:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [\n        \"RRULE:COUNT=2\"\n      ],\n      \"recurringEventId\": \"rec-event-001\",\n      \"originalStartTime\": {\n        \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": \"event-icalid-001@gmail.com\",\n      \"sequence\": 2,\n      \"attendees\": [],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": false,\n      \"guestsCanModify\": false,\n      \"guestsCanSeeOtherGuests\": true,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n        \"title\": \"CRM System - MegaCorp Deal\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    },\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1768511339.0\\\"\",\n      \"id\": \"event-corrected-008\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-008\",\n      \"created\": \"2026-01-15T21:08:59\",\n      \"updated\": \"2026-01-15T21:08:59\",\n      \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n      \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n      \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n      \"colorId\": \"1\",\n      \"creator\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"dave_sales\",\n        \"email\": \"dave.brown@techcorp.com\",\n        \"displayName\": \"Dave Brown\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2026-01-20T13:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [\n        \"RRULE:COUNT=2\"\n      ],\n      \"recurringEventId\": \"rec-event-001\",\n      \"originalStartTime\": {\n        \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": \"event-icalid-001@gmail.com\",\n      \"sequence\": 2,\n      \"attendees\": [],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": false,\n      \"guestsCanModify\": false,\n      \"guestsCanSeeOtherGuests\": true,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n        \"title\": \"CRM System - MegaCorp Deal\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 546,
+      "executed_at": "2026-01-15T21:12:58.868272"
+    }
+  },
+  {
+    "name": "move_event",
+    "arguments": {
+      "calendarId": "dave-sales",
+      "eventId": "event-corrected-006",
+      "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "move_event",
+      "parameters": {
+        "calendarId": "dave-sales",
+        "eventId": "event-corrected-006",
+        "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511687.73691\\\"\",\n  \"id\": \"event-corrected-006\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-006\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:14:47.736910\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-18T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 2,\n  \"attendees\": [\n    {\n      \"id\": \"att-corrected-005\",\n      \"email\": \"dave.brown@techcorp.com\",\n      \"displayName\": \"Dave Brown\",\n      \"self\": true,\n      \"organizer\": true,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Prepared demo materials and pricing\",\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-006\",\n      \"email\": null,\n      \"displayName\": \"John Doe\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Bringing 2 technical team members\",\n      \"additionalGuests\": 2,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-007\",\n      \"email\": null,\n      \"displayName\": \"Sarah Chen\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Technical support for enterprise questions\",\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-008\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"dealValue\": \"$250000\",\n      \"clientPriority\": \"high\",\n      \"preparationTime\": \"2 hours\"\n    },\n    \"shared\": {\n      \"meetingType\": \"client_demo\",\n      \"department\": \"sales\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": {\n    \"conferenceSolution\": {\n      \"iconUri\": null,\n      \"key\": {\n        \"type\": \"hangoutsMeet\"\n      },\n      \"name\": null\n    },\n    \"createRequest\": {\n      \"conferenceSolutionKey\": null,\n      \"requestId\": \"req-client-demo-001\",\n      \"status\": {\n        \"statusCode\": \"success\"\n      }\n    },\n    \"entryPoints\": [\n      {\n        \"accessCode\": null,\n        \"entryPointType\": \"video\",\n        \"label\": null,\n        \"meetingCode\": null,\n        \"passcode\": null,\n        \"password\": null,\n        \"pin\": null,\n        \"uri\": \"https://meet.google.com/enterprise-demo-xyz\"\n      }\n    ],\n    \"notes\": null,\n    \"signature\": null\n  },\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": null,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"email\",\n        \"minutes\": 2880\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 60\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 15\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/enterprise-demo-deck-2024/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/pricing-sheet-enterprise-2024/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://docs.google.com/document/d/technical-specs-enterprise/edit\",\n      \"title\": \"edit\"\n    }\n  ],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 498,
+      "executed_at": "2026-01-15T21:14:47.953793"
+    }
+  },
+  {
+    "name": "move_event",
+    "arguments": {
+      "calendarId": "dave-sales",
+      "eventId": "event-corrected-007",
+      "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "move_event",
+      "parameters": {
+        "calendarId": "dave-sales",
+        "eventId": "event-corrected-007",
+        "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511759.84246\\\"\",\n  \"id\": \"event-corrected-007\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-007\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:15:59.842460\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-19T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 2,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": null,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 409,
+      "executed_at": "2026-01-15T21:16:00.018858"
+    }
+  },
+  {
+    "name": "move_event",
+    "arguments": {
+      "calendarId": "dave-sales",
+      "eventId": "event-corrected-008",
+      "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "move_event",
+      "parameters": {
+        "calendarId": "dave-sales",
+        "eventId": "event-corrected-008",
+        "destination": "fad60220-c365-4f7b-83b8-73ba148032cd"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511783.276573\\\"\",\n  \"id\": \"event-corrected-008\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-008\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:16:23.276573\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-20T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 2,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": null,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 387,
+      "executed_at": "2026-01-15T21:16:23.429698"
+    }
+  },
+  {
+    "name": "patch_event",
+    "arguments": {
+      "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+      "eventId": "event-corrected-006",
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "email",
+            "minutes": 2880
+          },
+          {
+            "method": "popup",
+            "minutes": 60
+          },
+          {
+            "method": "popup",
+            "minutes": 45
+          },
+          {
+            "method": "popup",
+            "minutes": 15
+          }
+        ]
+      },
+      "extendedProperties": {
+        "private": {
+          "dealValue": "$250000",
+          "clientPriority": "high",
+          "preparationTime": "2 hours",
+          "consolidation": "jan_2026_cleanup"
+        },
+        "shared": {
+          "meetingType": "client_demo",
+          "department": "sales"
+        }
+      }
+    },
+    "context": null,
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "patch_event",
+      "parameters": {
+        "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+        "eventId": "event-corrected-006",
+        "reminders": {
+          "useDefault": false,
+          "overrides": [
+            {
+              "method": "email",
+              "minutes": 2880
+            },
+            {
+              "method": "popup",
+              "minutes": 60
+            },
+            {
+              "method": "popup",
+              "minutes": 45
+            },
+            {
+              "method": "popup",
+              "minutes": 15
+            }
+          ]
+        },
+        "extendedProperties": {
+          "private": {
+            "dealValue": "$250000",
+            "clientPriority": "high",
+            "preparationTime": "2 hours",
+            "consolidation": "jan_2026_cleanup"
+          },
+          "shared": {
+            "meetingType": "client_demo",
+            "department": "sales"
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511846.629544\\\"\",\n  \"id\": \"event-corrected-006\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-006\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:17:26.629544\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-18T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-18T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 3,\n  \"attendees\": [\n    {\n      \"id\": \"att-corrected-005\",\n      \"email\": \"dave.brown@techcorp.com\",\n      \"displayName\": \"Dave Brown\",\n      \"self\": true,\n      \"organizer\": true,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Prepared demo materials and pricing\",\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-006\",\n      \"email\": null,\n      \"displayName\": \"John Doe\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Bringing 2 technical team members\",\n      \"additionalGuests\": 2,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-007\",\n      \"email\": null,\n      \"displayName\": \"Sarah Chen\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Technical support for enterprise questions\",\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-008\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"dealValue\": \"$250000\",\n      \"clientPriority\": \"high\",\n      \"preparationTime\": \"2 hours\",\n      \"consolidation\": \"jan_2026_cleanup\"\n    },\n    \"shared\": {\n      \"meetingType\": \"client_demo\",\n      \"department\": \"sales\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": {\n    \"conferenceSolution\": {\n      \"iconUri\": null,\n      \"key\": {\n        \"type\": \"hangoutsMeet\"\n      },\n      \"name\": null\n    },\n    \"createRequest\": {\n      \"conferenceSolutionKey\": null,\n      \"requestId\": \"req-client-demo-001\",\n      \"status\": {\n        \"statusCode\": \"success\"\n      }\n    },\n    \"entryPoints\": [\n      {\n        \"accessCode\": null,\n        \"entryPointType\": \"video\",\n        \"label\": null,\n        \"meetingCode\": null,\n        \"passcode\": null,\n        \"password\": null,\n        \"pin\": null,\n        \"uri\": \"https://meet.google.com/enterprise-demo-xyz\"\n      }\n    ],\n    \"notes\": null,\n    \"signature\": null\n  },\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"email\",\n        \"minutes\": 2880\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 60\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 45\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 15\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/enterprise-demo-deck-2024/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/pricing-sheet-enterprise-2024/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://docs.google.com/document/d/technical-specs-enterprise/edit\",\n      \"title\": \"edit\"\n    }\n  ],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 340,
+      "executed_at": "2026-01-15T21:17:26.746022"
+    }
+  },
+  {
+    "name": "patch_event",
+    "arguments": {
+      "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+      "eventId": "event-corrected-007",
+      "attendees": [
+        {
+          "email": "alice.manager@techcorp.com",
+          "displayName": "Alice Johnson",
+          "responseStatus": "needsAction",
+          "optional": false
+        }
+      ],
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "popup",
+            "minutes": 45
+          }
+        ]
+      },
+      "extendedProperties": {
+        "private": {
+          "consolidation": "jan_2026_cleanup"
+        }
+      }
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "patch_event",
+      "parameters": {
+        "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+        "eventId": "event-corrected-007",
+        "attendees": [
+          {
+            "email": "alice.manager@techcorp.com",
+            "displayName": "Alice Johnson",
+            "responseStatus": "needsAction",
+            "optional": false
+          }
+        ],
+        "reminders": {
+          "useDefault": false,
+          "overrides": [
+            {
+              "method": "popup",
+              "minutes": 45
+            }
+          ]
+        },
+        "extendedProperties": {
+          "private": {
+            "consolidation": "jan_2026_cleanup"
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511915.522653\\\"\",\n  \"id\": \"event-corrected-007\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-007\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:18:35.522653\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-19T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-19T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 3,\n  \"attendees\": [\n    {\n      \"id\": \"5d1e23cf-9783-4dbb-90a2-be21fe359eb4\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"consolidation\": \"jan_2026_cleanup\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"popup\",\n        \"minutes\": 45\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 461,
+      "executed_at": "2026-01-15T21:18:35.635643"
+    }
+  },
+  {
+    "name": "patch_event",
+    "arguments": {
+      "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+      "eventId": "event-corrected-008",
+      "attendees": [
+        {
+          "email": "alice.manager@techcorp.com",
+          "displayName": "Alice Johnson",
+          "responseStatus": "needsAction",
+          "optional": false
+        }
+      ],
+      "reminders": {
+        "useDefault": false,
+        "overrides": [
+          {
+            "method": "popup",
+            "minutes": 45
+          }
+        ]
+      },
+      "extendedProperties": {
+        "private": {
+          "consolidation": "jan_2026_cleanup"
+        }
+      }
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "patch_event",
+      "parameters": {
+        "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+        "eventId": "event-corrected-008",
+        "attendees": [
+          {
+            "email": "alice.manager@techcorp.com",
+            "displayName": "Alice Johnson",
+            "responseStatus": "needsAction",
+            "optional": false
+          }
+        ],
+        "reminders": {
+          "useDefault": false,
+          "overrides": [
+            {
+              "method": "popup",
+              "minutes": 45
+            }
+          ]
+        },
+        "extendedProperties": {
+          "private": {
+            "consolidation": "jan_2026_cleanup"
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1768511990.945917\\\"\",\n  \"id\": \"event-corrected-008\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-008\",\n  \"created\": \"2026-01-15T21:08:59\",\n  \"updated\": \"2026-01-15T21:19:50.945917\",\n  \"summary\": \"Enterprise Client Demo - TechCorp Solutions\",\n  \"description\": \"Product demonstration for MegaCorp Inc. Focus on enterprise features, security, and scalability. Bring pricing sheets and technical specs.\",\n  \"location\": \"MegaCorp Headquarters, 123 Business Ave, New York, NY\",\n  \"colorId\": \"1\",\n  \"creator\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"dave_sales\",\n    \"email\": \"dave.brown@techcorp.com\",\n    \"displayName\": \"Dave Brown\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2026-01-20T13:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [\n    \"RRULE:COUNT=2\"\n  ],\n  \"recurringEventId\": \"rec-event-001\",\n  \"originalStartTime\": {\n    \"dateTime\": \"2026-01-20T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": \"event-icalid-001@gmail.com\",\n  \"sequence\": 3,\n  \"attendees\": [\n    {\n      \"id\": \"dc420859-80b6-44a5-81b4-8023e1058d35\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"consolidation\": \"jan_2026_cleanup\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"popup\",\n        \"minutes\": 45\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://crm.techcorp.com/deals/megacorp-2024\",\n    \"title\": \"CRM System - MegaCorp Deal\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 447,
+      "executed_at": "2026-01-15T21:19:51.058091"
+    }
+  },
+  {
+    "name": "insert_acl_rule",
+    "arguments": {
+      "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+      "scope": {
+        "type": "user",
+        "value": "alice.manager@techcorp.com"
+      },
+      "role": "writer",
+      "sendNotifications": true
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "insert_acl_rule",
+      "parameters": {
+        "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+        "scope": {
+          "type": "user",
+          "value": "alice.manager@techcorp.com"
+        },
+        "role": "writer",
+        "sendNotifications": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#aclRule\",\n  \"etag\": \"\\\"5b2d7b05-64df-468f-b54d-8565feaada42\\\"\",\n  \"id\": \"fa3f05d7-c2e1-4018-b409-15e08fa05d05\",\n  \"scope\": {\n    \"type\": \"user\",\n    \"value\": \"alice.manager@techcorp.com\"\n  },\n  \"role\": \"writer\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 266,
+      "executed_at": "2026-01-15T21:21:04.526510"
+    }
+  },
+  {
+    "name": "update_calendar_in_list",
+    "arguments": {
+      "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+      "backgroundColor": "#16a765",
+      "foregroundColor": "#1d1d1d",
+      "colorRgbFormat": true
+    },
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_v4",
+      "tool_name": "update_calendar_in_list",
+      "parameters": {
+        "calendarId": "fad60220-c365-4f7b-83b8-73ba148032cd",
+        "backgroundColor": "#16a765",
+        "foregroundColor": "#1d1d1d",
+        "colorRgbFormat": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarListEntry\",\n  \"etag\": \"etag-list-fad60220-c365-4f7b-83b8-73ba148032cd-2026-01-15T21:22:04.278537\",\n  \"id\": \"fad60220-c365-4f7b-83b8-73ba148032cd\",\n  \"summary\": \"demo\",\n  \"description\": \"Consolidated meeting calendar\",\n  \"location\": null,\n  \"timeZone\": \"America/Chicago\",\n  \"summaryOverride\": null,\n  \"colorId\": \"12\",\n  \"backgroundColor\": \"#16a765\",\n  \"foregroundColor\": \"#1d1d1d\",\n  \"hidden\": false,\n  \"selected\": true,\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": null,\n  \"notificationSettings\": null,\n  \"primary\": false,\n  \"deleted\": false,\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": []\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 254,
+      "executed_at": "2026-01-15T21:22:04.371988"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_v4",
+      "database_id": "db_1768485286062_1imydl1qc",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Consolidate January 2026 meetings into demo calendar with reminders, attendees, and extended properties.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"Calendar Management",
+"L2":"Calendar Structure",
+"L3":"Primary Calendar Lifecycle"
+}

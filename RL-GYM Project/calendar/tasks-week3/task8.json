@@ -1,0 +1,177 @@
+{
+  "scenario_config": {
+    "scenario_name": "project_2026_migration",
+    "scenario_description": "Migrate sprint event to Project 2026 calendar",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "To prepare my project calendars for the upcoming season, please create a new calendar titled \"Project 2026,\" matching the timezone and color of my existing projects calendar. Then replicate the \"Sprint Planning\" event from the old calendar onto this new calendar, scheduling it for January 4 from 9:00 AM to 11:00 AM (original timezone). Preserve all event details, but exclude any attendees who do not have an email address listed.\nAfter replicating the event, archive the old project calendar by deleting the event init and associated attachments, adding a suffix \"-[ARCHIVED]\" to its description, and removing all ACL permissions except my own. This will finalize the restructuring for the new project calendar.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "create_event",
+      "patch_calendar",
+      "delete_event",
+      "list_acl_rules",
+      "delete_acl_rule",
+      "delete_acl_rule"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "create_event",
+      "patch_calendar",
+      "delete_event",
+      "list_acl_rules",
+      "delete_acl_rule",
+      "delete_acl_rule"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Project2026 Calendar",
+      "description": "Verify new Project 2026 calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Project 2026' AND time_zone = 'America/New_York' AND color_id = 7",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Event Fields",
+      "description": "Verify replicated sprint event fields",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND user_id = 'alice_manager' AND summary = 'Sprint Planning & Architecture Review' AND description LIKE 'Detailed sprint planning session with architecture discussion for Q4 features.%' AND description LIKE '%plan the technical approach.' AND location = 'Conference Room A, Building 1' AND color_id = 7 AND start_datetime = '2026-01-04 09:00:00.000000' AND end_datetime = '2026-01-04 11:00:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York' AND guestscaninviteothers = 1 AND guestscanmodify = 0 AND guestscanseeotherguests = 1 AND json_extract(source, '$.url') = 'https://jira.techcorp.com/sprint-planning-q4' AND json_extract(source, '$.title') = 'Sprint Planning Board' AND sequence = 1 AND visibility = 'default'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Attendees",
+      "description": "Verify attendees copied to new event",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN (SELECT COUNT(*) FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')) = 3 AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Alice Johnson') AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Bob Smith') AND EXISTS (SELECT 1 FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND displayname = 'Carol White') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Ext Props",
+      "description": "Verify extended properties copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND scope = 'shared' AND json_extract(properties, '$.meetingType') = 'sprint_planning' AND json_extract(properties, '$.priority') = 'high') AND EXISTS (SELECT 1 FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND scope = 'private' AND json_extract(properties, '$.departmentBudget') = 'engineering' AND json_extract(properties, '$.projectCode') = 'PROJ-2024-Q4') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Conference",
+      "description": "Verify conference data copied",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM conference_data WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Reminders",
+      "description": "Verify reminders copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND method = 'email' AND minutes = 1440) AND EXISTS (SELECT 1 FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND method = 'popup' AND minutes = 30) THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Replicated Attachments",
+      "description": "Verify attachments copied",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN (SELECT COUNT(*) FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review')) = 2 AND EXISTS (SELECT 1 FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND file_url = 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view') AND EXISTS (SELECT 1 FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Project 2026') AND summary = 'Sprint Planning & Architecture Review') AND file_url = 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Old Cal Archived",
+      "description": "Verify old projects calendar archived",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE calendar_id = 'alice-projects' AND description LIKE '%[ARCHIVED]%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Old Event Deleted",
+      "description": "Verify old sprint event deleted",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-001'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "ACLs Cleared",
+      "description": "Verify non-owner ACLs removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'alice-projects' AND scope_id NOT LIKE '%alice%'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "2",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Owner ACL Kept",
+      "description": "Verify owner ACL retained",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'alice-projects' AND role = 'owner'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create Project 2026 calendar, replicate sprint event, and archive old projects calendar.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "trajectory_id": "gn_talent_001",
+  "metadata": {
+    "domain": "github",
+    "task_type": "info_seek",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "turn_id": 1,
+      "user_input": "A sample prompt",
+      "continuation": {
+        "mode": "new",
+        "prior_turn_summary": "NA"
+      },
+      "steps": [
+        {
+          "step_id": 1,
+          "reason": {
+            "text": "This is just for test",
+            "intent": "discover_state"
+          },
+          "action": {
+            "type": "sequential",
+            "calls": [
+              {
+                "call_id": "t1s1c1",
+                "tool_name": "",
+                "tool_input": {},
+                "observation": {
+                  "tool_output": {},
+                  "key_facts": [],
+                  "confidence": "low",
+                  "issues": []
+                }
+              }
+            ]
+          },
+          "decision": {
+            "text": ""
+          },
+          "observation": {
+            "key_facts": [],
+            "confidence": "low",
+            "issues": []
+          }
+        }
+      ],
+      "final_response": {
+        "reason": "",
+        "text": ""
+      }
+    }
+  ]
+}

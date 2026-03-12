@@ -1,0 +1,318 @@
+{
+  "task_id": "task_20251218_145205_721_c5ca08eb_a6460147",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "<p># **ITSM Assistant Policy**</p><p>**Role:** ITSM Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p>First you must check the user information and operate exclusively based on **confirmed user roles**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p>---</p><p>## **1. General Operational Instructions and Constraints**</p><p>* **Policy Violation:** If a user request violates any rule herein, you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous, return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields.</p><p>* You do not need to ask for confirmation or permission before taking action.</p><p>* When identifiers such as names or IDs are missing, perform lookups, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.</p><p>* Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. The same is the case of optional or default arguments.</p><p>* Complete each task in a logical, and efficient execution flow.</p><p>---</p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p>*(Roles renamed and permissions corrected to align with DB/Tool data: `ITIL Agent` → `Agent`, `End User` → `Reporter`. Permissions for `Agent` and `Manager` corrected.)*</p><p>Access rights are defined by roles and grant granular control across tables.</p><p>| Role (DB ID) | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** (`admin`) | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables.&nbsp;|</p><p>| **Manager** (`manager`) | Supervision, Escalation, Approvals | Full CRUD on operational tables (`incident`, `problem`, `change`, `knowledge`); READ access to all the tables. Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. |</p><p>| **Agent** (`agent`) | Frontline Incident/Request fulfillment | **Full CRUD** on **Incidents, Service Requests, Tasks, Work Notes, CMDB, Change, Problem, and Knowledge**. READ access to all the tables. Can update assignment, state, and resolution. | Cannot bypass approvals, or change system administration settings. |</p><p>| **Reporter** (`reporter`) | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p>---</p><p>## **3. Core Operations: Incident Management**</p><p>### **3.1. Incident Registration**</p><p>* **Creation:** To log any issue/interrupted service, create an **Incident** record(create_incident).</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>* **Default Status:** All new Incidents are set to `status = new`.</p><p>### **3.2. Incident Assignment**</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `Agent` or `Manager` role and must be a member of the specified `assignment_group`.</p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid Status Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed` / 'in_progress'</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code`, and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The incidents that are in `resolved` status will transition to `closed` after 72 hours.</p><p>---</p><p>## **4. Core Operations: Change and Problem Management**</p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Default Status:** All new Changes are set to `status = new`.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Default Status:** All new Problems are set to `status = new`.</p><p>* **Workaround:** If workaround/temporary solution found, update workaround field and set status=`fix_in_progress`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final Status:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>---</p><p>## **5. Configuration and Service Management (CMDB)**</p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `configuration_item` table.</p><p>* **CI Status:** Only CIs with `status = in_use` or `status = maintenance` can be linked to active Incidents. Do not link CIs in `status = retired` or `status = disposed`.</p><p>* **CI Owner:** All CIs must have a recorded `owner_id`.</p><p>---</p><p>## **6. Service Level Management (SLA)**</p><p>* **SLA Application:** SLAs are automatically aligned based on `priority` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `target_mins`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `stage = on_hold` and the `on_hold_reason` is one of the following enumerations: `Awaiting Change`, `Awaiting Caller`, or `Awaiting Problem`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `Manager`.</p><p>---</p><p>## **7. Knowledge Management**</p><p>* **Article Status:** Only articles in `knowledge.state = published` are searchable by the `Reporter` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `used_as = suggested`.</p><p>* **Use Tracking:** All knowledge links must track `used_as` type: `suggested`, `applied`, or `resolution`.</p><p>---</p><p>## **8. Validation, Error Handling, and Logging**</p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied.</p><p>* **Time Tracking:** All work logs must include the timestamp (`created_on`) and the `user_id` performing the action.</p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation).</p><p>* **409 Conflict:** Record locking or state conflict.</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p>---</p><p>## **9. Predefined Lists (Enumerations)**</p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `admin`, `manager`, `agent`, `reporter` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low`, `planning` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.status** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `Awaiting Change`, `Awaiting Caller`, `Awaiting Problem` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.status** | `new`, `assess`, `authorize`, `scheduled`, `implement`, `review`, `closed`, `canceled` |</p><p>| **configuration_item.status** | `in_use`, `in_stock`, `maintenance`, `retired`, `disposed` |</p><p>| **kb_knowledge.state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `completed`, `cancelled`, `breached` |</p>",
+  "created_at": "2025-12-18T14:52:05.681722+00:00",
+  "created_by": "c5ca08eb-3eb7-49ac-9407-041cdc8459d5",
+  "scenario_config": {
+    "scenario_name": "Unauthorized Change Status Modification",
+    "scenario_description": "Unauthorized Change Status Modification",
+    "system_prompt": "<p># **ITSM Assistant Policy**</p><p>**Role:** ITSM Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p>First you must check the user information and operate exclusively based on **confirmed user roles**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p>---</p><p>## **1. General Operational Instructions and Constraints**</p><p>* **Policy Violation:** If a user request violates any rule herein, you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous, return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields.</p><p>* You do not need to ask for confirmation or permission before taking action.</p><p>* When identifiers such as names or IDs are missing, perform lookups, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.</p><p>* Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. The same is the case of optional or default arguments.</p><p>* Complete each task in a logical, and efficient execution flow.</p><p>---</p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p>*(Roles renamed and permissions corrected to align with DB/Tool data: `ITIL Agent` → `Agent`, `End User` → `Reporter`. Permissions for `Agent` and `Manager` corrected.)*</p><p>Access rights are defined by roles and grant granular control across tables.</p><p>| Role (DB ID) | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** (`admin`) | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables.&nbsp;|</p><p>| **Manager** (`manager`) | Supervision, Escalation, Approvals | Full CRUD on operational tables (`incident`, `problem`, `change`, `knowledge`); READ access to all the tables. Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. |</p><p>| **Agent** (`agent`) | Frontline Incident/Request fulfillment | **Full CRUD** on **Incidents, Service Requests, Tasks, Work Notes, CMDB, Change, Problem, and Knowledge**. READ access to all the tables. Can update assignment, state, and resolution. | Cannot bypass approvals, or change system administration settings. |</p><p>| **Reporter** (`reporter`) | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p>---</p><p>## **3. Core Operations: Incident Management**</p><p>### **3.1. Incident Registration**</p><p>* **Creation:** To log any issue/interrupted service, create an **Incident** record(create_incident).</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>* **Default Status:** All new Incidents are set to `status = new`.</p><p>### **3.2. Incident Assignment**</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `Agent` or `Manager` role and must be a member of the specified `assignment_group`.</p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid Status Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed` / 'in_progress'</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code`, and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The incidents that are in `resolved` status will transition to `closed` after 72 hours.</p><p>---</p><p>## **4. Core Operations: Change and Problem Management**</p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Default Status:** All new Changes are set to `status = new`.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Default Status:** All new Problems are set to `status = new`.</p><p>* **Workaround:** If workaround/temporary solution found, update workaround field and set status=`fix_in_progress`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final Status:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>---</p><p>## **5. Configuration and Service Management (CMDB)**</p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `configuration_item` table.</p><p>* **CI Status:** Only CIs with `status = in_use` or `status = maintenance` can be linked to active Incidents. Do not link CIs in `status = retired` or `status = disposed`.</p><p>* **CI Owner:** All CIs must have a recorded `owner_id`.</p><p>---</p><p>## **6. Service Level Management (SLA)**</p><p>* **SLA Application:** SLAs are automatically aligned based on `priority` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `target_mins`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `stage = on_hold` and the `on_hold_reason` is one of the following enumerations: `Awaiting Change`, `Awaiting Caller`, or `Awaiting Problem`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `Manager`.</p><p>---</p><p>## **7. Knowledge Management**</p><p>* **Article Status:** Only articles in `knowledge.state = published` are searchable by the `Reporter` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `used_as = suggested`.</p><p>* **Use Tracking:** All knowledge links must track `used_as` type: `suggested`, `applied`, or `resolution`.</p><p>---</p><p>## **8. Validation, Error Handling, and Logging**</p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied.</p><p>* **Time Tracking:** All work logs must include the timestamp (`created_on`) and the `user_id` performing the action.</p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation).</p><p>* **409 Conflict:** Record locking or state conflict.</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p>---</p><p>## **9. Predefined Lists (Enumerations)**</p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `admin`, `manager`, `agent`, `reporter` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low`, `planning` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.status** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `Awaiting Change`, `Awaiting Caller`, `Awaiting Problem` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.status** | `new`, `assess`, `authorize`, `scheduled`, `implement`, `review`, `closed`, `canceled` |</p><p>| **configuration_item.status** | `in_use`, `in_stock`, `maintenance`, `retired`, `disposed` |</p><p>| **kb_knowledge.state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `completed`, `cancelled`, `breached` |</p>",
+    "prompt": "I have raised a change request to upgrade the Core Router OS. This change requires urgent attention. Please assign it to the L2 Infra Team and schedule it as early as possible.",
+    "selected_tools": [
+      "get_user",
+      "list_changes",
+      "list_change_request_mappings",
+      "find_group_by_name",
+      "list_group_members",
+      "update_change"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "get_user",
+      "list_changes",
+      "list_change_request_mappings",
+      "find_group_by_name",
+      "list_group_members",
+      "update_change"
+    ],
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Verify Change Record Status",
+      "description": "Verify Change Record Status",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM change WHERE change_id=\"CHG_021\" AND status=\"authorize\"",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Assignee Details",
+      "description": "Verify Assignee Details",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM change WHERE change_id=\"CHG_021\" AND assignment_group=\"GROUP_008\"",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "get_user",
+      "arguments": {
+        "user_id": "USER_039"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "get_user",
+        "parameters": {
+          "user_id": "USER_039"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_id\": \"USER_039\",\n  \"user_name\": \"karen.watkins\",\n  \"first_name\": \"Karen\",\n  \"last_name\": \"Watkins\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"phone\": \"+441613971941\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:45:46\",\n  \"updated_on\": \"2026-02-10T13:31:36\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 171,
+        "executed_at": "2025-12-18T14:50:05.576794"
+      }
+    },
+    {
+      "name": "list_changes",
+      "arguments": {
+        "short_description": "Core Router"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_changes",
+        "parameters": {
+          "short_description": "Core Router"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"changes\": [\n    {\n      \"change_id\": \"CHG_021\",\n      \"number\": \"CHG0000021\",\n      \"short_description\": \"Upgrade Core Router OS\",\n      \"requested_by\": \"USER_039\",\n      \"service\": \"SVC_043\",\n      \"service_offering\": \"SVCOFF_052\",\n      \"configuration_item\": null,\n      \"assigned_to\": \"USER_045\",\n      \"assignment_group\": \"GROUP_007\",\n      \"status\": \"authorize\",\n      \"category\": \"network\",\n      \"description\": \"Major version upgrade.\",\n      \"implementation_plan\": \"Upload image, reload.\",\n      \"testing_plan\": \"BGP convergence check.\",\n      \"close_notes\": null,\n      \"cab_required\": true,\n      \"impact\": \"high\",\n      \"priority\": \"high\",\n      \"risk\": \"high\",\n      \"close_code\": null,\n      \"created_on\": \"2025-12-02T16:00:00\",\n      \"updated_on\": \"2025-12-02T16:00:00\",\n      \"org_id\": \"ORG_001\"\n    }\n  ],\n  \"total_count\": 1\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 176,
+        "executed_at": "2025-12-18T14:50:12.075907"
+      }
+    },
+    {
+      "name": "list_change_request_mappings",
+      "arguments": {
+        "change_id": "CHG_021"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_change_request_mappings",
+        "parameters": {
+          "change_id": "CHG_021"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"change_request_mappings\": [],\n  \"total_count\": 0\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 180,
+        "executed_at": "2025-12-18T14:50:15.569491"
+      }
+    },
+    {
+      "name": "find_group_by_name",
+      "arguments": {
+        "name": "L2 Infra Team"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "find_group_by_name",
+        "parameters": {
+          "name": "L2 Infra Team"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"group_id\": \"GROUP_008\",\n  \"name\": \"L2 Infra Team\",\n  \"type\": \"Infrastructure Problem Team\",\n  \"active\": true,\n  \"email\": \"l2.infra@acme.com\",\n  \"description\": \"Root Cause Analysis and Server Outages\",\n  \"manager_id\": \"USER_002\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2023-01-05T10:00:00\",\n  \"updated_on\": \"2023-01-05T10:00:00\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 182,
+        "executed_at": "2025-12-18T14:50:19.849387"
+      }
+    },
+    {
+      "name": "list_group_members",
+      "arguments": {
+        "group_id": "GROUP_008"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_group_members",
+        "parameters": {
+          "group_id": "GROUP_008"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"group_members\": [\n    {\n      \"member_id\": \"MEM_026\",\n      \"group_id\": \"GROUP_008\",\n      \"user_id\": \"USER_049\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2025-01-10T09:00:00\",\n      \"updated_on\": \"2025-01-10T09:00:00\"\n    },\n    {\n      \"member_id\": \"MEM_027\",\n      \"group_id\": \"GROUP_008\",\n      \"user_id\": \"USER_052\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2025-01-10T09:00:00\",\n      \"updated_on\": \"2025-01-10T09:00:00\"\n    },\n    {\n      \"member_id\": \"MEM_028\",\n      \"group_id\": \"GROUP_008\",\n      \"user_id\": \"USER_054\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2025-01-10T09:00:00\",\n      \"updated_on\": \"2025-01-10T09:00:00\"\n    }\n  ],\n  \"total_count\": 3\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 180,
+        "executed_at": "2025-12-18T14:50:43.769905"
+      }
+    },
+    {
+      "name": "update_change",
+      "arguments": {
+        "change_id": "CHG_021",
+        "assigned_to": "USER_052",
+        "assignment_group": "GROUP_008"
+      },
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "update_change",
+        "parameters": {
+          "change_id": "CHG_021",
+          "assigned_to": "USER_052",
+          "assignment_group": "GROUP_008"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"change_id\": \"CHG_021\",\n  \"number\": \"CHG0000021\",\n  \"requested_by\": \"USER_039\",\n  \"short_description\": \"Upgrade Core Router OS\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": null,\n  \"status\": \"authorize\",\n  \"category\": \"network\",\n  \"description\": \"Major version upgrade.\",\n  \"implementation_plan\": \"Upload image, reload.\",\n  \"testing_plan\": \"BGP convergence check.\",\n  \"cab_required\": true,\n  \"impact\": \"high\",\n  \"risk\": \"high\",\n  \"priority\": \"high\",\n  \"assigned_to\": \"USER_052\",\n  \"assignment_group\": \"GROUP_008\",\n  \"close_code\": null,\n  \"close_notes\": null,\n  \"created_on\": \"2025-12-02T16:00:00\",\n  \"updated_on\": \"2025-12-18T14:50:47.157614\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 217,
+        "executed_at": "2025-12-18T14:50:47.211350"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1765949061488_6sskwu6en",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      },
+      "gym_server_id": "sn-itsm-internal"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gpt-5-High",
+      "platform_name": "openai",
+      "platform_config_id": "default-openai-gpt-5-High",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "default-gemini-gemini-2.5-pro",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true
+  },
+  "L1": "Change Management",
+  "L2": "Changes",
+  "L3": "Change Request Lifecycle"
+}

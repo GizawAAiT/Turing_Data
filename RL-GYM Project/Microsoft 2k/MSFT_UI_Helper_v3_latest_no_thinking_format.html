@@ -1,0 +1,4083 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Trace Builder</title>
+    <!-- Premium Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode Variables */
+            --bg-body: #f7f9fc;
+            --bg-card: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --border: #e2e8f0;
+            --input-bg: #f8fafc;
+            --focus-ring: rgba(59, 130, 246, 0.4);
+            --header-bg: #ffffff;
+            --header-border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 0.75rem;
+        }
+
+        body.dark-mode {
+            /* Dark Mode Variables */
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --primary: #60a5fa;
+            --primary-hover: #3b82f6;
+            --danger: #f87171;
+            --danger-hover: #ef4444;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --focus-ring: rgba(96, 165, 250, 0.4);
+            --header-bg: #1e293b;
+            --header-border: #334155;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            margin: 0;
+            padding-bottom: 8rem;
+            /* Extra space for action bar */
+        }
+
+        /* Layout */
+        header {
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+        }
+
+        main {
+            max-width: 95%;
+            /* Expanded layout */
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Cards (General Section styling) */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .section.nested {
+            border-left: 4px solid var(--primary);
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+
+        /* Nesting Visuals */
+        [data-turn-id] {
+            margin-bottom: 2.5rem;
+            border-top: 4px solid var(--primary);
+            border-left: 1px solid var(--border);
+        }
+
+        [data-step-id] {
+            border-left: 4px solid #a855f7;
+            background: rgba(168, 85, 247, 0.02);
+        }
+
+        [data-call-id] {
+            border-left: 4px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.02);
+        }
+
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: var(--text-primary);
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+        }
+
+        h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        h5 {
+            font-size: 1rem;
+            color: #a855f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h6 {
+            font-size: 0.9rem;
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 1rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        button {
+            padding: 0.5rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            background-color: var(--primary);
+            color: white;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.remove-btn {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        button.remove-btn:hover {
+            background-color: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        /* Fixing Mode Styles */
+        .has-issue {
+            border: 2px solid #ff4444 !important;
+            background-color: rgba(255, 68, 68, 0.05);
+            position: relative;
+        }
+        
+        /* Turn-level issue styling (for tool_calls, ambiguity, etc.) */
+        .has-turn-issue {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, transparent 50%) !important;
+            border-left: 3px solid #f59e0b !important;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .has-turn-issue::after {
+            content: '⚠️ Turn Issues';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .turn-level-tooltip {
+            border-left: 3px solid #f59e0b;
+        }
+
+        .issue-tooltip {
+            position: absolute;
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 380px;
+            min-width: 320px;
+            font-size: 0.85em;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+            pointer-events: auto;
+            border: 1px solid #334155;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .issue-tooltip strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #ff8888;
+        }
+
+        .issue-tooltip .suggestion {
+            margin-top: 5px;
+            font-style: italic;
+            color: #aaa;
+            border-top: 1px solid #555;
+            padding-top: 5px;
+        }
+
+        /* Reviewer Mode Styles */
+        .review-comment-box {
+            background-color: #fff9c4;
+            /* Light yellow */
+            border: 1px solid #fbc02d;
+            color: #333;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 0.9em;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .review-comment-box textarea {
+            background-color: #fffde7;
+            border: 1px solid #fdd835;
+            color: #222 !important;
+            /* Force dark text on yellow background */
+            width: 100%;
+            min-height: 60px;
+            margin-top: 5px;
+        }
+
+        .review-toggle-btn {
+            background-color: #fbc02d !important;
+            color: #333 !important;
+            border: none;
+        }
+
+        .add-comment-btn {
+            background: transparent;
+            border: 1px solid #fbc02d;
+            color: #f57f17;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            margin-left: 10px;
+            display: none;
+            /* Hidden until Review Mode on */
+        }
+
+        body.review-mode .add-comment-btn {
+            display: inline-block;
+        }
+
+        body.review-mode .review-comment-box.active {
+            display: block;
+        }
+
+        /* Severity dropdown styling */
+        .review-comment-box select[data-severity-for] {
+            font-weight: 500;
+        }
+
+        .review-comment-box select[data-severity-for] option[value="minor"] {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .review-comment-box select[data-severity-for] option[value="major"] {
+            background-color: #fed7aa;
+            color: #c2410c;
+        }
+
+        .review-comment-box select[data-severity-for] option[value="critical"] {
+            background-color: #fecaca;
+            color: #dc2626;
+        }
+
+        /* Floating Action Bar at Bottom */
+        .action-bar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            gap: 1rem;
+            z-index: 200;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .flex-item {
+            flex: 1 1 200px;
+        }
+
+        /* Collapsible Styles */
+        .section.collapsed> :not(.flex-row.header-row) {
+            display: none !important;
+        }
+
+        .section.collapsed {
+            padding-bottom: 0.5rem;
+            /* Tighter when collapsed */
+        }
+
+        button.toggle-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+
+        button.toggle-btn:hover {
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        /* Validation Colors */
+        .json-invalid {
+            border-color: var(--danger) !important;
+            background-color: rgba(239, 68, 68, 0.05) !important;
+        }
+
+        .json-valid {
+            border-color: #10b981 !important;
+            /* Green */
+        }
+
+        .json-error-message {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Theme Toggle */
+        #theme-toggle {
+            background: transparent;
+            color: var(--text-primary);
+            padding: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        #theme-toggle:hover {
+            background: rgba(128, 128, 128, 0.1);
+        }
+
+        /* Review Import/Export Styles */
+        .has-review {
+            border: 2px solid #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.08) !important;
+            position: relative;
+        }
+
+        .has-review.severity-critical {
+            border-color: #dc2626 !important;
+            background-color: rgba(220, 38, 38, 0.08) !important;
+        }
+
+        .has-review.severity-major {
+            border-color: #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.08) !important;
+        }
+
+        .has-review.severity-minor {
+            border-color: #fbbf24 !important;
+            background-color: rgba(251, 191, 36, 0.08) !important;
+        }
+
+        .review-tooltip {
+            position: absolute;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 12px;
+            border-radius: 6px;
+            z-index: 1000;
+            max-width: 350px;
+            font-size: 0.9em;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #f59e0b;
+            pointer-events: auto;
+        }
+
+        .review-tooltip.severity-critical {
+            border-left-color: #dc2626;
+        }
+
+        .review-tooltip.severity-major {
+            border-left-color: #f59e0b;
+        }
+
+        .review-tooltip.severity-minor {
+            border-left-color: #fbbf24;
+        }
+
+        .review-tooltip .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #333;
+        }
+
+        .review-tooltip .review-severity {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .review-tooltip .review-severity.critical {
+            background: #dc2626;
+            color: white;
+        }
+
+        .review-tooltip .review-severity.major {
+            background: #f59e0b;
+            color: #1a1a2e;
+        }
+
+        .review-tooltip .review-severity.minor {
+            background: #fbbf24;
+            color: #1a1a2e;
+        }
+
+        .review-tooltip .review-comment {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .review-tooltip .review-meta {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .review-tooltip .review-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .review-tooltip .review-actions button {
+            padding: 4px 12px;
+            font-size: 0.8em;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .review-tooltip .btn-fixed {
+            background: #10b981;
+            color: white;
+        }
+
+        .review-tooltip .btn-false-positive {
+            background: #6b7280;
+            color: white;
+        }
+
+        /* Status Counter Badge (shared for reviews and evals) */
+        .status-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-counter .counter-label {
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .status-counter .counter-value {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 2px 10px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Review counter colors */
+        .status-counter.review-counter {
+            background: #f59e0b;
+            color: #1a1a2e;
+        }
+
+        /* Eval/Issue counter colors */
+        .status-counter.eval-counter {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* All done state - green checkmark */
+        .status-counter.all-done {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-counter.all-done .counter-label {
+            display: none;
+        }
+
+        .status-counter.all-done .counter-value {
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Navigation buttons */
+        .nav-btn {
+            border: 1px solid currentColor;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* AR Review - Blue theme for both buttons */
+        .nav-prev, .nav-next {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .nav-prev:hover, .nav-next:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        /* Review Mode - Orange theme for both buttons */
+        .nav-prev-review, .nav-next-review {
+            background: #f59e0b;
+            color: #1a1a2e;
+            border-color: #f59e0b;
+        }
+
+        .nav-prev-review:hover, .nav-next-review:hover {
+            background: #d97706;
+            border-color: #d97706;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Floating Sidebars - Compact Vertical */
+        .floating-sidebar {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 44px;
+        }
+
+        .floating-sidebar.active {
+            display: flex;
+        }
+
+        /* AR Mode Sidebar - Left side */
+        .sidebar-ar {
+            left: 10px;
+        }
+
+        /* Imported Reviews Sidebar - Right side, upper */
+        #review-sidebar {
+            right: 10px;
+            top: 30%;
+            transform: translateY(-50%);
+        }
+
+        /* Reviewer Mode Sidebar - Right side, lower */
+        #reviewer-sidebar {
+            right: 10px;
+            top: 70%;
+            transform: translateY(-50%);
+        }
+
+        /* Sidebar Icon Header */
+        .sidebar-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .sidebar-ar .sidebar-icon {
+            background: #3b82f6;
+        }
+
+        #review-sidebar .sidebar-icon {
+            background: #f59e0b;
+        }
+
+        #reviewer-sidebar .sidebar-icon {
+            background: #10b981;
+        }
+
+        /* Sidebar Counter Badge */
+        .sidebar-counter {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-counter.all-done {
+            background: #10b981;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Sidebar Nav Buttons */
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-nav-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-nav-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .sidebar-ar .sidebar-nav-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .sidebar-ar .sidebar-nav-btn:hover {
+            background: #2563eb;
+        }
+
+        #review-sidebar .sidebar-nav-btn {
+            background: #f59e0b;
+            color: #1a1a2e;
+        }
+
+        #review-sidebar .sidebar-nav-btn:hover {
+            background: #d97706;
+        }
+
+        #reviewer-sidebar .sidebar-nav-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        #reviewer-sidebar .sidebar-nav-btn:hover {
+            background: #059669;
+        }
+
+        /* Sidebar Close Button */
+        .sidebar-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid #ef4444;
+            background: transparent;
+            color: #ef4444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-close:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9em;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .toast.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .toast-icon {
+            font-size: 1.2em;
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: white;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 0 4px;
+        }
+
+        .toast-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Custom Confirm Modal */
+        .confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .confirm-modal.active {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: scaleIn 0.2s ease;
+        }
+
+        .confirm-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        .confirm-icon.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .confirm-icon.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .confirm-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .confirm-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .confirm-btn.cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .confirm-btn.cancel:hover {
+            background: var(--border);
+        }
+
+        .confirm-btn.confirm {
+            background: #ef4444;
+            color: white;
+        }
+
+        .confirm-btn.confirm:hover {
+            background: #dc2626;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Input Modal Field */
+        .input-modal-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1em;
+            margin-bottom: 16px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            box-sizing: border-box;
+        }
+
+        .input-modal-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Legacy jump-btn for backward compatibility */
+        .jump-btn {
+            background: transparent;
+            border: 1px solid currentColor;
+        }
+
+        .jump-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .jump-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 300;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 80%;
+            max-width: 600px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .close {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Top level metadata grid */
+        #top-level .flex-row {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                <path
+                    d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            </svg>
+            <h1>Human Trace Builder</h1>
+        </div>
+        <button type="button" id="theme-toggle" title="Toggle Dark Mode">◑</button>
+    </header>
+
+    <main>
+        <!-- Metadata Card -->
+        <div class="section" id="top-level">
+            <h2>Trajectory Metadata</h2>
+            <label for="trajectory_id">Trajectory ID</label>
+            <input type="text" id="trajectory_id" placeholder="e.g., gh_talent_networking_0001">
+            <div class="flex-row">
+                <div class="flex-item">
+                    <label for="domain">Domain</label>
+                    <select id="domain">
+                        <option value="Slack">Slack</option>
+                        <option value="HiBob">HiBob</option>
+                        <option value="Asana">Asana</option>
+                        <option value="Gmail">Gmail</option>
+                        <option value="Freshdesk">Freshdesk</option>
+                    </select>
+                </div>
+                <div class="flex-item">
+                    <label for="task_type">Task Type</label>
+                    <select id="task_type">
+                        <option value="info_seek">info_seek</option>
+                        <option value="state_change">state_change</option>
+                        <option value="mixed">mixed</option>
+                        <option value="planning">planning</option>
+                    </select>
+                </div>
+                <div class="flex-item">
+                    <label for="difficulty">Difficulty</label>
+                    <select id="difficulty">
+                        <option value="easy">easy</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="hard">hard</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Turns Container -->
+        <div id="turns-section">
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" onclick="toggleAllTurns('collapse')"
+                    style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">Collapse
+                    All Turns</button>
+                <button type="button" onclick="toggleAllTurns('expand')"
+                    style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">Expand
+                    All Turns</button>
+            </div>
+            <div id="turns-container"></div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="button" id="add-turn-btn" style="padding: 0.75rem 1.5rem; font-size: 1rem;">
+                    + Add New Turn
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Bar -->
+    <div class="action-bar">
+        <button type="button" id="export-btn" title="Save to JSON">Export JSON</button>
+        <a id="download-link" style="display:none;" download="human_trace.json"></a>
+        <button type="button" id="import-btn" style="background-color: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">Import JSON</button>
+        <button type="button" id="tools-btn" style="background-color: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">Tools List</button>
+        <input type="file" id="import-input" accept=".json" style="display:none;">
+        <input type="file" id="import-eval-input" accept=".json" style="display:none;">
+        <input type="file" id="import-review-input" accept=".json" style="display:none;">
+
+        <!-- Mode Buttons (in action bar) -->
+        <button type="button" id="ar-review-btn" style="background-color: #4a90e2; color: white; border: none; opacity: 0.5; cursor: not-allowed;" disabled title="Import a JSON file first">Import AR Review</button>
+        <button type="button" id="import-review-btn" style="background-color: #f59e0b; color: #1a1a2e; border: none; opacity: 0.5; cursor: not-allowed;" disabled title="Import a JSON file first">Import Reviews</button>
+        <button type="button" id="review-mode-btn" class="review-toggle-btn" style="opacity: 0.5; cursor: not-allowed;" disabled title="Import a JSON file first">Review Mode: OFF</button>
+    </div>
+
+    <!-- AR Mode Floating Sidebar (Left) -->
+    <div id="ar-sidebar" class="floating-sidebar sidebar-ar">
+        <div class="sidebar-icon" title="AR Review">◆</div>
+        <div class="sidebar-counter" id="eval-counter-badge" title="Unresolved issues"><span id="eval-count-number">0</span></div>
+        <div class="sidebar-nav">
+            <button type="button" id="prev-eval-btn" class="sidebar-nav-btn" title="Previous issue">▲</button>
+            <button type="button" id="jump-eval-btn" class="sidebar-nav-btn" title="Next issue">▼</button>
+        </div>
+        <button type="button" id="export-ar-btn" class="sidebar-nav-btn" title="Export AR Summary" style="background: #10b981;">⎘</button>
+        <button type="button" id="exit-ar-mode-btn" class="sidebar-close" title="Exit AR Mode">×</button>
+    </div>
+
+    <!-- AR Export Modal -->
+    <div id="ar-export-modal" class="confirm-modal">
+        <div class="confirm-box" style="max-width: 600px;">
+            <div class="confirm-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">!</div>
+            <div class="confirm-title">AR Feedback Report</div>
+            
+            <!-- FP Summary Section -->
+            <div style="margin-bottom: 1rem;">
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">False Positives (AR Mistakes)</div>
+                <div id="fp-summary-list" style="max-height: 150px; overflow-y: auto; text-align: left; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; background: var(--input-bg); font-size: 0.85rem;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- Add Missed Issue Section -->
+            <div style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #f59e0b; border-radius: 6px; background: rgba(245, 158, 11, 0.05);">
+                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem;">+ Add Missed Issue (AR should have caught)</div>
+                <select id="missed-dimension" style="width: 100%; padding: 6px; margin-bottom: 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-primary);">
+                    <option value="">Select Dimension...</option>
+                </select>
+                <input type="text" id="missed-explanation" placeholder="Explanation: What did AR miss?" style="width: 100%; padding: 6px; margin-bottom: 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-primary); box-sizing: border-box;">
+                <input type="text" id="missed-suggestion" placeholder="Suggestion: How should AR catch this? (optional)" style="width: 100%; padding: 6px; margin-bottom: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-primary); box-sizing: border-box;">
+                <button onclick="addMissedIssue()" style="padding: 6px 16px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">+ Add Missed</button>
+            </div>
+            
+            <!-- Missed Issues List -->
+            <div id="missed-issues-container" style="margin-bottom: 1rem; display: none;">
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Missed Issues Added</div>
+                <div id="missed-issues-list" style="max-height: 120px; overflow-y: auto; text-align: left; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; background: var(--input-bg); font-size: 0.85rem;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- Copy Dimensions Section (Collapsible) -->
+            <details style="margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: var(--text-primary); padding: 0.5rem;">▶ Copy Dimensions (select which to include)</summary>
+                <div style="margin-top: 0.75rem;">
+                    <div id="dimension-checkbox-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg);">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button onclick="selectAllDimCheckboxes(true)" style="padding: 5px 12px; font-size: 0.8rem; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Select All</button>
+                        <button onclick="selectAllDimCheckboxes(false)" style="padding: 5px 12px; font-size: 0.8rem; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear All</button>
+                        <button onclick="copyCheckedDimensions()" style="padding: 5px 12px; font-size: 0.8rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy Dimensions</button>
+                    </div>
+                </div>
+            </details>
+            
+            <div class="confirm-buttons" style="gap: 0.5rem;">
+                <button class="confirm-btn cancel" onclick="closeARExportModal()">Cancel</button>
+                <button class="confirm-btn confirm" style="background: #3b82f6;" onclick="copyFeedbackReport()">Copy Feedback Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Imported Reviews Floating Sidebar (Right) -->
+    <div id="review-sidebar" class="floating-sidebar">
+        <div class="sidebar-icon" title="Imported Reviews">●</div>
+        <div class="sidebar-counter" id="review-counter-badge" title="Unresolved reviews"><span id="review-count-number">0</span></div>
+        <div class="sidebar-nav">
+            <button type="button" id="prev-review-btn" class="sidebar-nav-btn" title="Previous review">▲</button>
+            <button type="button" id="jump-review-btn" class="sidebar-nav-btn" title="Next review">▼</button>
+        </div>
+        <button type="button" id="clear-reviews-btn" class="sidebar-close" title="Clear Reviews">×</button>
+    </div>
+
+    <!-- Reviewer Mode Floating Sidebar (Right, below reviews) -->
+    <div id="reviewer-sidebar" class="floating-sidebar">
+        <div class="sidebar-icon" title="Reviewer Mode">✎</div>
+        <button type="button" id="export-review-btn" class="sidebar-nav-btn" title="Export Reviews" disabled>↓</button>
+        <button type="button" id="copy-review-btn" class="sidebar-nav-btn" title="Copy Summary">⎘</button>
+        <button type="button" id="exit-reviewer-btn" class="sidebar-close" title="Exit Review Mode">×</button>
+    </div>
+
+    <!-- Tools Modal -->
+    <div id="toolsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="margin-top: 0;">Unique Tools Used</h2>
+            <textarea id="toolsListArea" readonly
+                style="height: 300px; margin-bottom: 1rem; font-family: monospace;"></textarea>
+            <div style="text-align: right;">
+                <button type="button" id="copy-tools-btn">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="confirm-modal">
+        <div class="confirm-box">
+            <div class="confirm-icon warning">⚠</div>
+            <div class="confirm-title">Confirm Action</div>
+            <div class="confirm-message">Are you sure?</div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn cancel">Cancel</button>
+                <button class="confirm-btn confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Modal -->
+    <div id="input-modal" class="confirm-modal">
+        <div class="confirm-box">
+            <div class="confirm-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">✎</div>
+            <div class="confirm-title">Enter Reviewer Email</div>
+            <div class="confirm-message">This email will be used for all your review comments.</div>
+            <input type="email" id="input-modal-field" class="input-modal-field" placeholder="your.email@turing.com" autocomplete="email">
+            <div class="confirm-buttons">
+                <button class="confirm-btn cancel">Cancel</button>
+                <button class="confirm-btn confirm" style="background: #3b82f6;">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✓',
+                error: '✕',
+                info: 'ℹ',
+                warning: '⚠'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span>${message}</span>
+                <button class="toast-close">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => removeToast(toast));
+            
+            if (duration > 0) {
+                setTimeout(() => removeToast(toast), duration);
+            }
+            
+            return toast;
+        }
+        
+        function removeToast(toast) {
+            toast.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        // Custom Confirm Dialog
+        function showConfirm(title, message, type = 'warning') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const iconEl = modal.querySelector('.confirm-icon');
+                const titleEl = modal.querySelector('.confirm-title');
+                const messageEl = modal.querySelector('.confirm-message');
+                const cancelBtn = modal.querySelector('.confirm-btn.cancel');
+                const confirmBtn = modal.querySelector('.confirm-btn.confirm');
+                
+                iconEl.className = `confirm-icon ${type}`;
+                iconEl.textContent = type === 'danger' ? '🗑' : '⚠';
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                
+                modal.classList.add('active');
+                
+                const cleanup = () => {
+                    modal.classList.remove('active');
+                    cancelBtn.removeEventListener('click', onCancel);
+                    confirmBtn.removeEventListener('click', onConfirm);
+                };
+                
+                const onCancel = () => { cleanup(); resolve(false); };
+                const onConfirm = () => { cleanup(); resolve(true); };
+                
+                cancelBtn.addEventListener('click', onCancel);
+                confirmBtn.addEventListener('click', onConfirm);
+            });
+        }
+
+        // Custom Input Prompt
+        function showPrompt(title, message, defaultValue = '') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('input-modal');
+                const titleEl = modal.querySelector('.confirm-title');
+                const messageEl = modal.querySelector('.confirm-message');
+                const inputEl = modal.querySelector('#input-modal-field');
+                const cancelBtn = modal.querySelector('.confirm-btn.cancel');
+                const confirmBtn = modal.querySelector('.confirm-btn.confirm');
+                
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                inputEl.value = defaultValue;
+                
+                modal.classList.add('active');
+                inputEl.focus();
+                
+                const cleanup = () => {
+                    modal.classList.remove('active');
+                    cancelBtn.removeEventListener('click', onCancel);
+                    confirmBtn.removeEventListener('click', onConfirm);
+                    inputEl.removeEventListener('keydown', onKeydown);
+                };
+                
+                const onCancel = () => { cleanup(); resolve(null); };
+                const onConfirm = () => { cleanup(); resolve(inputEl.value.trim() || null); };
+                const onKeydown = (e) => { if (e.key === 'Enter') onConfirm(); };
+                
+                cancelBtn.addEventListener('click', onCancel);
+                confirmBtn.addEventListener('click', onConfirm);
+                inputEl.addEventListener('keydown', onKeydown);
+            });
+        }
+
+        // Global reviewer email
+        let currentReviewerEmail = '';
+
+        // Error Handler
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            showToast('Error: ' + msg + ' (Line: ' + lineNo + ')', 'error', 5000);
+            return false;
+        };
+
+        // Theme Toggle Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            body.classList.add('dark-mode');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+
+        // Tools List by Domain
+        const toolsByDomain = {
+            'Slack': [
+                'get_users_list', 'get_user_info', 'get_user_profile', 'set_user_profile', 'admin_users_assign', 'admin_users_invite', 'admin_users_remove', 'admin_apps_approve', 'admin_apps_clear_resolution', 'admin_apps_restrict', 'admin_apps_uninstall', 'admin_apps_approved_list', 'admin_apps_config_lookup', 'admin_apps_config_set', 'admin_apps_requests_cancel', 'admin_apps_requests_list', 'admin_apps_restricted_list', 'admin_audit_anomaly_allow_get_item', 'admin_audit_anomaly_allow_update_item', 'admin_auth_policy_assign_entities', 'admin_auth_policy_get_entities', 'admin_auth_policy_remove_entities', 'admin_barriers_create', 'admin_barriers_list', 'admin_barriers_update', 'admin_barriers_delete', 'admin_conversations_archive', 'admin_conversations_unarchive', 'admin_conversations_bulk_archive', 'admin_conversations_bulk_delete', 'admin_conversations_bulk_move', 'admin_conversations_convert_to_private', 'admin_conversations_convert_to_public', 'admin_conversations_create', 'admin_conversations_create_for_objects', 'admin_conversations_delete', 'admin_conversations_disconnect_shared', 'admin_conversations_get_conversation_prefs', 'admin_conversations_get_custom_retention', 'admin_conversations_get_teams', 'admin_conversations_invite', 'admin_conversations_link_objects', 'admin_conversations_unlink_objects', 'admin_conversations_ekm_list_original_connected_channel_info', 'admin_conversations_lookup', 'admin_conversations_remove_custom_retention', 'admin_conversations_rename', 'admin_conversations_search', 'admin_conversations_set_conversation_prefs', 'admin_conversations_restrict_access_add_group', 'admin_conversations_set_custom_retention', 'admin_conversations_restrict_access_list_groups', 'admin_conversations_restrict_access_remove_group', 'apps_activities_list', 'apps_auth_external_delete', 'apps_auth_external_get', 'apps_datastore_bulk_get', 'apps_datastore_bulk_delete', 'apps_datastore_bulk_put', 'apps_datastore_count', 'apps_datastore_delete', 'apps_datastore_get', 'apps_datastore_put', 'apps_datastore_update', 'apps_datastore_query', 'apps_connections_open', 'get_channels_list', 'get_conversations_history', 'users_conversations', 'chat_post_message', 'chat_delete', 'chat_delete_scheduled_message', 'chat_get_permalink', 'chat_me_message', 'chat_post_ephemeral', 'chat_schedule_message', 'chat_scheduled_messages_list', 'chat_unfurl', 'chat_update', 'reactions_add', 'reactions_get', 'reactions_list', 'reactions_remove', 'search_all', 'search_files', 'search_messages', 'conversations_accept_shared_invite', 'conversations_approve_shared_invite', 'conversations_invite', 'conversations_create', 'conversations_decline_shared_invite', 'conversations_close', 'conversations_info', 'conversations_kick', 'conversations_leave', 'conversations_members', 'conversations_join', 'conversations_replies', 'conversations_rename', 'conversations_open', 'conversations_list', 'conversations_list_connect_invites', 'conversations_request_shared_invite_approve', 'conversations_request_shared_invite_deny', 'conversations_request_shared_invite_list', 'conversations_external_invite_permissions_set', 'conversations_set_purpose', 'conversations_set_topic', 'conversations_archive', 'conversations_unarchive', 'admin_conversations_set_teams', 'admin_emoji_add', 'admin_emoji_add_alias', 'emoji_list', 'admin_emoji_list', 'admin_emoji_remove', 'admin_emoji_rename', 'admin_functions_list', 'admin_functions_permissions_lookup', 'admin_functions_permissions_set', 'admin_inviteRequests_approve', 'admin_inviteRequests_deny', 'admin_inviteRequests_list', 'admin_inviteRequests_approved_list', 'admin_inviteRequests_denied_list', 'admin_roles_addAssignments', 'admin_roles_listAssignments', 'admin_roles_removeAssignments', 'admin_teams_create', 'admin_teams_list', 'admin_teams_owners_list', 'admin_teams_settings_info', 'admin_teams_settings_set_default_channels', 'admin_teams_admins_list', 'admin_teams_settings_set_description', 'admin_teams_settings_set_discoverability', 'admin_teams_settings_set_icon', 'admin_teams_settings_set_name', 'admin_usergroups_add_channels', 'admin_usergroups_add_teams', 'admin_usergroups_list_channels', 'admin_usergroups_remove_channels', 'admin_users_set_admin', 'admin_users_set_expiration', 'admin_users_set_owner', 'admin_users_set_regular', 'admin_users_session_clear_settings', 'admin_users_session_get_settings', 'admin_users_session_invalidate', 'admin_users_session_list', 'admin_users_session_reset', 'admin_users_session_reset_bulk', 'admin_users_session_set_settings', 'admin_users_unsupported_versions_export', 'admin_users_list', 'admin_workflows_collaborators_add', 'admin_workflows_collaborators_remove', 'admin_workflows_permissions_lookup', 'admin_workflows_search', 'admin_workflows_unpublish', 'admin_workflows_triggers_types_permissions_lookup', 'admin_workflows_triggers_types_permissions_set', 'files_remote_add', 'files_remote_list', 'files_remote_remove', 'files_remote_update', 'files_remote_info', 'files_comments_delete', 'files_delete', 'files_info', 'files_list', 'files_get_upload_url_external', 'files_complete_upload_external', 'files_remote_share', 'files_revoke_public_url', 'files_shared_public_url', 'files_upload', 'calls_add', 'calls_end', 'calls_info', 'calls_update', 'calls_participants_add', 'calls_participants_remove', 'workflows_featured_add', 'workflows_featured_list', 'workflows_featured_remove', 'workflows_featured_set', 'functions_complete_error', 'functions_complete_success', 'functions_distributions_permissions_add', 'functions_distributions_permissions_list', 'functions_distributions_permissions_remove', 'functions_distributions_permissions_set', 'functions_workflows_steps_list', 'functions_workflows_steps_responses_export', 'bookmarks_add', 'bookmarks_edit', 'bookmarks_list', 'bookmarks_remove', 'slack_lists_create', 'slack_lists_items_list', 'usergroups_create', 'usergroups_disable', 'usergroups_enable', 'usergroups_list', 'team_access_logs', 'team_billable_info', 'team_billing_info', 'team_external_teams_disconnect', 'team_external_teams_list', 'team_info', 'team_integration_logs', 'team_preferences_list', 'team_profile_get', 'bots_info', 'slack_lists_download_start', 'slack_lists_download_get', 'rtm_connect', 'assistant_threads_set_status', 'assistant_threads_set_suggested_prompts', 'assistant_threads_set_title', 'assistant_search_context', 'assistant_search_info', 'workflows_triggers_permissions_add', 'workflows_triggers_permissions_list', 'workflows_triggers_permissions_remove', 'workflows_triggers_permissions_set', 'usergroups_update', 'usergroups_users_list', 'usergroups_users_update', 'slack_lists_items_create', 'stars_add', 'stars_list', 'stars_remove', 'pins_add', 'pins_list', 'pins_remove', 'slack_lists_items_delete', 'slack_lists_items_delete_multiple', 'slack_lists_items_update', 'auth_revoke', 'auth_teams_list', 'auth_test', 'dnd_end_dnd', 'dnd_end_snooze', 'dnd_info', 'dnd_set_snooze', 'dnd_team_info', 'canvases_create', 'canvases_edit', 'canvases_delete', 'canvases_sections_lookup', 'slack_lists_items_info', 'slack_lists_update', 'slack_lists_access_set', 'slack_lists_access_delete', 'canvases_access_set', 'canvases_access_delete', 'apps_activities_list'
+            ],
+            'HiBob': [
+                'get_policy_type_names', 'get_policy_type_details', 'get_reason_codes', 'add_reason_codes', 'get_policies', 'get_policy_names', 'submit_timeoff_request', 'get_timeoff_request', 'cancel_timeoff_request', 'get_request_changes', 'get_whosout', 'get_out_today', 'get_balance', 'create_balance_adjustment', 'import_attendance_data', 'read_company_reports', 'download_report_by_id', 'generate_company_report_async', 'download_report_by_name', 'read_all_active_job_ads', 'read_job_ads_by_id', 'read_company_job_profiles', 'get_all_job_roles', 'get_all_job_families', 'get_all_job_family_groups', 'get_job_profiles_metadata', 'get_job_roles_metadata', 'get_job_families_metadata', 'get_job_family_groups_metadata', 'get_goal_type_metadata', 'get_goals_metadata', 'get_key_results_metadata', 'search_goal_types', 'search_goals', 'search_key_results', 'create_goals', 'update_goal_status', 'update_goal', 'delete_goal', 'create_key_results', 'update_key_results_progress', 'update_key_results_details', 'delete_key_result', 'people_search', 'read_by_identifier', 'update_by_identifier', 'get_profiles', 'create_person', 'invite_employee', 'uninvite_employee', 'terminate_employee', 'set_start_date', 'get_avatar_by_email', 'get_avatar_by_id', 'upload_avatar_by_url', 'update_employee_email', 'get_all_positions_fields', 'get_all_position_openings_fields', 'get_all_position_budget_fields', 'read_company_positions', 'read_position_openings', 'read_position_budgets', 'create_positions', 'create_position_openings', 'update_position', 'update_position_opening', 'delete_position_opening', 'create_position_budget', 'update_position_budget', 'cancel_position', 'get_onboarding_wizards', 'get_bulk_people_work', 'get_bulk_lifecycle_history', 'get_bulk_employment_history', 'get_bulk_payroll_history', 'search_actual_payments', 'get_employee_work_history', 'create_employee_work_entry', 'update_employee_work_entry', 'delete_employee_work_entry', 'get_employee_employment_history', 'create_employee_employment_entry', 'update_employee_employment_entry', 'delete_employee_employment_entry', 'get_employee_lifecycle_history', 'get_employee_payroll_history', 'create_employee_salary_entry', 'delete_employee_salary_entry', 'get_payroll_history', 'get_employee_equity_grants', 'create_employee_equity_grant', 'update_employee_equity_grant', 'delete_employee_equity_grant', 'get_employee_variable_payments', 'create_employee_variable_payment', 'delete_employee_variable_payment', 'get_employee_training_records', 'create_employee_training_record', 'delete_employee_training_record', 'get_employee_bank_accounts', 'create_employee_bank_account', 'update_employee_bank_account', 'delete_employee_bank_account', 'get_docs_folders_metadata', 'get_docs_for_employee', 'upload_shared_document', 'upload_confidential_document', 'upload_custom_document', 'delete_shared_document', 'delete_confidential_document', 'delete_custom_document', 'get_all_company_fields', 'create_new_field', 'update_existing_field', 'delete_existing_field', 'get_all_company_lists', 'get_company_list_by_name', 'add_item_to_list', 'update_list_item', 'delete_list_item', 'read_all_open_tasks', 'read_tasks_for_employee', 'complete_task', 'get_custom_tables_metadata', 'get_custom_table_metadata', 'get_employee_custom_table_entries', 'create_custom_table_entry', 'update_custom_table_entry', 'delete_custom_table_entry' 
+            ],
+            'Asana': [
+                'get_user', 'get_multiple_webhooks', 'get_webhook', 'establish_webhook', 'update_webhook', 'delete_webhook', 'get_user_favourites', 'get_multiple_users', 'get_users_in_team', 'get_users_in_workspace', 'create_project_brief', 'get_project_brief', 'update_project_brief', 'delete_project_brief', 'add_custom_field_to_project', 'add_followers_to_project', 'get_access_requests', 'create_access_request', 'approve_access_request', 'reject_access_request', 'get_workspace_membership', 'get_user_workspace_memberships', 'get_workspace_workspace_memberships', 'get_team_membership', 'get_team_memberships', 'get_memberships_for_team', 'get_team_memberships_from_user', 'add_users_to_project', 'remove_users_from_project', 'remove_followers_from_project', 'get_workspace', 'get_multiple_workspaces', 'update_workspace', 'add_user_to_workspace', 'remove_user_from_workspace', 'remove_custom_field_from_project', 'get_project_task_counts', 'get_tasks', 'get_task', 'get_task_from_project', 'get_task_from_section', 'get_task_subtasks', 'get_task_dependencies', 'get_task_dependents', 'get_task_from_tag', 'get_task_by_custom_id', 'get_user_task_list_tasks', 'get_user_task_list', 'get_user_task_list_for_user', 'get_task_projects', 'get_multiple_projects', 'get_attachment', 'delete_attachment', 'get_attachments_from_object', 'upload_attachment', 'get_workspace_projects', 'get_team_projects', 'get_project', 'get_project_membership', 'get_memberships_from_project', 'delete_project', 'create_project_in_workspace', 'create_allocation', 'get_allocations', 'get_allocation', 'delete_allocation', 'update_allocation', 'get_audit_log_events', 'get_events', 'create_project_in_team', 'create_project', 'update_project', 'save_project_as_template', 'get_reactions', 'trigger_rule', 'get_section', 'get_sections_in_project', 'delete_section', 'create_section', 'update_section', 'add_task_to_section', 'move_or_insert_section', 'duplicate_project', 'add_custom_field_to_portfolio', 'add_item_to_portfolio', 'get_workspace_events', 'get_status_update', 'get_status_updates_from_object', 'delete_status_update', 'create_status_update', 'get_story', 'get_stories_from_task', 'create_story', 'delete_story', 'update_story', 'get_goal', 'get_goals', 'delete_goal', 'update_goal', 'create_goal', 'set_goal_metric', 'update_goal_metric_current_value', 'add_followers_to_goal', 'remove_followers_from_goal', 'get_parent_goals', 'add_members_to_portfolio', 'create_portfolio', 'delete_portfolio', 'get_portfolio', 'get_portfolios', 'get_portfolio_items', 'remove_custom_field_from_portfolio', 'remove_item_from_portfolio', 'remove_members_from_portfolio', 'update_portfolio', 'get_portfolio_membership', 'get_goal_relationship', 'get_goal_relationships', 'add_supporting_goal_relationship', 'update_goal_relationship', 'remove_supporting_goal_relationship', 'get_tag', 'get_multiple_tags', 'create_tag', 'update_tag', 'delete_tag', 'create_tag_in_workspace', 'get_task_tags', 'get_tags_in_workspace', 'get_portfolio_memberships', 'get_all_portfolio_memberships', 'add_project_to_task', 'add_tag_to_task', 'add_followers_to_task', 'create_subtask', 'create_task', 'update_task', 'delete_task', 'create_team', 'get_team', 'get_teams_for_user', 'get_teams_in_workspace', 'update_team', 'remove_user_from_team', 'add_user_to_team'
+            ],
+            'Gmail': [
+                'get_user_profile', 'stop_user_watch', 'watch_user_mailbox', 'create_draft', 'delete_draft', 'get_draft', 'list_drafts', 'send_draft', 'update_draft', 'list_history', 'create_label', 'delete_label', 'get_label', 'list_labels', 'patch_label', 'update_label', 'batch_delete_messages', 'batch_modify_messages', 'delete_message', 'get_message', 'import_message', 'insert_message', 'list_messages', 'modify_message', 'send_message', 'trash_message', 'untrash_message', 'get_attachment', 'get_auto_forwarding', 'update_auto_forwarding', 'get_imap_settings', 'update_imap_settings', 'get_language_settings', 'update_language_settings', 'get_pop_settings', 'update_pop_settings', 'get_vacation_settings', 'update_vacation_settings', 'create_cse_identity', 'delete_cse_identity', 'get_cse_identity', 'list_cse_identities', 'patch_cse_identity', 'email_create_cse_keypair', 'email_disable_cse_keypair', 'email_enable_cse_keypair', 'email_get_cse_keypair', 'email_list_cse_keypairs', 'email_obliterate_cse_keypair', 'email_create_delegate', 'email_delete_delegate', 'email_get_delegate', 'email_list_delegates', 'create_filter', 'delete_filter', 'get_filter', 'list_filters', 'create_forwarding_address', 'delete_forwarding_address', 'get_forwarding_address', 'list_forwarding_addresses', 'create_send_as_alias', 'delete_send_as_alias', 'get_send_as_alias', 'list_send_as_aliases', 'patch_send_as_alias', 'update_send_as_alias', 'verify_send_as_alias', 'delete_smime_config', 'get_smime_config', 'insert_smime_config', 'list_smime_configs', 'set_default_smime_config', 'delete_thread', 'get_thread', 'list_threads', 'modify_thread', 'trash_thread', 'untrash_thread'
+            ],
+            'Freshdesk': [
+                'create_contact', 'get_contact', 'get_contact_by_email', 'update_contact', 'delete_contact', 'hard_delete_contact', 'filter_contacts', 'make_agent', 'search_contacts', 'get_contacts_by_company', 'add_contact_to_company', 'remove_contact_from_company', 'restore_contact', 'autocomplete_contacts', 'filter_contacts', 'list_contacts', 'create_comment', 'view_comment', 'update_comment', 'delete_comment', 'list_comments_in_topic', 'create_forum_category', 'get_forum_category', 'list_forum_categories', 'update_forum_category', 'delete_forum_category', 'list_forums_in_category', 'create_admin_group', 'get_admin_group', 'list_admin_groups', 'update_admin_group', 'delete_admin_group', 'list_agents_in_group', 'modify_agents_in_group', 'omnichannel_groups_note', 'create_forum', 'view_forum', 'list_all_topics_in_forum', 'update_forum', 'delete_forum', 'monitor_forum', 'unmonitor_forum', 'get_forum_monitor_status', 'create_topic', 'view_topic', 'update_topic', 'delete_topic', 'list_all_comments_in_topic', 'monitor_topic', 'get_topic_monitor_status', 'unmonitor_topic', 'list_monitored_topics', 'list_participated_topics', 'create_solution_category', 'view_solution_category', 'update_solution_category', 'delete_solution_category', 'list_all_solution_categories', 'create_translated_solution_category', 'update_translated_solution_category', 'view_translated_solution_category', 'create_group', 'get_group', 'list_all_groups', 'update_group', 'delete_group', 'list_roles', 'get_role', 'list_business_hours', 'get_business_hour', 'create_business_hour', 'update_business_hour', 'delete_business_hour', 'list_holidays_for_business_hour', 'create_holiday', 'update_holiday', 'delete_holiday', 'list_skills', 'get_skill', 'create_skill', 'update_skill', 'delete_skill', 'list_sla_policies', 'get_sla_policy', 'create_sla_policy', 'update_sla_policy', 'delete_sla_policy', 'list_products', 'get_product', 'create_email_mailbox', 'get_email_mailbox', 'list_email_mailboxes', 'update_email_mailbox', 'delete_email_mailbox', 'update_mailbox_settings', 'get_mailbox_settings', 'create_company', 'get_company', 'get_company_by_name', 'update_company', 'delete_company', 'list_companies', 'search_companies', 'list_folders_in_solution_category', 'get_solution_folder', 'create_solution_folder', 'update_solution_folder', 'delete_solution_folder', 'create_translated_solution_folder', 'update_translated_solution_folder', 'get_translated_solution_folder', 'list_translated_folders_in_category', 'list_subfolders_in_folder', 'list_translated_subfolders_in_folder', 'list_articles_in_solution_folder', 'get_solution_article', 'create_solution_article', 'update_solution_article', 'delete_solution_article', 'search_solutions', 'list_surveys', 'get_survey', 'create_survey', 'list_satisfaction_ratings', 'create_satisfaction_rating', 'list_email_configurations', 'get_email_configuration', 'update_email_configuration', 'create_thread', 'get_thread', 'update_thread', 'delete_thread', 'create_thread_message', 'get_thread_message', 'update_thread_message', 'delete_thread_message', 'get_thread_message_quoted_text', 'list_time_entries', 'update_time_entry', 'toggle_time_entry_timer', 'delete_time_entry', 'create_time_entry_for_ticket', 'list_time_entries_for_ticket', 'list_automation_rules', 'get_automation_rule', 'create_automation_rule', 'update_automation_rule', 'delete_automation_rule', 'create_canned_response', 'get_canned_response', 'update_canned_response', 'bulk_create_canned_responses', 'create_canned_response_folder', 'update_canned_response_folder', 'list_canned_response_folders', 'get_canned_response_folder', 'list_responses_in_canned_response_folder', 'create_ticket', 'create_ticket_via_outbound_email', 'get_ticket_by_id', 'list_all_tickets', 'search_tickets', 'update_ticket', 'delete_ticket', 'restore_ticket', 'bulk_update_tickets', 'bulk_delete_tickets', 'get_satisfaction_ratings', 'get_ticket_summary', 'update_ticket_summary', 'delete_ticket_summary', 'get_archived_ticket', 'delete_archived_ticket', 'get_archived_ticket_conversations', 'merge_tickets', 'get_watchers', 'watch_ticket', 'unwatch_ticket', 'bulk_watch', 'bulk_unwatch', 'delete_attachment', 'add_ticket_access', 'patch_ticket_access', 'get_ticket_access', 'delete_ticket_access', 'create_agent', 'bulk_create_agents', 'get_agent', 'update_agent', 'list_agents', 'delete_agent', 'search_agents', 'get_conversations_of_a_ticket', 'create_conversation', 'update_conversation', 'delete_conversation', 'create_reply_to_ticket', 'create_note_to_ticket', 'reply_to_forward'
+            ]
+        };
+
+        // Current available tools (will change based on domain)
+        let availableTools = toolsByDomain['Slack'];
+
+        const toolNameDataList = document.createElement('datalist');
+        toolNameDataList.id = 'toolNamesList';
+        
+        function updateToolsList(domain) {
+            availableTools = toolsByDomain[domain] || toolsByDomain['Slack'];
+            toolNameDataList.innerHTML = '';
+            availableTools.forEach(tool => {
+                const opt = document.createElement('option');
+                opt.value = tool;
+                toolNameDataList.appendChild(opt);
+            });
+        }
+        
+        // Initialize with default domain
+        updateToolsList('Slack');
+        document.body.appendChild(toolNameDataList);
+        
+        // Add event listener for domain change
+        document.getElementById('domain').addEventListener('change', (e) => {
+            updateToolsList(e.target.value);
+        });
+
+        let hasUnsavedChanges = false;
+        document.addEventListener('input', () => { hasUnsavedChanges = true; });
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnsavedChanges) {
+                const msg = 'You have unsaved changes.';
+                e.preventDefault();
+                e.returnValue = msg;
+                return msg;
+            }
+        });
+
+        // Global validation state
+        function updateExportButton() {
+            const exportBtn = document.getElementById('export-btn');
+            const invalidJson = document.querySelector('.json-invalid');
+            const invalidAction = document.querySelector('.action-error');
+            const invalidTool = document.querySelector('.tool-name-error');
+
+            // Validation: Continuation Mode 'continue' requires Prior Turn Summary
+            let invalidContinuation = false;
+            document.querySelectorAll('.section[data-turn-id]').forEach(turnDiv => {
+                const modeEl = turnDiv.querySelector('[data-field="mode"]');
+                const summaryEl = turnDiv.querySelector('[data-field="prior_summary"]');
+
+                // Clear previous continuation errors
+                const existingErr = summaryEl.nextElementSibling;
+                if (existingErr && existingErr.classList.contains('continuation-error')) {
+                    existingErr.remove();
+                }
+
+                if (modeEl && summaryEl) {
+                    const mode = modeEl.value;
+                    const summary = summaryEl.value.trim();
+                    if (mode === 'continue' && !summary) {
+                        invalidContinuation = true;
+                        const msg = document.createElement('div');
+                        msg.className = 'json-error-message continuation-error';
+                        msg.textContent = 'Prior Turn Summary is required for "continue" mode.';
+                        summaryEl.after(msg);
+                    }
+                }
+            });
+
+            const hasIssues = document.querySelectorAll('.has-issue').length > 0;
+            const hasUnresolvedReviews = document.querySelectorAll('.has-review').length > 0;
+
+            if (invalidJson || invalidAction || invalidTool || invalidContinuation || hasIssues || hasUnresolvedReviews) {
+                exportBtn.disabled = true;
+                exportBtn.style.opacity = '0.5';
+                exportBtn.style.cursor = 'not-allowed';
+                let title = "Fix errors";
+                if (invalidJson) title = "Fix invalid JSON";
+                else if (invalidAction) title = "Fix Action errors";
+                else if (invalidTool) title = "Fix Tool Name mismatch";
+                else if (invalidContinuation) title = "Fix Continuation Mode errors";
+                else if (hasIssues) title = "Resolve all evaluation issues to export";
+                else if (hasUnresolvedReviews) title = "Resolve all reviews before exporting";
+                exportBtn.title = title;
+            } else {
+                exportBtn.disabled = false;
+                exportBtn.style.opacity = '1';
+                exportBtn.style.cursor = 'pointer';
+                exportBtn.title = "Save to JSON";
+            }
+        }
+
+        function sanitizeInput(el) {
+            let val = el.value;
+            // Smart quotes
+            val = val.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+            // Long emdashes
+            val = val.replace(/—/g, '-');
+            // Bold markers - global replace
+            val = val.split('**').join('');
+
+            if (el.value !== val) {
+                el.value = val;
+                // Trigger event to re-validate if needed
+                el.dispatchEvent(new Event('input'));
+            }
+        }
+
+        function attachSanitizer(el) {
+            el.addEventListener('blur', () => sanitizeInput(el));
+            el.addEventListener('paste', () => setTimeout(() => sanitizeInput(el), 0));
+        }
+
+        function attachJsonValidator(textarea, isToolOutput = false, callDiv = null) {
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'json-error-message';
+            textarea.after(errorMsg);
+
+            const validate = () => {
+                const value = textarea.value.trim();
+                textarea.classList.remove('json-invalid', 'json-valid');
+                errorMsg.style.display = 'none';
+
+                // Clear any existing tool name error for this call
+                if (isToolOutput && callDiv) {
+                    const existingError = callDiv.querySelector('.tool-name-error');
+                    if (existingError) existingError.remove();
+                }
+
+                if (value) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        textarea.classList.add('json-valid');
+
+                        // Tool Name Sync & Validation Logic
+                        if (isToolOutput && callDiv) {
+                            const toolNameInput = callDiv.querySelector('[data-field="tool_name"]');
+                            const toolToolName = parsed.tool_name;
+
+                            if (toolToolName) {
+                                // ALWAYS SYNC if mismatched
+                                if (toolNameInput.value !== toolToolName) {
+                                    toolNameInput.value = toolToolName;
+                                }
+
+                                // Check validity AFTER sync
+                                if (!availableTools.includes(toolToolName)) {
+                                    const mismatchMsg = document.createElement('div');
+                                    mismatchMsg.className = 'json-error-message tool-name-error';
+                                    mismatchMsg.innerText = `Invalid Tool Name in Output: "${toolToolName}"`;
+                                    toolNameInput.after(mismatchMsg);
+                                }
+                            }
+                        }
+
+                    } catch (e) {
+                        textarea.classList.add('json-invalid');
+                        errorMsg.textContent = 'Invalid JSON: ' + e.message;
+                        errorMsg.style.display = 'block';
+                    }
+                }
+                updateExportButton();
+            };
+            textarea.addEventListener('input', validate);
+            textarea.addEventListener('blur', validate);
+
+            // Also trigger validation when tool name input changes (to clear error if user manually fixes it)
+            if (isToolOutput && callDiv) {
+                const toolNameInput = callDiv.querySelector('[data-field="tool_name"]');
+                toolNameInput.addEventListener('input', () => {
+                    // We need to re-run validation of the OUTPUT to check consistency? 
+                    // Or just check if current input is valid?
+                    // The requirement is mostly about the output dictating the name.
+                    // But if user types a valid name, we should clear error.
+                    const currentVal = toolNameInput.value;
+                    const existingError = callDiv.querySelector('.tool-name-error');
+                    if (existingError) existingError.remove();
+
+                    if (currentVal && !availableTools.includes(currentVal)) {
+                        const mismatchMsg = document.createElement('div');
+                        mismatchMsg.className = 'json-error-message tool-name-error';
+                        mismatchMsg.innerText = `Invalid Tool Name: "${currentVal}"`;
+                        toolNameInput.after(mismatchMsg);
+                    }
+                    updateExportButton();
+                });
+            }
+
+            validate();
+        }
+
+        function createElement(tag, options = {}) {
+            const el = document.createElement(tag);
+            if (options.class) el.className = options.class;
+            if (options.id) el.id = options.id;
+            if (options.text) el.textContent = options.text;
+            if (options.html) el.innerHTML = options.html;
+            if (options.placeholder) el.placeholder = options.placeholder;
+            return el;
+        }
+
+
+        // --- Fixing Mode / Evaluation Logic ---
+
+        // Global tracking for all issues and dimensions
+        let allIssuesById = {}; // { issueId: { dimension, description, status, fpExplanation, fpSuggestion, ... } }
+        let issuesByDimension = {}; // { dimension: [issueId1, issueId2, ...] }
+        let issueIdCounter = 0;
+        let arScoresByDimension = {}; // Store AR scores for each dimension
+        let reviewerScores = {}; // Store reviewer's scores
+        let turnLevelIssues = {}; // Issues that can't be mapped to specific fields (e.g., tool_calls, ambiguity)
+        let missedIssues = []; // { dimension, explanation, suggestion } - issues AR missed
+        
+        // FP Form Functions
+        window.showFPForm = function(issueId) {
+            const form = document.getElementById(`fp-form-${issueId}`);
+            if (form) {
+                form.style.display = 'block';
+            }
+        };
+        
+        window.hideFPForm = function(issueId) {
+            const form = document.getElementById(`fp-form-${issueId}`);
+            if (form) {
+                form.style.display = 'none';
+            }
+        };
+        
+        window.submitFP = function(issueId) {
+            const explanation = document.getElementById(`fp-explanation-${issueId}`)?.value?.trim() || '';
+            const suggestion = document.getElementById(`fp-suggestion-${issueId}`)?.value?.trim() || '';
+            
+            // Store feedback with the issue (both optional)
+            if (allIssuesById[issueId]) {
+                allIssuesById[issueId].fpExplanation = explanation;
+                allIssuesById[issueId].fpSuggestion = suggestion;
+            }
+            
+            // Now resolve as FP
+            resolveIssue(issueId, 'false_positive');
+            
+            if (explanation || suggestion) {
+                showToast('False positive recorded with feedback!', 'success');
+            } else {
+                showToast('Marked as false positive.', 'success');
+            }
+        };
+
+        function parseAndVisualizeEvaluation(data) {
+            // Clear existing issues
+            document.querySelectorAll('.has-issue').forEach(el => {
+                el.classList.remove('has-issue');
+                delete el._issueData;
+                el.removeEventListener('mouseover', showTooltip);
+                el.removeEventListener('mouseout', hideTooltip);
+                el.removeEventListener('input', clearIssueOnEdit);
+                delete el._hasTooltipListeners;
+            });
+            
+            // Clear turn-level issue highlights
+            document.querySelectorAll('.has-turn-issue').forEach(el => {
+                el.classList.remove('has-turn-issue');
+                delete el._turnIssueData;
+            });
+
+            // Reset tracking
+            totalEvalIssues = 0;
+            allIssuesById = {};
+            issuesByDimension = {};
+            issueIdCounter = 0;
+            arScoresByDimension = {};
+            turnLevelIssues = {};
+
+            const results = data.evaluation_results;
+            if (!results) {
+                showToast('No evaluation_results found in JSON.', 'warning');
+                updateEvalCounter();
+                return;
+            }
+
+            let issueCount = 0;
+            let turnIssueCount = 0;
+
+            for (const [dimension, result] of Object.entries(results)) {
+                if (!result.response) continue;
+
+                // Extract JSON from Markdown
+                const match = result.response.match(/```json\s*([\s\S]*?)\s*```/);
+                if (match && match[1]) {
+                    try {
+                        const innerJson = JSON.parse(match[1]);
+                        const issues = innerJson.issues || [];
+                        
+                        // Extract AR score for this dimension
+                        if (innerJson.score !== undefined) {
+                            arScoresByDimension[dimension] = parseInt(innerJson.score) || 0;
+                        }
+
+                        if (!issuesByDimension[dimension]) {
+                            issuesByDimension[dimension] = [];
+                        }
+
+                        issues.forEach(issue => {
+                            const issueId = highlightIssue(issue, dimension);
+                            if (issueId) {
+                                if (issueId.startsWith('turn_issue_')) {
+                                    // Turn-level issue
+                                    turnIssueCount++;
+                                } else {
+                                    issuesByDimension[dimension].push(issueId);
+                                    issueCount++;
+                                }
+                            }
+                        });
+
+                    } catch (e) {
+                        console.error('Failed to parse inner JSON for dimension:', dimension, e);
+                    }
+                }
+            }
+
+            totalEvalIssues = issueCount + turnIssueCount;
+
+            let message = `Imported evaluation. Found ${issueCount} field issues`;
+            if (turnIssueCount > 0) {
+                message += ` and ${turnIssueCount} turn-level issues`;
+            }
+            message += ` across ${Object.keys(issuesByDimension).filter(d => issuesByDimension[d]?.length > 0).length} dimensions.`;
+            
+            if (totalEvalIssues > 0) {
+                showToast(message, 'success');
+            } else {
+                showToast('Imported evaluation. No specific issues found.', 'info');
+            }
+            updateEvalCounter();
+            updateExportButton();
+        }
+
+        function highlightIssue(issue, dimension) {
+            // Parse location: turn_X_step_Y (with normalization for various formats)
+            if (!issue.location) return null;
+            
+            // Normalize location string to handle various formats
+            let location = issue.location.toLowerCase();
+            
+            // Remove prefixes like "assistant_"
+            location = location.replace(/^assistant_/, '');
+            
+            // Remove suffixes like "_final_output", "_final_response"
+            location = location.replace(/_final_output$/, '');
+            location = location.replace(/_final_response$/, '');
+            
+            // Handle "final_response" -> default to turn_1
+            if (location === 'final_response') {
+                location = 'turn_1';
+            }
+            
+            // Remove call suffix if present (turn_1_step_1_call_1 -> turn_1_step_1)
+            location = location.replace(/_call_\d+$/, '');
+            
+            const parts = location.split('_'); // ['turn', '1', 'step', '1']
+            if (parts.length < 2) return null;
+
+            const turnId = parts[1];
+            let stepId = null;
+            if (parts.length >= 4 && parts[2] === 'step') {
+                stepId = parts[3];
+            }
+
+            const turnDiv = document.querySelector(`.section[data-turn-id="${turnId}"]`);
+            if (!turnDiv) {
+                console.warn('Turn not found:', turnId);
+                return null;
+            }
+
+            let targetContainer = turnDiv;
+            if (stepId) {
+                const stepDiv = turnDiv.querySelector(`.nested[data-step-id="${stepId}"]`);
+                if (stepDiv) targetContainer = stepDiv;
+            }
+
+            // Map Component to Field
+            // Expanded mapping to handle various formats from evaluation JSONs
+            const component = (issue.component || issue.type || '').toLowerCase();
+            let fieldName = null;
+            let isTurnLevelIssue = false;
+            let isToolCallIssue = false;
+            let toolCallId = null;
+
+            // Reasoning variations: "Reasoning Text", "reasoning_text", "reason"
+            if (component.includes('reasoning') || component.includes('reason')) {
+                fieldName = 'reason_text';
+            }
+            // Observation variations: "Observation Text", "observation_text", "obs"
+            else if (component.includes('observation') || component.includes('obs')) {
+                fieldName = 'obs_text';
+            }
+            // User input variations: "User Input", "User Prompt", "user_input"
+            else if (component.includes('user input') || component.includes('user prompt') || component.includes('user_input')) {
+                fieldName = 'user_input';
+            }
+            // Prior/continuation
+            else if (component.includes('prior') || component.includes('continuation')) {
+                fieldName = 'prior_summary';
+            }
+            // Final variations: "Final Output", "Final Text", "final_output", "final_text", "final_response"
+            else if (component.includes('final')) {
+                fieldName = 'final_text';
+            }
+            // Tool calls with specific call location (e.g., turn_1_step_1_call_1) - map to tool call container
+            else if (component.includes('tool_calls') || component.includes('tool selection') || component.includes('parameter accuracy')) {
+                // Check if we have a call_id in the original location
+                const callMatch = issue.location.match(/call_(\d+)/i);
+                if (callMatch && stepId) {
+                    const callNum = callMatch[1];
+                    // Call container uses format: t{turnId}s{stepId}c{callNum}
+                    toolCallId = `t${turnId}s${stepId}c${callNum}`;
+                    isToolCallIssue = true;
+                } else {
+                    isTurnLevelIssue = true;
+                }
+            }
+            // Other turn-level issues: conversation flow, ambiguity handling
+            else if (component.includes('conversation') || component.includes('ambiguity')) {
+                isTurnLevelIssue = true;
+            }
+
+            // Extract description/explanation/suggestion with all field variations
+            const description = issue.description || 
+                               issue.what_is_wrong || 
+                               issue.what_was_done ||
+                               issue.actual_content ||
+                               issue.example ||
+                               '';
+            
+            const explanation = issue.why_it_is_wrong || 
+                               issue.why_unnatural || 
+                               issue.impact ||
+                               issue.what_was_missing ||
+                               '';
+            
+            const suggestion = issue.suggestion || 
+                              issue.suggested_improvement ||
+                              issue.expected ||
+                              '';
+
+            // Handle tool call issues (attach to specific tool call container)
+            if (isToolCallIssue && toolCallId) {
+                const callContainer = targetContainer.querySelector(`[data-call-id="${toolCallId}"]`);
+                if (callContainer) {
+                    callContainer.classList.add('has-issue');
+                    
+                    const issueId = `issue_${++issueIdCounter}`;
+                    
+                    allIssuesById[issueId] = {
+                        id: issueId,
+                        dimension: dimension,
+                        description: description,
+                        explanation: explanation,
+                        suggestion: suggestion,
+                        status: 'pending',
+                        fieldElement: callContainer,
+                        location: issue.location,
+                        component: issue.component || issue.type
+                    };
+                    
+                    if (!callContainer._issueData) callContainer._issueData = [];
+                    callContainer._issueData.push(issueId);
+                    
+                    if (!callContainer._hasTooltipListeners) {
+                        callContainer.addEventListener('mouseover', showTooltip);
+                        callContainer.addEventListener('mouseout', hideTooltip);
+                        callContainer._hasTooltipListeners = true;
+                    }
+                    
+                    return issueId;
+                }
+            }
+
+            // Handle turn-level issues (attach to turn header)
+            if (isTurnLevelIssue) {
+                const issueId = `turn_issue_${++issueIdCounter}`;
+                
+                // Find the turn header element (class is 'header-row' from addTurn())
+                const turnHeader = turnDiv.querySelector('.header-row');
+                if (turnHeader) {
+                    turnHeader.classList.add('has-turn-issue');
+                    
+                    allIssuesById[issueId] = {
+                        id: issueId,
+                        dimension: dimension,
+                        description: description,
+                        explanation: explanation,
+                        suggestion: suggestion,
+                        status: 'pending',
+                        fieldElement: turnHeader,
+                        location: issue.location,
+                        component: issue.component || issue.type,
+                        isTurnLevel: true
+                    };
+                    
+                    if (!turnHeader._turnIssueData) turnHeader._turnIssueData = [];
+                    turnHeader._turnIssueData.push(issueId);
+                    
+                    // Store in turnLevelIssues tracking
+                    if (!turnLevelIssues[turnId]) turnLevelIssues[turnId] = [];
+                    turnLevelIssues[turnId].push(issueId);
+                    
+                    // Also add to dimension tracking
+                    if (!issuesByDimension[dimension]) issuesByDimension[dimension] = [];
+                    issuesByDimension[dimension].push(issueId);
+                    
+                    // Attach listeners if not already attached
+                    if (!turnHeader._hasTurnTooltipListeners) {
+                        turnHeader.addEventListener('mouseover', showTurnTooltip);
+                        turnHeader.addEventListener('mouseout', hideTurnTooltip);
+                        turnHeader._hasTurnTooltipListeners = true;
+                    }
+                    
+                    return issueId;
+                }
+                return null;
+            }
+
+            if (!fieldName) {
+                console.warn('Could not map component to field:', component);
+                return null;
+            }
+
+            const inputEl = targetContainer.querySelector(`[data-field="${fieldName}"]`);
+            if (inputEl) {
+                inputEl.classList.add('has-issue');
+
+                // Generate unique issue ID
+                const issueId = `issue_${++issueIdCounter}`;
+                
+                // Store issue in global tracking
+                allIssuesById[issueId] = {
+                    id: issueId,
+                    dimension: dimension,
+                    description: description,
+                    explanation: explanation,
+                    suggestion: suggestion,
+                    status: 'pending', // pending, fixed, false_positive
+                    fieldElement: inputEl,
+                    location: issue.location,
+                    component: issue.component || issue.type
+                };
+
+                // Store issue data for tooltip (reference by ID)
+                if (!inputEl._issueData) inputEl._issueData = [];
+                inputEl._issueData.push(issueId);
+
+                // Attach listeners if not already attached
+                if (!inputEl._hasTooltipListeners) {
+                    inputEl.addEventListener('mouseover', showTooltip);
+                    inputEl.addEventListener('mouseout', hideTooltip);
+                    inputEl._hasTooltipListeners = true;
+                }
+                
+                return issueId;
+            }
+            return null;
+        }
+        
+        // Turn-level tooltip for issues that can't be mapped to specific fields
+        const turnTooltip = document.createElement('div');
+        turnTooltip.className = 'issue-tooltip turn-level-tooltip';
+        let turnTooltipTimeout = null;
+        
+        turnTooltip.addEventListener('mouseover', () => {
+            clearTimeout(turnTooltipTimeout);
+            turnTooltip.style.display = 'block';
+        });
+        turnTooltip.addEventListener('mouseout', () => {
+            turnTooltipTimeout = setTimeout(() => {
+                turnTooltip.style.display = 'none';
+            }, 300);
+        });
+        document.body.appendChild(turnTooltip);
+        
+        function showTurnTooltip(e) {
+            clearTimeout(turnTooltipTimeout);
+            const issueIds = e.currentTarget._turnIssueData;
+            if (!issueIds || issueIds.length === 0) return;
+            
+            const pendingIssueIds = issueIds.filter(id => allIssuesById[id] && allIssuesById[id].status === 'pending');
+            const resolvedIssueIds = issueIds.filter(id => allIssuesById[id] && allIssuesById[id].status !== 'pending');
+            
+            let html = '<div style="font-weight: bold; color: #f59e0b; margin-bottom: 8px;">⚠️ Turn-Level Issues</div>';
+            const totalIssues = issueIds.length;
+            
+            pendingIssueIds.forEach((issueId, idx) => {
+                const issue = allIssuesById[issueId];
+                if (!issue) return;
+                
+                html += `<div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #444;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-size: 0.75em; color: #888;">Issue ${idx + 1} of ${totalIssues}</span>
+                        <span style="font-size: 0.7em; padding: 2px 6px; background: #ef4444; color: white; border-radius: 10px;">PENDING</span>
+                    </div>
+                    <strong style="color: #60a5fa;">${issue.dimension}</strong>
+                    <div style="font-size: 0.8em; color: #f59e0b; margin: 3px 0;">${issue.component}</div>
+                    <div style="margin: 5px 0;">${issue.description || 'No description'}</div>
+                    ${issue.explanation ? `<div style="font-style: italic; color: #aaa; font-size: 0.9em;">Why: ${issue.explanation}</div>` : ''}
+                    ${issue.suggestion ? `<div class="suggestion">Suggestion: ${issue.suggestion}</div>` : ''}
+                    <div style="margin-top: 8px; display: flex; gap: 5px;">
+                        <button onclick="resolveIssue('${issueId}', 'fixed')" style="padding: 3px 10px; font-size: 0.75em; background: #10b981; color: white; border: none; border-radius: 3px; cursor: pointer;">✓ Fixed</button>
+                        <button onclick="showFPForm('${issueId}')" style="padding: 3px 10px; font-size: 0.75em; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">✗ False Positive</button>
+                    </div>
+                    <div id="fp-form-${issueId}" style="display: none; margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border: 1px solid #ef4444;">
+                        <div style="font-size: 0.8em; font-weight: 600; color: #ef4444; margin-bottom: 8px;">Mark as False Positive (AR Mistake)</div>
+                        <input type="text" id="fp-explanation-${issueId}" placeholder="Explanation (optional): Why is this a false positive?" style="width: 100%; padding: 6px; font-size: 0.8em; border: 1px solid #444; border-radius: 4px; background: #1e293b; color: white; margin-bottom: 6px; box-sizing: border-box;">
+                        <input type="text" id="fp-suggestion-${issueId}" placeholder="Suggestion (optional): How should AR improve?" style="width: 100%; padding: 6px; font-size: 0.8em; border: 1px solid #444; border-radius: 4px; background: #1e293b; color: white; margin-bottom: 8px; box-sizing: border-box;">
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="submitFP('${issueId}')" style="padding: 4px 12px; font-size: 0.75em; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Save FP</button>
+                            <button onclick="hideFPForm('${issueId}')" style="padding: 4px 12px; font-size: 0.75em; background: #4b5563; color: white; border: none; border-radius: 3px; cursor: pointer;">Cancel</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            if (resolvedIssueIds.length > 0) {
+                html += `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed #555;">
+                    <div style="font-size: 0.75em; color: #10b981; margin-bottom: 5px;">✓ ${resolvedIssueIds.length} resolved issue(s)</div>`;
+                resolvedIssueIds.forEach(issueId => {
+                    const issue = allIssuesById[issueId];
+                    if (!issue) return;
+                    const statusColor = issue.status === 'fixed' ? '#10b981' : '#6b7280';
+                    const statusText = issue.status === 'fixed' ? 'FIXED' : 'FALSE POSITIVE';
+                    html += `<div style="font-size: 0.8em; color: #666; padding: 3px 0; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${issue.dimension} - ${issue.component}</span>
+                        <span style="font-size: 0.7em; padding: 1px 5px; background: ${statusColor}; color: white; border-radius: 8px;">${statusText}</span>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            turnTooltip.innerHTML = html;
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            turnTooltip.style.left = `${rect.left + window.scrollX}px`;
+            turnTooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
+            turnTooltip.style.display = 'block';
+        }
+        
+        function hideTurnTooltip() {
+            turnTooltipTimeout = setTimeout(() => {
+                turnTooltip.style.display = 'none';
+            }, 300);
+        }
+
+        // Tooltip Logic
+        const tooltip = document.createElement('div');
+        tooltip.className = 'issue-tooltip';
+        let issueTooltipTimeout = null;
+        
+        // Keep tooltip open when hovering over it
+        tooltip.addEventListener('mouseover', () => {
+            clearTimeout(issueTooltipTimeout);
+            tooltip.style.display = 'block';
+        });
+        tooltip.addEventListener('mouseout', () => {
+            issueTooltipTimeout = setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 300);
+        });
+        document.body.appendChild(tooltip);
+
+        let activeTooltipTarget = null;
+
+        function showTooltip(e) {
+            clearTimeout(issueTooltipTimeout);
+            const issueIds = e.target._issueData;
+            if (!issueIds || issueIds.length === 0) return;
+
+            activeTooltipTarget = e.target;
+
+            // Filter to only pending issues
+            const pendingIssueIds = issueIds.filter(id => allIssuesById[id] && allIssuesById[id].status === 'pending');
+            const resolvedIssueIds = issueIds.filter(id => allIssuesById[id] && allIssuesById[id].status !== 'pending');
+            
+            let html = '';
+            const totalIssues = issueIds.length;
+            
+            // Show pending issues with action buttons
+            pendingIssueIds.forEach((issueId, idx) => {
+                const issue = allIssuesById[issueId];
+                if (!issue) return;
+                
+                const descriptionText = issue.description || 'No description provided';
+                
+                html += `<div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #444;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-size: 0.75em; color: #888;">Issue ${idx + 1} of ${totalIssues}</span>
+                        <span style="font-size: 0.7em; padding: 2px 6px; background: #ef4444; color: white; border-radius: 10px;">PENDING</span>
+                    </div>
+                    <strong style="color: #60a5fa;">${issue.dimension}</strong>
+                    ${issue.component ? `<div style="font-size: 0.75em; color: #f59e0b; margin-top: 2px;">${issue.component}</div>` : ''}
+                    <div style="margin: 5px 0;">${descriptionText}</div>
+                    ${issue.explanation ? `<div style="font-style: italic; color: #aaa; font-size: 0.9em;">Why: ${issue.explanation}</div>` : ''}
+                    ${issue.suggestion ? `<div class="suggestion">Suggestion: ${issue.suggestion}</div>` : ''}
+                    <div style="margin-top: 8px; display: flex; gap: 5px;">
+                        <button onclick="resolveIssue('${issueId}', 'fixed')" style="padding: 3px 10px; font-size: 0.75em; background: #10b981; color: white; border: none; border-radius: 3px; cursor: pointer;">✓ Fixed</button>
+                        <button onclick="showFPForm('${issueId}')" style="padding: 3px 10px; font-size: 0.75em; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">✗ False Positive</button>
+                    </div>
+                    <div id="fp-form-${issueId}" style="display: none; margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border: 1px solid #ef4444;">
+                        <div style="font-size: 0.8em; font-weight: 600; color: #ef4444; margin-bottom: 8px;">Mark as False Positive (AR Mistake)</div>
+                        <input type="text" id="fp-explanation-${issueId}" placeholder="Explanation (optional): Why is this a false positive?" style="width: 100%; padding: 6px; font-size: 0.8em; border: 1px solid #444; border-radius: 4px; background: #1e293b; color: white; margin-bottom: 6px; box-sizing: border-box;">
+                        <input type="text" id="fp-suggestion-${issueId}" placeholder="Suggestion (optional): How should AR improve?" style="width: 100%; padding: 6px; font-size: 0.8em; border: 1px solid #444; border-radius: 4px; background: #1e293b; color: white; margin-bottom: 8px; box-sizing: border-box;">
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="submitFP('${issueId}')" style="padding: 4px 12px; font-size: 0.75em; background: #ef4444; color: white; border: none; border-radius: 3px; cursor: pointer;">Save FP</button>
+                            <button onclick="hideFPForm('${issueId}')" style="padding: 4px 12px; font-size: 0.75em; background: #4b5563; color: white; border: none; border-radius: 3px; cursor: pointer;">Cancel</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            // Show resolved issues (collapsed)
+            if (resolvedIssueIds.length > 0) {
+                html += `<div style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed #555;">
+                    <div style="font-size: 0.75em; color: #10b981; margin-bottom: 5px;">✓ ${resolvedIssueIds.length} resolved issue(s)</div>`;
+                resolvedIssueIds.forEach(issueId => {
+                    const issue = allIssuesById[issueId];
+                    if (!issue) return;
+                    const statusColor = issue.status === 'fixed' ? '#10b981' : '#6b7280';
+                    const statusText = issue.status === 'fixed' ? 'FIXED' : 'FALSE POSITIVE';
+                    html += `<div style="font-size: 0.8em; color: #666; padding: 3px 0; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${issue.dimension}</span>
+                        <span style="font-size: 0.7em; padding: 1px 5px; background: ${statusColor}; color: white; border-radius: 8px;">${statusText}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            tooltip.innerHTML = html;
+            tooltip.style.display = 'block';
+            tooltip.style.maxHeight = '400px';
+            tooltip.style.overflowY = 'auto';
+
+            // Position
+            const rect = e.target.getBoundingClientRect();
+            let left = rect.left;
+            let top = rect.bottom + 5; // Below the field
+
+            // Constrain Width
+            const tooltipWidth = 350; // Increased for better readability
+            const viewportWidth = window.innerWidth;
+
+            if (left + tooltipWidth > viewportWidth) {
+                left = viewportWidth - tooltipWidth - 20;
+            }
+            if (left < 0) left = 10;
+
+            tooltip.style.left = (left + window.scrollX) + 'px';
+            tooltip.style.top = (top + window.scrollY) + 'px';
+        }
+
+        window.resolveIssue = function (issueId, resolution) {
+            if (!allIssuesById[issueId]) return;
+            
+            const issue = allIssuesById[issueId];
+            
+            // Update issue status
+            issue.status = resolution;
+            
+            // Check if this is a turn-level issue
+            if (issue.isTurnLevel) {
+                const fieldElement = issue.fieldElement;
+                if (fieldElement && fieldElement._turnIssueData) {
+                    const pendingCount = fieldElement._turnIssueData.filter(id => 
+                        allIssuesById[id] && allIssuesById[id].status === 'pending'
+                    ).length;
+                    
+                    if (pendingCount === 0) {
+                        // All turn-level issues resolved - remove highlight
+                        fieldElement.classList.remove('has-turn-issue');
+                    }
+                    
+                    // Refresh turn tooltip
+                    clearTimeout(turnTooltipTimeout);
+                    turnTooltip.style.display = 'none';
+                }
+            } else {
+                // Regular field issue
+                const fieldElement = issue.fieldElement;
+                if (fieldElement && fieldElement._issueData) {
+                    const pendingCount = fieldElement._issueData.filter(id => 
+                        allIssuesById[id] && allIssuesById[id].status === 'pending'
+                    ).length;
+                    
+                    if (pendingCount === 0) {
+                        // All issues resolved - remove highlight
+                        fieldElement.classList.remove('has-issue');
+                    }
+                }
+                
+                // Refresh tooltip if still showing
+                if (activeTooltipTarget && activeTooltipTarget._issueData) {
+                    const pendingOnTarget = activeTooltipTarget._issueData.filter(id => 
+                        allIssuesById[id] && allIssuesById[id].status === 'pending'
+                    ).length;
+                    
+                    if (pendingOnTarget === 0) {
+                        // Hide tooltip - all resolved
+                        clearTimeout(issueTooltipTimeout);
+                        tooltip.style.display = 'none';
+                        activeTooltipTarget = null;
+                    } else {
+                        // Refresh tooltip to show updated status
+                        showTooltip({ target: activeTooltipTarget });
+                    }
+                }
+            }
+            
+            updateEvalCounter();
+            updateExportButton();
+            
+            const statusText = resolution === 'fixed' ? 'marked as fixed' : 'marked as false positive';
+            showToast(`Issue ${statusText}`, 'success', 2000);
+        };
+
+        // Eval/Issue counter and navigation
+        let totalEvalIssues = 0;
+
+        function updateEvalCounter() {
+            const evalCountNumber = document.getElementById('eval-count-number');
+            const evalCounterBadge = document.getElementById('eval-counter-badge');
+            
+            // Count individual pending issues (not fields)
+            const unresolvedCount = Object.values(allIssuesById).filter(issue => issue.status === 'pending').length;
+
+            if (unresolvedCount === 0 && totalEvalIssues > 0) {
+                evalCountNumber.textContent = '✓';
+                evalCounterBadge.classList.add('all-done');
+                evalCounterBadge.title = 'All issues resolved!';
+            } else {
+                evalCountNumber.textContent = unresolvedCount;
+                evalCounterBadge.classList.remove('all-done');
+                evalCounterBadge.title = `${unresolvedCount} unresolved issue(s)`;
+            }
+        }
+
+        // --- AR Export Functions ---
+
+        // All standard AR dimensions
+        const ALL_AR_DIMENSIONS = [
+            'Date/Time Quality Checks',
+            'Grammar & Language Quality',
+            'Hallucination',
+            'Naturalness & Flow',
+            'Reasoning Chain Coherence',
+            'System Context Awareness',
+            'Task Completeness',
+            'Tool Output Integration',
+            'Tool Use Accuracy'
+        ];
+
+        
+        function populateFPSummary() {
+            const container = document.getElementById('fp-summary-list');
+            
+            // Get all FP issues with feedback
+            const fpIssues = Object.values(allIssuesById).filter(issue => issue.status === 'false_positive');
+            
+            if (fpIssues.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); padding: 0.5rem;">No false positives marked yet.</div>';
+                return;
+            }
+            
+            let html = '';
+            fpIssues.forEach((issue, idx) => {
+                html += `<div style="padding: 0.5rem; border-bottom: 1px solid var(--border); ${idx === fpIssues.length - 1 ? 'border-bottom: none;' : ''}">
+                    <div style="font-weight: 600; color: #ef4444;">${issue.dimension}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.8em; margin-top: 2px;">Explanation: ${issue.fpExplanation || 'None'}</div>
+                    ${issue.fpSuggestion ? `<div style="color: var(--text-muted); font-size: 0.8em;">Suggestion: ${issue.fpSuggestion}</div>` : ''}
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function populateMissedDimensionDropdown() {
+            const select = document.getElementById('missed-dimension');
+            let html = '<option value="">Select Dimension...</option>';
+            
+            ALL_AR_DIMENSIONS.forEach(dimension => {
+                html += `<option value="${dimension}">${dimension}</option>`;
+            });
+            
+            select.innerHTML = html;
+        }
+        
+        function updateMissedIssuesList() {
+            const container = document.getElementById('missed-issues-container');
+            const list = document.getElementById('missed-issues-list');
+            
+            if (missedIssues.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            let html = '';
+            missedIssues.forEach((issue, idx) => {
+                html += `<div style="padding: 0.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; ${idx === missedIssues.length - 1 ? 'border-bottom: none;' : ''}">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #f59e0b;">${issue.dimension}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.8em; margin-top: 2px;">Explanation: ${issue.explanation}</div>
+                        ${issue.suggestion ? `<div style="color: var(--text-muted); font-size: 0.8em;">Suggestion: ${issue.suggestion}</div>` : ''}
+                    </div>
+                    <button onclick="removeMissedIssue(${idx})" style="padding: 2px 8px; font-size: 0.75em; background: #4b5563; color: white; border: none; border-radius: 3px; cursor: pointer;">×</button>
+                </div>`;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        window.addMissedIssue = function() {
+            const dimension = document.getElementById('missed-dimension').value;
+            const explanation = document.getElementById('missed-explanation').value.trim();
+            const suggestion = document.getElementById('missed-suggestion').value.trim();
+            
+            if (!dimension) {
+                showToast('Please select a dimension.', 'warning');
+                return;
+            }
+            if (!explanation) {
+                showToast('Please provide an explanation.', 'warning');
+                return;
+            }
+            
+            missedIssues.push({ dimension, explanation, suggestion });
+            
+            // Clear inputs
+            document.getElementById('missed-dimension').value = '';
+            document.getElementById('missed-explanation').value = '';
+            document.getElementById('missed-suggestion').value = '';
+            
+            updateMissedIssuesList();
+            showToast('Missed issue added!', 'success');
+        };
+        
+        window.removeMissedIssue = function(idx) {
+            missedIssues.splice(idx, 1);
+            updateMissedIssuesList();
+        };
+        
+        function populateDimensionCheckboxList() {
+            const container = document.getElementById('dimension-checkbox-list');
+            let html = '';
+            
+            ALL_AR_DIMENSIONS.forEach(dimension => {
+                const issueIds = issuesByDimension[dimension] || [];
+                const hasIssues = issueIds.length > 0;
+                const issueCount = issueIds.length;
+                
+                html += `<label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border);">
+                    <input type="checkbox" class="dim-select-checkbox" data-dimension="${dimension}" ${hasIssues ? 'checked' : ''} style="width: 16px; height: 16px; cursor: pointer;">
+                    <span style="flex: 1; font-size: 0.85rem;">
+                        ${dimension}
+                        ${hasIssues 
+                            ? `<span style="color: #ef4444; font-size: 0.8em; margin-left: 6px;">(${issueCount} AR issues)</span>` 
+                            : `<span style="color: var(--text-muted); font-size: 0.8em; margin-left: 6px;">(no AR issues)</span>`
+                        }
+                    </span>
+                </label>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        window.selectAllDimCheckboxes = function(selectAll) {
+            document.querySelectorAll('.dim-select-checkbox').forEach(cb => {
+                cb.checked = selectAll;
+            });
+        };
+        
+        window.copyCheckedDimensions = function() {
+            const selected = Array.from(document.querySelectorAll('.dim-select-checkbox:checked'))
+                .map(cb => cb.dataset.dimension);
+            
+            if (selected.length === 0) {
+                showToast('Please select at least one dimension.', 'warning');
+                return;
+            }
+            
+            const csv = selected.join(',');
+            navigator.clipboard.writeText(csv).then(() => {
+                showToast(`Copied ${selected.length} dimensions!`, 'success');
+            }).catch(err => {
+                showToast('Failed to copy to clipboard', 'error');
+                console.error(err);
+            });
+        };
+        
+        function copyFeedbackReport() {
+            // Get all FP issues
+            const fpIssues = Object.values(allIssuesById).filter(issue => issue.status === 'false_positive');
+            
+            if (fpIssues.length === 0 && missedIssues.length === 0) {
+                showToast('No feedback to export. Mark some FPs or add missed issues.', 'warning');
+                return;
+            }
+            
+            // Build tab-separated report: Dimension \t Mistake \t Explanation \t Suggestion
+            let lines = [];
+            
+            // Add FP issues
+            fpIssues.forEach(issue => {
+                const dimension = issue.dimension;
+                const mistake = 'FP';
+                const explanation = issue.fpExplanation || '';
+                const suggestion = issue.fpSuggestion || '';
+                lines.push(`${dimension}\t${mistake}\t${explanation}\t${suggestion}`);
+            });
+            
+            // Add missed issues
+            missedIssues.forEach(issue => {
+                const dimension = issue.dimension;
+                const mistake = 'Missed';
+                const explanation = issue.explanation || '';
+                const suggestion = issue.suggestion || '';
+                lines.push(`${dimension}\t${mistake}\t${explanation}\t${suggestion}`);
+            });
+            
+            const report = lines.join('\n');
+            
+            navigator.clipboard.writeText(report).then(() => {
+                showToast(`Copied ${lines.length} feedback items! Paste into your sheet.`, 'success');
+                closeARExportModal();
+            }).catch(err => {
+                showToast('Failed to copy to clipboard', 'error');
+                console.error(err);
+            });
+        }
+
+        function showARExportModal() {
+            const modal = document.getElementById('ar-export-modal');
+            
+            // Populate all sections
+            populateFPSummary();
+            populateMissedDimensionDropdown();
+            updateMissedIssuesList();
+            populateDimensionCheckboxList();
+            
+            modal.classList.add('active');
+        }
+
+        function closeARExportModal() {
+            document.getElementById('ar-export-modal').classList.remove('active');
+        }
+
+        // Make functions available globally
+        window.showARExportModal = showARExportModal;
+        window.closeARExportModal = closeARExportModal;
+        window.copyFeedbackReport = copyFeedbackReport;
+
+        // Track current issue index for navigation
+        let currentIssueIndex = -1;
+
+        function jumpToNextIssue() {
+            // Include both field issues and turn-level issues
+            const issueElements = Array.from(document.querySelectorAll('.has-issue, .has-turn-issue'));
+            if (issueElements.length === 0) {
+                showToast('No unresolved issues remaining!', 'success');
+                return;
+            }
+
+            // Move to next index, wrap around
+            currentIssueIndex = (currentIssueIndex + 1) % issueElements.length;
+            scrollToAndHighlight(issueElements[currentIssueIndex], 'rgba(239, 68, 68, 0.6)');
+        }
+
+        function jumpToPrevIssue() {
+            // Include both field issues and turn-level issues
+            const issueElements = Array.from(document.querySelectorAll('.has-issue, .has-turn-issue'));
+            if (issueElements.length === 0) {
+                showToast('No unresolved issues remaining!', 'success');
+                return;
+            }
+
+            // Move to previous index, wrap around
+            currentIssueIndex = currentIssueIndex <= 0 ? issueElements.length - 1 : currentIssueIndex - 1;
+            scrollToAndHighlight(issueElements[currentIssueIndex], 'rgba(239, 68, 68, 0.6)');
+        }
+
+        // Track current review index for navigation
+        let currentReviewIndex = -1;
+
+        function jumpToNextReview() {
+            const reviewElements = Array.from(document.querySelectorAll('.has-review'));
+            if (reviewElements.length === 0) {
+                showToast('No unresolved reviews remaining!', 'success');
+                return;
+            }
+
+            // Move to next index, wrap around
+            currentReviewIndex = (currentReviewIndex + 1) % reviewElements.length;
+            scrollToAndHighlight(reviewElements[currentReviewIndex], 'rgba(245, 158, 11, 0.6)');
+        }
+
+        function jumpToPrevReview() {
+            const reviewElements = Array.from(document.querySelectorAll('.has-review'));
+            if (reviewElements.length === 0) {
+                showToast('No unresolved reviews remaining!', 'success');
+                return;
+            }
+
+            // Move to previous index, wrap around
+            currentReviewIndex = currentReviewIndex <= 0 ? reviewElements.length - 1 : currentReviewIndex - 1;
+            scrollToAndHighlight(reviewElements[currentReviewIndex], 'rgba(245, 158, 11, 0.6)');
+        }
+
+        function scrollToAndHighlight(element, color) {
+            if (!element) return;
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Flash effect
+            element.style.transition = 'box-shadow 0.3s';
+            element.style.boxShadow = `0 0 20px 5px ${color}`;
+            setTimeout(() => {
+                if (element) element.style.boxShadow = '';
+            }, 1500);
+        }
+
+        function hideTooltip() {
+            issueTooltipTimeout = setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 300);
+        }
+
+        // --- Review Import/Export Logic ---
+
+        // Review tooltip element
+        const reviewTooltip = document.createElement('div');
+        reviewTooltip.className = 'review-tooltip';
+        reviewTooltip.style.display = 'none';
+        let reviewTooltipTimeout = null;
+        
+        reviewTooltip.addEventListener('mouseover', () => {
+            clearTimeout(reviewTooltipTimeout);
+            reviewTooltip.style.display = 'block';
+        });
+        reviewTooltip.addEventListener('mouseout', () => {
+            reviewTooltipTimeout = setTimeout(() => {
+                reviewTooltip.style.display = 'none';
+            }, 300);
+        });
+        document.body.appendChild(reviewTooltip);
+
+        let activeReviewTarget = null;
+        let importedReviews = []; // Store imported reviews for export
+
+        function parseAndVisualizeReviews(data) {
+            // Clear existing reviews
+            document.querySelectorAll('.has-review').forEach(el => {
+                el.classList.remove('has-review', 'severity-critical', 'severity-major', 'severity-minor');
+                delete el._reviewData;
+                el.removeEventListener('mouseover', showReviewTooltip);
+                el.removeEventListener('mouseout', hideReviewTooltip);
+                el.removeEventListener('input', clearReviewOnEdit);
+                delete el._hasReviewListeners;
+            });
+
+            const reviews = data.reviews;
+            if (!reviews || reviews.length === 0) {
+                showToast('No reviews found in JSON.', 'warning');
+                return;
+            }
+
+            // Store reviews for later export
+            importedReviews = reviews.map(r => ({
+                ...r,
+                status: r.status || 'pending',
+                resolution: null
+            }));
+
+            let reviewCount = 0;
+
+            reviews.forEach(review => {
+                if (highlightReview(review)) {
+                    reviewCount++;
+                }
+            });
+
+            if (reviewCount > 0) {
+                showToast(`Imported ${reviewCount} reviews.`, 'success');
+            } else {
+                showToast('Could not map any reviews to fields.', 'warning');
+            }
+
+            updateReviewCounter();
+            updateExportButton();
+        }
+
+        function highlightReview(review) {
+            // Parse location: turn_X or turn_X_step_Y
+            if (!review.location) return false;
+            const parts = review.location.split('_'); // ['turn', '1', 'step', '1']
+            if (parts.length < 2) return false;
+
+            const turnId = parts[1];
+            let stepId = null;
+            if (parts.length >= 4 && parts[2] === 'step') {
+                stepId = parts[3];
+            }
+
+            const turnDiv = document.querySelector(`.section[data-turn-id="${turnId}"]`);
+            if (!turnDiv) {
+                console.warn('Could not find turn:', turnId);
+                return false;
+            }
+
+            let targetContainer = turnDiv;
+            if (stepId) {
+                const stepDiv = turnDiv.querySelector(`.nested[data-step-id="${stepId}"]`);
+                if (stepDiv) targetContainer = stepDiv;
+            }
+
+            // Map field name to data-field attribute
+            const fieldMapping = {
+                'user_input': 'user_input',
+                'prior_summary': 'prior_summary',
+                'prior_turn_summary': 'prior_summary',
+                'reason_text': 'reason_text',
+                'reasoning_text': 'reason_text',
+                'obs_text': 'obs_text',
+                'observation_text': 'obs_text',
+                'final_text': 'final_text',
+                'tool_name': 'tool_name',
+                'tool_input': 'tool_input',
+                'tool_output': 'tool_output'
+            };
+
+            const fieldName = fieldMapping[review.field] || review.field;
+            if (!fieldName) {
+                console.warn('No field specified in review:', review);
+                return false;
+            }
+
+            // Handle call-level fields (tool_name, tool_input, tool_output)
+            let inputEl = null;
+            if (['tool_name', 'tool_input', 'tool_output'].includes(fieldName) && review.call_id) {
+                const callDiv = targetContainer.querySelector(`[data-call-id="${review.call_id}"]`);
+                if (callDiv) {
+                    inputEl = callDiv.querySelector(`[data-field="${fieldName}"]`);
+                }
+            } else {
+                inputEl = targetContainer.querySelector(`[data-field="${fieldName}"]`);
+            }
+
+            if (!inputEl) {
+                console.warn('Could not find field:', fieldName, 'in', review.location);
+                return false;
+            }
+
+            // Add review styling
+            inputEl.classList.add('has-review');
+            const severity = review.severity || 'major';
+            inputEl.classList.add(`severity-${severity}`);
+
+            // Store review data
+            if (!inputEl._reviewData) inputEl._reviewData = [];
+            inputEl._reviewData.push({
+                id: review.id,
+                comment: review.comment,
+                severity: severity,
+                reviewer: review.reviewer || 'Unknown',
+                status: 'pending'
+            });
+
+            // Attach listeners if not already attached
+            if (!inputEl._hasReviewListeners) {
+                inputEl.addEventListener('mouseover', showReviewTooltip);
+                inputEl.addEventListener('mouseout', hideReviewTooltip);
+                inputEl.addEventListener('input', clearReviewOnEdit);
+                inputEl._hasReviewListeners = true;
+            }
+
+            return true;
+        }
+
+        function showReviewTooltip(e) {
+            clearTimeout(reviewTooltipTimeout);
+            const reviews = e.target._reviewData;
+            if (!reviews || reviews.length === 0) return;
+
+            activeReviewTarget = e.target;
+
+            let html = '';
+            reviews.forEach((review, idx) => {
+                html += `
+                    <div class="review-item" data-review-idx="${idx}">
+                        <div class="review-header">
+                            <strong>Review ${review.id || (idx + 1)}</strong>
+                            <span class="review-severity ${review.severity}">${review.severity}</span>
+                        </div>
+                        <div class="review-comment">${escapeHtml(review.comment)}</div>
+                        <div class="review-meta">Reviewer: ${escapeHtml(review.reviewer)}</div>
+                        <div class="review-actions">
+                            <button class="btn-fixed" onclick="resolveReview('fixed', ${idx})">✓ Mark Fixed</button>
+                            <button class="btn-false-positive" onclick="resolveReview('false_positive', ${idx})">✗ False Positive</button>
+                        </div>
+                    </div>
+                    ${idx < reviews.length - 1 ? '<hr style="border-color:#333; margin: 10px 0;">' : ''}
+                `;
+            });
+
+            // Apply severity class to tooltip
+            const highestSeverity = reviews.reduce((acc, r) => {
+                const order = { critical: 3, major: 2, minor: 1 };
+                return order[r.severity] > order[acc] ? r.severity : acc;
+            }, 'minor');
+
+            reviewTooltip.className = `review-tooltip severity-${highestSeverity}`;
+            reviewTooltip.innerHTML = html;
+            reviewTooltip.style.display = 'block';
+
+            // Position tooltip ABOVE the field (top-right area)
+            const rect = e.target.getBoundingClientRect();
+            const tooltipWidth = 350;
+            const tooltipHeight = reviewTooltip.offsetHeight || 150;
+            const viewportWidth = window.innerWidth;
+
+            // Position at top-right of the field
+            let left = rect.right - tooltipWidth;
+            let top = rect.top - tooltipHeight - 10; // Above the field
+
+            // If tooltip would go above viewport, position it below instead
+            if (top < 10) {
+                top = rect.bottom + 10;
+            }
+
+            // Keep within viewport horizontally
+            if (left < 10) left = 10;
+            if (left + tooltipWidth > viewportWidth) {
+                left = viewportWidth - tooltipWidth - 20;
+            }
+
+            reviewTooltip.style.left = (left + window.scrollX) + 'px';
+            reviewTooltip.style.top = (top + window.scrollY) + 'px';
+        }
+
+        function hideReviewTooltip() {
+            reviewTooltipTimeout = setTimeout(() => {
+                reviewTooltip.style.display = 'none';
+            }, 300);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#039;');
+        }
+
+        window.resolveReview = function(resolution, reviewIdx) {
+            if (!activeReviewTarget || !activeReviewTarget._reviewData) return;
+
+            const review = activeReviewTarget._reviewData[reviewIdx];
+            if (review) {
+                review.status = resolution;
+
+                // Update the imported reviews array for export
+                const importedReview = importedReviews.find(r => r.id === review.id);
+                if (importedReview) {
+                    importedReview.status = resolution;
+                    importedReview.resolution = resolution;
+                }
+            }
+
+            // Remove from the element's review data
+            activeReviewTarget._reviewData.splice(reviewIdx, 1);
+
+            // If no more reviews on this element, remove styling
+            if (activeReviewTarget._reviewData.length === 0) {
+                activeReviewTarget.classList.remove('has-review', 'severity-critical', 'severity-major', 'severity-minor');
+            }
+
+            reviewTooltip.style.display = 'none';
+            updateReviewCounter();
+            updateExportButton();
+        };
+
+        function clearReviewOnEdit(e) {
+            // When user edits a field, mark all reviews on it as being addressed
+            if (e.target._reviewData) {
+                e.target._reviewData.forEach(review => {
+                    const importedReview = importedReviews.find(r => r.id === review.id);
+                    if (importedReview) {
+                        importedReview.status = 'edited';
+                        importedReview.resolution = 'edited';
+                    }
+                });
+                e.target._reviewData = [];
+            }
+            e.target.classList.remove('has-review', 'severity-critical', 'severity-major', 'severity-minor');
+            updateReviewCounter();
+            updateExportButton();
+        }
+
+        function updateReviewCounter() {
+            const reviewCountNumber = document.getElementById('review-count-number');
+            const reviewCounterBadge = document.getElementById('review-counter-badge');
+            const unresolvedCount = document.querySelectorAll('.has-review').length;
+
+            if (unresolvedCount === 0 && importedReviews.length > 0) {
+                reviewCountNumber.textContent = '✓';
+                reviewCounterBadge.classList.add('all-done');
+                reviewCounterBadge.title = 'All done!';
+            } else {
+                reviewCountNumber.textContent = unresolvedCount;
+                reviewCounterBadge.classList.remove('all-done');
+                reviewCounterBadge.title = 'Unresolved reviews';
+            }
+        }
+
+        // Check if there are any comments to export and enable/disable button
+        function updateExportReviewsButton() {
+            const exportReviewBtn = document.getElementById('export-review-btn');
+            if (!exportReviewBtn) return;
+            
+            // Count comments in review comment boxes
+            let commentCount = 0;
+            document.querySelectorAll('.review-comment-box textarea').forEach(textarea => {
+                if (textarea.value.trim()) {
+                    commentCount++;
+                }
+            });
+            
+            // Also count imported reviews
+            const totalReviews = importedReviews.length + commentCount;
+            
+            if (totalReviews > 0) {
+                exportReviewBtn.disabled = false;
+                exportReviewBtn.style.opacity = '1';
+                exportReviewBtn.style.cursor = 'pointer';
+                exportReviewBtn.title = 'Export reviews as JSON';
+            } else {
+                exportReviewBtn.disabled = true;
+                exportReviewBtn.style.opacity = '0.5';
+                exportReviewBtn.style.cursor = 'not-allowed';
+                exportReviewBtn.title = 'Add at least 1 review comment to export';
+            }
+        }
+
+        function exportReviews() {
+            const trajectoryId = document.getElementById('trajectory_id').value.trim() || 'unknown';
+            const reviews = [];
+            let reviewId = 1;
+
+            // Collect comments from Review Mode comment boxes
+            document.querySelectorAll('.review-comment-box textarea').forEach(textarea => {
+                const comment = textarea.value.trim();
+                if (!comment) return;
+
+                const label = textarea.dataset.reviewLabel || '';
+                const commentId = textarea.dataset.commentId || '';
+                
+                // Get severity from the dropdown in the same comment box
+                const severitySelect = document.querySelector(`select[data-severity-for="${commentId}"]`);
+                const severity = severitySelect ? severitySelect.value : 'major';
+                
+                // Parse label like "Turn 1 > Step 2 > Reasoning" or "Turn 1 > User Input"
+                const parsedLocation = parseReviewLabel(label);
+                
+                reviews.push({
+                    id: `rev_${String(reviewId++).padStart(3, '0')}`,
+                    location: parsedLocation.location,
+                    field: parsedLocation.field,
+                    call_id: parsedLocation.call_id || null,
+                    comment: comment,
+                    severity: severity,
+                    reviewer: currentReviewerEmail || 'Unknown',
+                    status: 'pending'
+                });
+            });
+
+            // Also include any imported reviews that were resolved
+            importedReviews.forEach(r => {
+                if (r.resolution) {
+                    reviews.push({
+                        id: r.id,
+                        location: r.location,
+                        field: r.field,
+                        call_id: r.call_id || null,
+                        comment: r.comment,
+                        severity: r.severity,
+                        status: r.status,
+                        resolution: r.resolution
+                    });
+                }
+            });
+
+            if (reviews.length === 0) {
+                showToast('No reviews to export. Add comments first.', 'warning');
+                return;
+            }
+
+            const exportData = {
+                trajectory_id: trajectoryId,
+                reviews: reviews,
+                reviewer: currentReviewerEmail || 'Unknown',
+                review_date: new Date().toISOString().split('T')[0],
+                export_date: new Date().toISOString(),
+                summary: {
+                    total: reviews.length,
+                    pending: reviews.filter(r => r.status === 'pending').length,
+                    fixed: reviews.filter(r => r.resolution === 'fixed').length,
+                    false_positive: reviews.filter(r => r.resolution === 'false_positive').length
+                }
+            };
+
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${trajectoryId}_reviews.json`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function parseReviewLabel(label) {
+            // Parse labels like:
+            // "Turn 1 > User Input" -> { location: "turn_1", field: "user_input" }
+            // "Turn 1 > Step 2 > Reason Text" -> { location: "turn_1_step_2", field: "reason_text" }
+            // "Turn 1 > Final Text" -> { location: "turn_1", field: "final_text" }
+            
+            const result = { location: '', field: '', call_id: null };
+            
+            const parts = label.split('>').map(p => p.trim());
+            
+            // Extract turn number
+            const turnMatch = parts[0]?.match(/Turn\s*(\d+)/i);
+            if (turnMatch) {
+                result.location = `turn_${turnMatch[1]}`;
+            }
+            
+            // Check for step
+            const stepPart = parts.find(p => /Step\s*\d+/i.test(p));
+            if (stepPart) {
+                const stepMatch = stepPart.match(/Step\s*(\d+)/i);
+                if (stepMatch) {
+                    result.location += `_step_${stepMatch[1]}`;
+                }
+            }
+            
+            // Map the field based on the last part
+            const lastPart = parts[parts.length - 1]?.toLowerCase() || '';
+            
+            if (lastPart.includes('user input')) {
+                result.field = 'user_input';
+            } else if (lastPart.includes('continuation') || lastPart.includes('prior')) {
+                result.field = 'prior_summary';
+            } else if (lastPart.includes('reason text') || lastPart === 'reasoning') {
+                result.field = 'reason_text';
+            } else if (lastPart.includes('observation text')) {
+                result.field = 'obs_text';
+            } else if (lastPart.includes('final text')) {
+                result.field = 'final_text';
+            } else if (lastPart.includes('action')) {
+                result.field = 'action_type';
+            } else {
+                result.field = lastPart.replace(/\s+/g, '_');
+            }
+            
+            return result;
+        }
+
+        function validateActionCounts() {
+            // Remove all existing action errors
+            document.querySelectorAll('.action-error').forEach(el => el.remove());
+
+            const steps = document.querySelectorAll('[data-step-id]');
+            steps.forEach(stepDiv => {
+                const actionType = stepDiv.querySelector('[data-field="action_type"]').value;
+                const callsContainer = stepDiv.querySelector(`[id^="step_"][id$="_calls"]`);
+                const callCount = callsContainer ? callsContainer.children.length : 0;
+
+                let error = null;
+                if (actionType === 'sequential' && callCount !== 1) {
+                    error = "Sequential action must have exactly 1 call.";
+                } else if (actionType === 'parallel' && callCount < 2) {
+                    error = "Parallel action must have at least 2 calls.";
+                }
+
+                if (error) {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'json-error-message action-error';
+                    msgDiv.style.marginTop = '0.5rem';
+                    msgDiv.innerText = error;
+                    // Insert after the add call button
+                    const btn = stepDiv.querySelector('button[type="button"]'); // The '+ Add Call' button is usually the 3rd button in stepDiv (remove is 1st) logic is tricky. 
+                    // Let's find the Add Call button specifically.
+                    const addCallBtn = Array.from(stepDiv.querySelectorAll('button')).find(b => b.textContent.includes('Add Call'));
+                    if (addCallBtn) addCallBtn.after(msgDiv);
+                }
+            });
+            updateExportButton();
+        }
+
+        function createElement(tag, options = {}) {
+            const el = document.createElement(tag);
+            if (options.class) el.className = options.class;
+            if (options.id) el.id = options.id;
+            if (options.text) el.textContent = options.text;
+            if (options.html) el.innerHTML = options.html;
+            return el;
+        }
+
+        window.toggleSection = function (btn) {
+            const section = btn.closest('.section');
+            section.classList.toggle('collapsed');
+            btn.textContent = section.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+        };
+
+        window.toggleAllTurns = function (action) {
+            const turns = document.querySelectorAll('#turns-section #turns-container > .section');
+            turns.forEach(turn => {
+                const btn = turn.querySelector('.toggle-btn');
+                if (action === 'collapse') {
+                    turn.classList.add('collapsed');
+                    if (btn) btn.textContent = 'Expand';
+                } else {
+                    turn.classList.remove('collapsed');
+                    if (btn) btn.textContent = 'Collapse';
+                }
+            });
+        };
+
+        let turnCount = 0;
+
+        function addTurn() {
+            turnCount++;
+            const turnId = turnCount;
+            const turnDiv = createElement('div', { class: 'section' }); // Reusing section class for card look
+            turnDiv.dataset.turnId = turnId;
+
+            const headerDiv = createElement('div', { class: 'flex-row header-row' });
+            headerDiv.style.justifyContent = 'space-between';
+            headerDiv.style.alignItems = 'center';
+            headerDiv.style.marginBottom = '1rem';
+
+            const leftHeader = createElement('div', { class: 'flex-row' });
+            leftHeader.style.alignItems = 'center';
+            leftHeader.style.gap = '0.5rem';
+
+            const toggleBtn = createElement('button', { class: 'toggle-btn', text: 'Collapse' });
+            toggleBtn.onclick = () => toggleSection(toggleBtn);
+            leftHeader.appendChild(toggleBtn);
+
+            const h3 = createElement('h3', { text: `Turn ${turnId}` });
+            h3.style.margin = '0';
+            leftHeader.appendChild(h3);
+
+            headerDiv.appendChild(leftHeader);
+
+            if (turnId > 1) {
+                const removeTurnBtn = createElement('button', { class: 'remove-btn', text: 'Remove Turn' });
+                removeTurnBtn.type = 'button'; // Explicit type
+                removeTurnBtn.style.margin = '0';
+                removeTurnBtn.addEventListener('click', async () => {
+                    if (await showConfirm('Delete Turn', 'Are you sure you want to delete this turn?', 'danger')) {
+                        turnDiv.remove();
+                        renumberTurnIds();
+                        hasUnsavedChanges = true;
+                    }
+                });
+                headerDiv.appendChild(removeTurnBtn);
+            }
+            turnDiv.appendChild(headerDiv);
+
+            // User Input with comment button
+            const userInputHeader = createElement('div', { class: 'flex-row' });
+            userInputHeader.style.alignItems = 'center';
+            userInputHeader.style.gap = '0.5rem';
+            userInputHeader.style.marginTop = '1rem';
+            const userLabel = createElement('label', { text: 'User Input' });
+            userLabel.style.margin = '0';
+            userInputHeader.appendChild(userLabel);
+            const userCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            userCommentBtn.onclick = (e) => toggleCommentBox(e, turnDiv, `Turn ${turnId} > User Input`, userInputHeader);
+            userInputHeader.appendChild(userCommentBtn);
+            turnDiv.appendChild(userInputHeader);
+
+            const userInput = createElement('textarea');
+            userInput.rows = 3;
+            userInput.name = `turn_${turnId}_user_input`;
+            userInput.dataset.field = 'user_input';
+            attachSanitizer(userInput);
+            turnDiv.appendChild(userInput);
+
+            const grid = createElement('div', { class: 'flex-row' });
+
+            const item1 = createElement('div', { class: 'flex-item' });
+            const contLabel = createElement('label', { text: 'Continuation Mode' });
+            const contSelect = createElement('select');
+            ['new', 'continue', 'reset'].forEach(mode => {
+                const opt = createElement('option');
+                opt.value = mode;
+                opt.textContent = mode;
+                if (mode === 'new') opt.selected = turnId === 1;
+                contSelect.appendChild(opt);
+            });
+            contSelect.dataset.field = 'mode';
+            contSelect.addEventListener('change', updateExportButton);
+            item1.appendChild(contLabel);
+            item1.appendChild(contSelect);
+
+            const item2 = createElement('div', { class: 'flex-item' });
+            item2.style.flex = '2';
+            const sumLabelContainer = createElement('div', { class: 'flex-row' });
+            sumLabelContainer.style.alignItems = 'center';
+            sumLabelContainer.style.gap = '0.5rem';
+            const sumLabel = createElement('label', { text: 'Prior Turn Summary' });
+            sumLabel.style.margin = '0';
+            sumLabelContainer.appendChild(sumLabel);
+            const contCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            contCommentBtn.onclick = (e) => toggleCommentBox(e, turnDiv, `Turn ${turnId} > Continuation`, sumLabelContainer);
+            sumLabelContainer.appendChild(contCommentBtn);
+            item2.appendChild(sumLabelContainer);
+
+            const sumInput = createElement('textarea');
+            sumInput.rows = 1;
+            sumInput.style.height = '45px';
+            sumInput.name = `turn_${turnId}_prior_summary`;
+            sumInput.dataset.field = 'prior_summary';
+            sumInput.addEventListener('input', updateExportButton);
+            sumInput.addEventListener('blur', updateExportButton);
+            attachSanitizer(sumInput);
+            item2.appendChild(sumInput);
+
+            grid.appendChild(item1);
+            grid.appendChild(item2);
+            turnDiv.appendChild(grid);
+
+            const stepsHeader = createElement('h4', { text: 'Steps' });
+            turnDiv.appendChild(stepsHeader);
+
+            const stepsContainer = createElement('div', {});
+            stepsContainer.id = `turn_${turnId}_steps`;
+            turnDiv.appendChild(stepsContainer);
+
+            const addStepBtn = createElement('button', { text: '+ Add Step' });
+            addStepBtn.type = 'button'; // Explicit type
+            addStepBtn.style.marginTop = '1rem';
+            addStepBtn.addEventListener('click', () => addStep(stepsContainer));
+            turnDiv.appendChild(addStepBtn);
+
+            // Final Response section header
+            const finalHeader = createElement('h4', { text: 'Final Response' });
+            finalHeader.style.marginTop = '2rem';
+            turnDiv.appendChild(finalHeader);
+
+            // Final Text with comment button
+            const finalTextLabelContainer = createElement('div', { class: 'flex-row' });
+            finalTextLabelContainer.style.alignItems = 'center';
+            finalTextLabelContainer.style.gap = '0.5rem';
+            const finalTextLabel = createElement('label', { text: 'Final Text' });
+            finalTextLabel.style.margin = '0';
+            finalTextLabelContainer.appendChild(finalTextLabel);
+            const finalTextCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            finalTextCommentBtn.onclick = (e) => toggleCommentBox(e, turnDiv, `Turn ${turnId} > Final Text`, finalTextLabelContainer);
+            finalTextLabelContainer.appendChild(finalTextCommentBtn);
+            turnDiv.appendChild(finalTextLabelContainer);
+
+            const finalTextInput = createElement('textarea');
+            finalTextInput.rows = 3;
+            finalTextInput.dataset.field = 'final_text';
+            attachSanitizer(finalTextInput);
+            turnDiv.appendChild(finalTextInput);
+
+            document.getElementById('turns-container').appendChild(turnDiv);
+            if (turnId === 1) addStep(stepsContainer);
+        }
+
+        function addStep(container) {
+            const stepId = container.children.length + 1;
+            const stepDiv = createElement('div', { class: 'section nested' });
+            stepDiv.dataset.stepId = stepId;
+
+            const header = createElement('div', { class: 'flex-row header-row' });
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+
+            const leftHeader = createElement('div', { class: 'flex-row' });
+            leftHeader.style.alignItems = 'center';
+            leftHeader.style.gap = '0.5rem';
+
+            const toggleBtn = createElement('button', { class: 'toggle-btn', text: 'Collapse' });
+            toggleBtn.onclick = () => toggleSection(toggleBtn);
+            leftHeader.appendChild(toggleBtn);
+
+            const h5 = createElement('h5', { text: `Step ${stepId}` });
+            h5.style.margin = '0';
+            leftHeader.appendChild(h5);
+
+            header.appendChild(leftHeader);
+
+            const removeBtn = createElement('button', { class: 'remove-btn', text: 'Remove' });
+            removeBtn.type = 'button'; // Explicit type
+            removeBtn.style.margin = '0';
+            removeBtn.addEventListener('click', async () => {
+                if (await showConfirm('Delete Step', 'Are you sure you want to delete this step?', 'danger')) {
+                    stepDiv.remove();
+                    const turnDiv = container.closest('[data-turn-id]');
+                    if (turnDiv) renumberStepsInTurn(turnDiv);
+                    hasUnsavedChanges = true;
+                    validateActionCounts();
+                }
+            });
+            header.appendChild(removeBtn);
+            stepDiv.appendChild(header);
+
+            // Reasoning section header
+            const reasonHeader = createElement('h6', { text: 'Reasoning' });
+            reasonHeader.style.margin = '1rem 0 0.5rem 0';
+            reasonHeader.style.color = 'var(--text-primary)';
+            reasonHeader.style.borderBottom = '1px solid var(--border)';
+            reasonHeader.style.paddingBottom = '0.25rem';
+            stepDiv.appendChild(reasonHeader);
+
+            // Reason Text with comment button
+            const reasonTextLabelContainer = createElement('div', { class: 'flex-row' });
+            reasonTextLabelContainer.style.alignItems = 'center';
+            reasonTextLabelContainer.style.gap = '0.5rem';
+            const reasonTextLabel = createElement('label', { text: 'Reason Text' });
+            reasonTextLabel.style.margin = '0';
+            reasonTextLabelContainer.appendChild(reasonTextLabel);
+            const reasonTextCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            reasonTextCommentBtn.onclick = (e) => toggleCommentBox(e, stepDiv, `Turn ${container.parentElement.dataset.turnId} > Step ${stepId} > Reason Text`, reasonTextLabelContainer);
+            reasonTextLabelContainer.appendChild(reasonTextCommentBtn);
+            stepDiv.appendChild(reasonTextLabelContainer);
+
+            const reasonTextInput = createElement('textarea');
+            reasonTextInput.rows = 2;
+            reasonTextInput.placeholder = 'User-facing plan...';
+            reasonTextInput.dataset.field = 'reason_text';
+            attachSanitizer(reasonTextInput);
+            stepDiv.appendChild(reasonTextInput);
+
+            // Action section with comment button
+            const actionHeaderContainer = createElement('div', { class: 'flex-row' });
+            actionHeaderContainer.style.alignItems = 'center';
+            actionHeaderContainer.style.gap = '0.5rem';
+            actionHeaderContainer.style.marginTop = '1.5rem';
+            const stepActionHeader = createElement('h6', { text: 'Step Action' });
+            stepActionHeader.style.margin = '0';
+            stepActionHeader.style.color = 'var(--text-primary)';
+            stepActionHeader.style.borderBottom = '1px solid var(--border)';
+            stepActionHeader.style.flex = '1';
+            actionHeaderContainer.appendChild(stepActionHeader);
+            const actionCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            actionCommentBtn.onclick = (e) => toggleCommentBox(e, stepDiv, `Turn ${container.parentElement.dataset.turnId} > Step ${stepId} > Action`, actionHeaderContainer);
+            actionHeaderContainer.appendChild(actionCommentBtn);
+            stepDiv.appendChild(actionHeaderContainer);
+
+            const actionTypeLabel = createElement('label', { text: 'Action Type' });
+            const actionTypeSelect = createElement('select');
+            ['sequential', 'parallel'].forEach(v => {
+                const opt = createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                actionTypeSelect.appendChild(opt);
+            });
+            actionTypeSelect.dataset.field = 'action_type';
+            actionTypeSelect.addEventListener('change', validateActionCounts);
+            stepDiv.appendChild(actionTypeLabel);
+            stepDiv.appendChild(actionTypeSelect);
+
+            const callsContainer = createElement('div', {});
+            callsContainer.id = `step_${stepId}_calls`;
+            stepDiv.appendChild(callsContainer);
+
+            const addCallBtn = createElement('button', { text: '+ Add Call' });
+            addCallBtn.type = 'button'; // Explicit type
+            addCallBtn.style.marginTop = '0.5rem';
+            addCallBtn.style.fontSize = '0.8rem';
+            addCallBtn.addEventListener('click', () => {
+                addCall(callsContainer);
+                validateActionCounts();
+            });
+            stepDiv.appendChild(addCallBtn);
+
+            // Observation section header
+            const obsHeader = createElement('h6', { text: 'Observation' });
+            obsHeader.style.margin = '1.5rem 0 0.5rem 0';
+            obsHeader.style.color = 'var(--text-primary)';
+            obsHeader.style.borderBottom = '1px solid var(--border)';
+            obsHeader.style.paddingBottom = '0.25rem';
+            stepDiv.appendChild(obsHeader);
+
+            // Observation Text with comment button
+            const obsTextLabelContainer = createElement('div', { class: 'flex-row' });
+            obsTextLabelContainer.style.alignItems = 'center';
+            obsTextLabelContainer.style.gap = '0.5rem';
+            const obsTextLabel = createElement('label', { text: 'Observation Text' });
+            obsTextLabel.style.margin = '0';
+            obsTextLabelContainer.appendChild(obsTextLabel);
+            const obsTextCommentBtn = createElement('button', { class: 'add-comment-btn', text: '+ Comment' });
+            obsTextCommentBtn.onclick = (e) => toggleCommentBox(e, stepDiv, `Turn ${container.parentElement.dataset.turnId} > Step ${stepId} > Observation Text`, obsTextLabelContainer);
+            obsTextLabelContainer.appendChild(obsTextCommentBtn);
+            stepDiv.appendChild(obsTextLabelContainer);
+
+            const obsTextInput = createElement('textarea');
+            obsTextInput.rows = 2;
+            obsTextInput.dataset.field = 'obs_text';
+            attachSanitizer(obsTextInput);
+            stepDiv.appendChild(obsTextInput);
+
+            container.appendChild(stepDiv);
+            addCall(callsContainer);
+            validateActionCounts();
+        }
+
+        let callGlobalCounter = 0;
+        function addCall(container) {
+            callGlobalCounter++;
+            const callIndex = container.children.length + 1;
+            const stepDiv = container.closest('[data-step-id]');
+            const stepId = stepDiv ? stepDiv.dataset.stepId : callIndex;
+            const turnDiv = stepDiv ? stepDiv.closest('[data-turn-id]') : null;
+            const turnId = turnDiv ? turnDiv.dataset.turnId : '1';
+            const callIdentifier = `t${turnId}s${stepId}c${callIndex}`;
+
+            const callDiv = createElement('div', { class: 'section nested' });
+            callDiv.style.borderLeftColor = '#f59e0b'; // Amber override
+            callDiv.style.background = 'var(--bg-card)';
+            callDiv.dataset.callId = callIdentifier;
+
+            const header = createElement('div', { class: 'flex-row' });
+            header.style.justifyContent = 'space-between';
+            const h6 = createElement('h6', { text: `Call ${callIndex}` });
+            h6.style.margin = '0';
+            header.appendChild(h6);
+
+            const removeBtn = createElement('button', { class: 'remove-btn', text: 'Remove' });
+            removeBtn.type = 'button'; // Explicit type
+            removeBtn.style.margin = '0';
+            removeBtn.addEventListener('click', async () => {
+                if (await showConfirm('Delete Call', 'Are you sure you want to delete this call?', 'danger')) {
+                    callDiv.remove();
+                    renumberCalls(container);
+                    hasUnsavedChanges = true;
+                    validateActionCounts();
+                }
+            });
+            header.appendChild(removeBtn);
+            callDiv.appendChild(header);
+
+            const callIdLabel = createElement('label', { text: 'Call ID' });
+            const callIdInput = createElement('input');
+            callIdInput.type = 'text';
+            callIdInput.value = callIdentifier;
+            callIdInput.readOnly = true;
+            callIdInput.dataset.field = 'call_id';
+            callIdInput.style.backgroundColor = 'var(--bg-body)';
+            callDiv.appendChild(callIdLabel);
+            callDiv.appendChild(callIdInput);
+
+            const toolLabel = createElement('label', { text: 'Tool Name' });
+            const toolInput = createElement('input');
+            toolInput.type = 'text';
+            toolInput.setAttribute('list', 'toolNamesList');
+            toolInput.dataset.field = 'tool_name';
+            attachSanitizer(toolInput);
+            callDiv.appendChild(toolLabel);
+            callDiv.appendChild(toolInput);
+
+            const row = createElement('div', { class: 'flex-row' });
+            const box1 = createElement('div', { class: 'flex-item' });
+            const inLabel = createElement('label', { text: 'Tool Input (JSON)' });
+            const inArea = createElement('textarea');
+            inArea.rows = 4;
+            inArea.placeholder = '{"param": "val"}';
+            inArea.dataset.field = 'tool_input';
+            attachJsonValidator(inArea);
+            attachSanitizer(inArea);
+            box1.appendChild(inLabel);
+            box1.appendChild(inArea);
+
+            const box2 = createElement('div', { class: 'flex-item' });
+            const outLabel = createElement('label', { text: 'Tool Output (JSON)' });
+            const outArea = createElement('textarea');
+            outArea.rows = 4;
+            outArea.dataset.field = 'tool_output';
+            attachJsonValidator(outArea, true, callDiv);
+            attachSanitizer(outArea);
+            box2.appendChild(outLabel);
+            box2.appendChild(outArea);
+
+            row.appendChild(box1);
+            row.appendChild(box2);
+            callDiv.appendChild(row);
+
+            container.appendChild(callDiv);
+        }
+
+        function renumberCalls(container) {
+            Array.from(container.children).forEach((callDiv, index) => {
+                const callIndex = index + 1;
+                const stepDiv = container.closest('[data-step-id]');
+                const stepId = stepDiv ? stepDiv.dataset.stepId : callIndex;
+                const turnDiv = stepDiv ? stepDiv.closest('[data-turn-id]') : null;
+                const turnId = turnDiv ? turnDiv.dataset.turnId : '1';
+                const callIdentifier = `t${turnId}s${stepId}c${callIndex}`;
+                callDiv.dataset.callId = callIdentifier;
+
+                const h6 = callDiv.querySelector('h6');
+                if (h6) h6.textContent = `Call ${callIndex}`;
+
+                const cidInput = callDiv.querySelector('[data-field="call_id"]');
+                if (cidInput) cidInput.value = callIdentifier;
+            });
+        }
+
+        function renumberStepsInTurn(turnDiv) {
+            const stepsContainer = turnDiv.querySelector(`[id^="turn_${turnDiv.dataset.turnId}_steps"]`);
+            if (!stepsContainer) return;
+
+            Array.from(stepsContainer.children).forEach((stepDiv, index) => {
+                const newStepId = index + 1;
+                const oldStepId = stepDiv.dataset.stepId;
+
+                if (String(oldStepId) !== String(newStepId)) {
+                    stepDiv.dataset.stepId = newStepId;
+                    const h5 = stepDiv.querySelector('h5');
+                    if (h5) h5.textContent = `Step ${newStepId}`;
+
+                    const callsContainer = stepDiv.querySelector(`[id^="step_${oldStepId}_calls"]`);
+                    if (callsContainer) {
+                        callsContainer.id = `step_${newStepId}_calls`;
+                        renumberCalls(callsContainer);
+                    }
+                } else {
+                    // Check calls anyway because turn id might have changed
+                    const callsContainer = stepDiv.querySelector(`[id^="step_${oldStepId}_calls"]`);
+                    if (callsContainer) renumberCalls(callsContainer);
+                }
+            });
+        }
+
+        function renumberTurnIds() {
+            const turnsContainer = document.getElementById('turns-container');
+            Array.from(turnsContainer.children).forEach((turnDiv, index) => {
+                const newTurnId = index + 1;
+                const oldTurnId = turnDiv.dataset.turnId;
+
+                // Always update everything just to be safe
+                turnDiv.dataset.turnId = newTurnId;
+
+                const h3 = turnDiv.querySelector('h3');
+                if (h3) h3.textContent = `Turn ${newTurnId}`;
+
+                // Update inputs names
+                turnDiv.querySelector('[data-field="user_input"]').name = `turn_${newTurnId}_user_input`;
+                turnDiv.querySelector('[data-field="prior_summary"]').name = `turn_${newTurnId}_prior_summary`;
+
+                const stepsContainer = turnDiv.querySelector(`[id^="turn_${oldTurnId}_steps"]`);
+                if (stepsContainer) {
+                    stepsContainer.id = `turn_${newTurnId}_steps`;
+                }
+
+                // Force step renumbering/updates to propagate new turn ID to calls
+                renumberStepsInTurn(turnDiv);
+            });
+            turnCount = turnsContainer.children.length; // Sync global counter
+        }
+
+        function collectData() {
+            const trajectoryId = document.getElementById('trajectory_id').value.trim();
+            const domain = document.getElementById('domain').value; // Dropdown now
+            const taskType = document.getElementById('task_type').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const turns = [];
+            const turnsContainer = document.getElementById('turns-container');
+
+            Array.from(turnsContainer.children).forEach((turnDiv, idx) => {
+                const turnId = idx + 1;
+                const userInput = turnDiv.querySelector('[data-field="user_input"]')?.value.trim() || '';
+                const mode = turnDiv.querySelector('[data-field="mode"]')?.value || 'new';
+                const priorSummary = turnDiv.querySelector('[data-field="prior_summary"]')?.value.trim() || '';
+
+                const stepsContainer = turnDiv.querySelector(`#turn_${turnDiv.dataset.turnId}_steps`);
+                const steps = [];
+                if (stepsContainer) {
+                    Array.from(stepsContainer.children).forEach((stepDiv, sidx) => {
+                        const stepId = sidx + 1;
+                        const reasonText = stepDiv.querySelector('[data-field="reason_text"]')?.value.trim() || '';
+                        const actionType = stepDiv.querySelector('[data-field="action_type"]')?.value || '';
+
+                        const callsContainer = stepDiv.querySelector(`[id^="step_${stepDiv.dataset.stepId}_calls"]`);
+                        const calls = [];
+                        if (callsContainer) {
+                            Array.from(callsContainer.children).forEach(callDiv => {
+                                const callId = callDiv.querySelector('[data-field="call_id"]')?.value.trim() || '';
+                                const toolName = callDiv.querySelector('[data-field="tool_name"]')?.value.trim() || '';
+                                const toolInput = parseJsonSafe(callDiv.querySelector('[data-field="tool_input"]')?.value);
+                                const toolOutput = parseJsonSafe(callDiv.querySelector('[data-field="tool_output"]')?.value);
+
+                                calls.push({
+                                    call_id: callId,
+                                    tool_name: toolName,
+                                    tool_input: toolInput,
+                                    tool_output: toolOutput
+                                });
+                            });
+                        }
+
+                        const obsText = stepDiv.querySelector('[data-field="obs_text"]')?.value.trim() || '';
+
+                        steps.push({
+                            reason: {
+                                text: reasonText
+                            },
+                            step_id: stepId,
+                            action: {
+                                type: actionType,
+                                calls: calls
+                            },
+                            observation: {
+                                text: obsText
+                            }
+                        });
+                    });
+                }
+
+                const finalText = turnDiv.querySelector('[data-field="final_text"]')?.value.trim() || '';
+
+                turns.push({
+                    turn_id: turnId,
+                    user_input: userInput,
+                    continuation: {
+                        mode: mode,
+                        prior_turn_summary: priorSummary
+                    },
+                    steps: steps,
+                    final_response: {
+                        text: finalText
+                    }
+                });
+            });
+
+            return {
+                trajectory_id: trajectoryId,
+                metadata: {
+                    domain: domain,
+                    task_type: taskType,
+                    difficulty: difficulty
+                },
+                turns: turns
+            };
+        }
+
+        function parseJsonSafe(str) {
+            try { return str ? JSON.parse(str) : {}; } catch (e) { return {}; }
+        }
+
+        function exportJson() {
+            const data = collectData();
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.getElementById('download-link');
+            link.href = url;
+            link.download = (data.trajectory_id || 'human_trace') + '.json';
+            link.style.display = 'inline-block';
+            link.click();
+        }
+
+        function populateUIFromJson(data) {
+            const turnsContainer = document.getElementById('turns-container');
+            turnsContainer.innerHTML = '';
+            turnCount = 0;
+
+            document.getElementById('trajectory_id').value = data.trajectory_id || '';
+            if (data.metadata) {
+                const domain = data.metadata.domain || 'Slack';
+                document.getElementById('domain').value = domain;
+                updateToolsList(domain); // Update tools list based on imported domain
+                document.getElementById('task_type').value = data.metadata.task_type || 'info_seek';
+                document.getElementById('difficulty').value = data.metadata.difficulty || 'easy';
+            }
+
+            (data.turns || []).forEach(turn => {
+                addTurn();
+                const turnDiv = turnsContainer.lastElementChild;
+                const userInputEl = turnDiv.querySelector('[data-field="user_input"]');
+                if (userInputEl) userInputEl.value = turn.user_input || '';
+
+                const modeEl = turnDiv.querySelector('[data-field="mode"]');
+                if (modeEl) modeEl.value = turn.continuation?.mode || 'new';
+                const priorEl = turnDiv.querySelector('[data-field="prior_summary"]');
+                if (priorEl) priorEl.value = turn.continuation?.prior_turn_summary || '';
+
+                const stepsContainer = turnDiv.querySelector(`#turn_${turnDiv.dataset.turnId}_steps`);
+                stepsContainer.innerHTML = ''; // clear default step
+
+                (turn.steps || []).forEach(step => {
+                    addStep(stepsContainer);
+                    const stepDiv = stepsContainer.lastElementChild;
+
+                    const rTextEl = stepDiv.querySelector('[data-field="reason_text"]');
+                    if (rTextEl) rTextEl.value = step.reason?.text || '';
+
+                    const actTypeEl = stepDiv.querySelector('[data-field="action_type"]');
+                    if (actTypeEl) actTypeEl.value = step.action?.type || '';
+
+                    stepDiv.querySelector('[data-field="obs_text"]').value = step.observation?.text || '';
+
+                    const callsContainer = stepDiv.querySelector(`[id^="step_${stepDiv.dataset.stepId}_calls"]`);
+                    callsContainer.innerHTML = '';
+
+                    (step.action?.calls || []).forEach(call => {
+                        addCall(callsContainer);
+                        const callDiv = callsContainer.lastElementChild;
+                        callDiv.querySelector('[data-field="call_id"]').value = call.call_id || '';
+                        callDiv.querySelector('[data-field="tool_name"]').value = call.tool_name || '';
+                        callDiv.querySelector('[data-field="tool_input"]').value = JSON.stringify(call.tool_input || {}, null, 2);
+                        callDiv.querySelector('[data-field="tool_output"]').value = JSON.stringify(call.tool_output || {}, null, 2);
+                    });
+                });
+
+                turnDiv.querySelector('[data-field="final_text"]').value = turn.final_response?.text || '';
+            });
+            renumberTurnIds();
+            hasUnsavedChanges = true;
+            updateExportButton();
+        }
+
+        // Initialize when ready
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('export-btn').addEventListener('click', exportJson);
+            document.getElementById('add-turn-btn').addEventListener('click', addTurn);
+
+            // Mode State Management
+            let isReviewMode = false;
+            let isARMode = false;
+
+            // Reviewer Mode Elements
+            const reviewBtn = document.getElementById('review-mode-btn');
+            const copyReviewBtn = document.getElementById('copy-review-btn');
+            const exportReviewBtn = document.getElementById('export-review-btn');
+            const importReviewBtn = document.getElementById('import-review-btn');
+            const jumpReviewBtn = document.getElementById('jump-review-btn');
+
+            // AR Review Mode Elements
+            const arReviewBtn = document.getElementById('ar-review-btn');
+            const jumpEvalBtn = document.getElementById('jump-eval-btn');
+            const exitARModeBtn = document.getElementById('exit-ar-mode-btn');
+
+            // Floating Sidebars
+            const arSidebar = document.getElementById('ar-sidebar');
+            const reviewSidebar = document.getElementById('review-sidebar');
+            const reviewerSidebar = document.getElementById('reviewer-sidebar');
+
+            // Function to enter AR Mode
+            function enterARMode() {
+                isARMode = true;
+                // Show AR sidebar
+                arSidebar.classList.add('active');
+                arReviewBtn.textContent = 'AR Mode: ON';
+                arReviewBtn.style.backgroundColor = '#10b981';
+                updateEvalCounter();
+            }
+
+            // Function to exit AR Mode
+            function exitARMode() {
+                isARMode = false;
+                totalEvalIssues = 0;
+                currentIssueIndex = -1;
+                // Clear global issue tracking
+                allIssuesById = {};
+                issuesByDimension = {};
+                issueIdCounter = 0;
+                arScoresByDimension = {};
+                reviewerScores = {};
+                turnLevelIssues = {};
+                missedIssues = [];
+                // Clear all field issues and remove listeners
+                document.querySelectorAll('.has-issue').forEach(el => {
+                    el.classList.remove('has-issue');
+                    el.removeEventListener('mouseover', showTooltip);
+                    el.removeEventListener('mouseout', hideTooltip);
+                    delete el._issueData;
+                    delete el._hasTooltipListeners;
+                });
+                // Clear all turn-level issues
+                document.querySelectorAll('.has-turn-issue').forEach(el => {
+                    el.classList.remove('has-turn-issue');
+                    el.removeEventListener('mouseover', showTurnTooltip);
+                    el.removeEventListener('mouseout', hideTurnTooltip);
+                    delete el._turnIssueData;
+                    delete el._hasTurnTooltipListeners;
+                });
+                // Hide tooltips
+                tooltip.style.display = 'none';
+                turnTooltip.style.display = 'none';
+                // Hide AR sidebar
+                arSidebar.classList.remove('active');
+                arReviewBtn.textContent = 'Import AR Review';
+                arReviewBtn.style.backgroundColor = '#4a90e2';
+                updateExportButton();
+            }
+
+            // Exit AR Mode button
+            exitARModeBtn.addEventListener('click', async () => {
+                if (await showConfirm('Exit AR Mode', 'This will clear all issue highlights.', 'warning')) {
+                    exitARMode();
+                }
+            });
+
+            // Export AR Summary button
+            document.getElementById('export-ar-btn').addEventListener('click', () => {
+                if (Object.keys(allIssuesById).length === 0) {
+                    showToast('No AR review imported yet.', 'warning');
+                    return;
+                }
+                showARExportModal();
+            });
+
+            // Reviewer Mode Toggle (can work alongside AR Mode)
+            reviewBtn.addEventListener('click', async () => {
+                if (!isReviewMode) {
+                    // Ask for reviewer email when turning ON
+                    const email = await showPrompt(
+                        'Enter Reviewer Email',
+                        'This email will be used for all your review comments.',
+                        currentReviewerEmail
+                    );
+                    if (!email) return; // Cancelled
+                    currentReviewerEmail = email;
+                }
+                
+                isReviewMode = !isReviewMode;
+                if (isReviewMode) {
+                    document.body.classList.add('review-mode');
+                    reviewBtn.textContent = 'Review Mode: ON';
+                    reviewBtn.style.backgroundColor = '#10b981';
+                    reviewBtn.style.color = 'white';
+                    reviewerSidebar.classList.add('active');
+                    updateExportReviewsButton();
+                    showToast(`Review Mode ON. Reviewer: ${currentReviewerEmail}`, 'success');
+                } else {
+                    document.body.classList.remove('review-mode');
+                    reviewBtn.textContent = 'Review Mode: OFF';
+                    reviewBtn.style.backgroundColor = '';
+                    reviewBtn.style.color = '';
+                    reviewerSidebar.classList.remove('active');
+                }
+            });
+
+            // Exit Reviewer Mode button
+            document.getElementById('exit-reviewer-btn').addEventListener('click', () => {
+                isReviewMode = false;
+                document.body.classList.remove('review-mode');
+                reviewBtn.textContent = 'Review Mode: OFF';
+                reviewBtn.style.backgroundColor = '';
+                reviewBtn.style.color = '';
+                reviewerSidebar.classList.remove('active');
+            });
+
+            document.getElementById('import-btn').addEventListener('click', () => {
+                document.getElementById('import-input').click();
+            });
+
+            document.getElementById('import-input').addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        populateUIFromJson(data);
+                        // Enable AR Review and Review Mode buttons after JSON import
+                        enableModeButtons();
+                    } catch (err) {
+                        showToast('Invalid JSON file', 'error');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // Function to enable mode buttons after JSON import
+            function enableModeButtons() {
+                arReviewBtn.disabled = false;
+                arReviewBtn.style.opacity = '1';
+                arReviewBtn.style.cursor = 'pointer';
+                arReviewBtn.title = 'Import AR Review file';
+                
+                reviewBtn.disabled = false;
+                reviewBtn.style.opacity = '1';
+                reviewBtn.style.cursor = 'pointer';
+                reviewBtn.title = '';
+
+                // Enable Import Reviews button
+                importReviewBtn.disabled = false;
+                importReviewBtn.style.opacity = '1';
+                importReviewBtn.style.cursor = 'pointer';
+                importReviewBtn.title = 'Import reviews file';
+            }
+
+            // AR Review - Direct file import (can work alongside Review Mode)
+            arReviewBtn.addEventListener('click', () => {
+                // Directly trigger file input
+                document.getElementById('import-eval-input').click();
+            });
+
+            document.getElementById('import-eval-input').addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        parseAndVisualizeEvaluation(data);
+                        // Enter AR mode if there are issues
+                        if (totalEvalIssues > 0) {
+                            enterARMode();
+                        }
+                    } catch (err) {
+                        showToast('Invalid AR Review JSON file', 'error');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+                this.value = ''; // Reset so same file can be re-imported
+            });
+
+            // Previous Issue button
+            document.getElementById('prev-eval-btn').addEventListener('click', jumpToPrevIssue);
+
+            // Import Reviews Logic
+            document.getElementById('import-review-btn').addEventListener('click', () => {
+                document.getElementById('import-review-input').click();
+            });
+
+            document.getElementById('import-review-input').addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        parseAndVisualizeReviews(data);
+                        // Show review sidebar after importing reviews
+                        if (importedReviews.length > 0) {
+                            reviewSidebar.classList.add('active');
+                        }
+                    } catch (err) {
+                        showToast('Invalid Reviews JSON file', 'error');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+                // Reset input so the same file can be re-imported
+                this.value = '';
+            });
+
+            // Clear Reviews button
+            document.getElementById('clear-reviews-btn').addEventListener('click', async () => {
+                if (await showConfirm('Clear Reviews', 'This will clear all imported reviews.', 'warning')) {
+                    document.querySelectorAll('.has-review').forEach(el => {
+                        el.classList.remove('has-review', 'severity-critical', 'severity-major', 'severity-minor');
+                        delete el._reviewData;
+                        el.removeEventListener('mouseover', showReviewTooltip);
+                        el.removeEventListener('mouseout', hideReviewTooltip);
+                        el.removeEventListener('input', clearReviewOnEdit);
+                        delete el._hasReviewListeners;
+                    });
+                    importedReviews = [];
+                    currentReviewIndex = -1;
+                    reviewSidebar.classList.remove('active');
+                    updateReviewCounter();
+                }
+            });
+
+            // Export Reviews Logic
+            document.getElementById('export-review-btn').addEventListener('click', exportReviews);
+
+            // Review Navigation
+            document.getElementById('jump-review-btn').addEventListener('click', jumpToNextReview);
+            document.getElementById('prev-review-btn').addEventListener('click', jumpToPrevReview);
+
+            // Issue Navigation (AR Review)
+            document.getElementById('jump-eval-btn').addEventListener('click', jumpToNextIssue);
+            document.getElementById('prev-eval-btn').addEventListener('click', jumpToPrevIssue);
+
+            // Modal Logic
+            const modal = document.getElementById('toolsModal');
+            const span = document.getElementsByClassName('close')[0];
+            const toolsListArea = document.getElementById('toolsListArea');
+            const copyBtn = document.getElementById('copy-tools-btn');
+
+            document.getElementById('tools-btn').addEventListener('click', () => {
+                const data = collectData();
+                const toolSet = new Set();
+                data.turns.forEach(t => t.steps.forEach(s => s.action.calls.forEach(c => {
+                    if (c.tool_name) toolSet.add(c.tool_name);
+                })));
+                toolsListArea.value = Array.from(toolSet).sort().join('\n');
+                modal.style.display = 'block';
+            });
+
+            span.onclick = function () { modal.style.display = 'none'; }
+            window.onclick = function (event) { 
+                if (event.target == modal) modal.style.display = 'none';
+            }
+
+            copyBtn.addEventListener('click', () => {
+                toolsListArea.select();
+                document.execCommand('copy');
+                const origText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => copyBtn.textContent = origText, 2000);
+            });
+
+            // Initial Turn
+            addTurn();
+        });
+        function toggleCommentBox(e, container, label, insertAfterElement) {
+            e.stopPropagation();
+            // Use a unique identifier based on the label to prevent sharing
+            const uniqueId = label.replace(/\s+/g, '_').replace(/>/g, '');
+            let commentBox = container.querySelector(`.review-comment-box[data-comment-id="${uniqueId}"]`);
+            if (!commentBox) {
+                commentBox = createElement('div', { class: 'review-comment-box active' });
+                commentBox.dataset.commentId = uniqueId;
+                
+                // Header with label and severity selector
+                const headerRow = createElement('div');
+                headerRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;';
+                
+                const labelStrong = createElement('strong', { text: `Comment for ${label}:` });
+                headerRow.appendChild(labelStrong);
+                
+                // Severity selector
+                const severityContainer = createElement('div');
+                severityContainer.style.cssText = 'display: flex; align-items: center; gap: 6px;';
+                
+                const severityLabel = createElement('span', { text: 'Severity:' });
+                severityLabel.style.cssText = 'font-size: 0.85em; color: #666;';
+                severityContainer.appendChild(severityLabel);
+                
+                const severitySelect = createElement('select');
+                severitySelect.dataset.severityFor = uniqueId;
+                severitySelect.style.cssText = 'padding: 2px 8px; font-size: 0.85em; border-radius: 4px; border: 1px solid #fbc02d; background: #fffde7; color: #333; cursor: pointer;';
+                
+                const optionMinor = createElement('option');
+                optionMinor.value = 'minor';
+                optionMinor.textContent = 'Minor';
+                optionMinor.style.color = '#333';
+                
+                const optionMajor = createElement('option');
+                optionMajor.value = 'major';
+                optionMajor.textContent = 'Major';
+                optionMajor.selected = true;
+                optionMajor.style.color = '#333';
+                
+                const optionCritical = createElement('option');
+                optionCritical.value = 'critical';
+                optionCritical.textContent = 'Critical';
+                optionCritical.style.color = '#333';
+                
+                severitySelect.appendChild(optionMinor);
+                severitySelect.appendChild(optionMajor);
+                severitySelect.appendChild(optionCritical);
+                severityContainer.appendChild(severitySelect);
+                
+                headerRow.appendChild(severityContainer);
+                commentBox.appendChild(headerRow);
+                
+                const textarea = createElement('textarea', { placeholder: 'Write your comment here...' });
+                textarea.dataset.reviewLabel = label;
+                textarea.dataset.commentId = uniqueId;
+                // Update Export Reviews button when comment changes
+                textarea.addEventListener('input', updateExportReviewsButton);
+                commentBox.appendChild(textarea);
+                
+                // Insert after the specified element (the header/label container)
+                insertAfterElement.after(commentBox);
+                
+                // Update Export Reviews button state
+                updateExportReviewsButton();
+            } else {
+                commentBox.classList.toggle('active');
+            }
+        }
+
+        document.getElementById('copy-review-btn').addEventListener('click', () => {
+            let summary = `Review Comments by ${currentReviewerEmail || 'Unknown'}:\n\n`;
+            let count = 0;
+            document.querySelectorAll('.review-comment-box textarea').forEach(txt => {
+                const val = txt.value.trim();
+                if (val) {
+                    // Get severity
+                    const commentId = txt.dataset.commentId || '';
+                    const severitySelect = document.querySelector(`select[data-severity-for="${commentId}"]`);
+                    const severity = severitySelect ? severitySelect.value.toUpperCase() : 'MAJOR';
+                    summary += `[${severity}] ${txt.dataset.reviewLabel}:\n- ${val}\n\n`;
+                    count++;
+                }
+            });
+
+            if (count === 0) {
+                showToast('No comments to copy.', 'warning');
+                return;
+            }
+
+            navigator.clipboard.writeText(summary).then(() => {
+                showToast(`Copied ${count} comments to clipboard!`, 'success');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('Failed to copy to clipboard.', 'error');
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+{
+  "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Create a calendar, set colors, provide access permissions, and schedule an event.",
+      "conversation_mode": true,
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "prompts": [
+        {
+          "prompt_text": "We're launching a new project called \"Apollo\". Please create a secondary calendar named \"Apollo Project Timeline\" in the Europe/London timezone. Add it to my calendar list with background color #ac725e and foreground color #1d1d1d. Provide edit access to Carol White (carol.white@techcorp.com) and view-only access to Bob Smith (bob.smith@techcorp.com). Then schedule an initial planning meeting for January 5th, 2026, at 10:00 AM GMT, lasting 90 minutes with Meet conferencing enabled.",
+          "expected_tools": [
+            "create_calendar",
+            "add_calendar_to_list",
+            "insert_acl_rule",
+            "insert_acl_rule",
+            "create_event"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Apollo Project Timeline' AND time_zone = 'Europe/London' AND background_color = '#ac725e' AND foreground_color = '#1d1d1d'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND scope_id LIKE '%bob%' AND role = 'reader'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND scope_id LIKE '%carol%' AND role = 'writer'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Initial Planning Meeting%' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Apollo Project Timeline') AND start_datetime = '2026-01-05 10:00:00.000000' AND end_datetime = '2026-01-05 11:30:00.000000'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

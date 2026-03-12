@@ -1,0 +1,36 @@
+{
+  "system_prompt": "You are a helpful assistant for Slack workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Archive ops-004, notify members, and rename the channel.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "I need help archiving the channel ops-004. Please also inform its members via DM on behave of the channel's creator, with a thank-you message. Make sure to rename the channel so it's clear that it has been archived.",
+          "expected_tools": [
+            "get_channels_list",
+            "conversations_rename",
+            "conversations_members",
+            "conversations_open",
+            "chat_post_message",
+            "conversations_archive"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_channels WHERE id = 'CJRCDYV00SS4' AND name <> 'ops-004' AND is_archived = 1",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

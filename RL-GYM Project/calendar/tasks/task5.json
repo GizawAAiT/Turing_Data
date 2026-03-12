@@ -1,0 +1,88 @@
+{
+  "scenario_config": {
+    "scenario_name": "reschedule_client_demo",
+    "scenario_description": "Demo Rescheduling",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Due to an urgent client request, please reschedule the “Enterprise Client Demo” event from my Sales Activities calendar (originally on 8 November 2025) to my primary calendar on 5 December 2025 at 09:00 UTC. If another event is already booked on my primary calendar at that time, move the conflicting event to 6 December at the same start time. Also, update the demo’s location to “TechCorp Main Campus – Building 1, Conference Room A.”",
+    "restricted_tools": [
+      "get_calendar_list",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Moved",
+      "description": "Verify demo moved to primary calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Enterprise Client Demo%' AND originalstarttime_datetime = '2025-11-08T11:00:00+00:00' AND originalstarttime_timezone = 'America/New_York' AND calendar_id = 'dave-primary'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Date Updated",
+      "description": "Verify demo rescheduled to Dec 5",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Enterprise Client Demo%' AND start_datetime = '2025-12-05 09:00:00.000000' AND end_datetime = '2025-12-05 11:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Location Updated",
+      "description": "Verify demo location update",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Enterprise Client Demo%' AND location = 'TechCorp Main Campus – Building 1, Conference Room A'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "No Overlap",
+      "description": "Ensure no event overlap on Dec 5",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id = 'dave-primary' AND start_datetime = '2025-12-05 09:00:00.000000' AND end_datetime = '2025-12-05 11:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "CALENDER_INTERNAL_PROD",
+      "database_id": "db_1762429018464_8jfwyiswu",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Reschedule demo event and update location",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

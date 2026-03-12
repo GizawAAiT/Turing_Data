@@ -1,0 +1,346 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_transfer_ci_ownership_stephanie_to_robin",
+    "scenario_description": "Transfer all active configuration items from Stephanie Todd to Robin Monroe and notify Robin about the newly assigned assets.",
+    "system_prompt": "You are a helpful Customer Service Drive Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Following our team restructuring, I need to transfer all active configuration items from Stephanie Todd to Robin Monroe. Update the ownership for all her active CIs and notify Robin about the assets now assigned to her.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user",
+      "get_user_using_name",
+      "get_user_using_name",
+      "find_configuration_items",
+      "update_configuration_item",
+      "create_incident",
+      "send_notification"
+    ],
+    "expected_tools": [
+      "get_user",
+      "get_user_using_name",
+      "get_user_using_name",
+      "find_configuration_items",
+      "update_configuration_item",
+      "create_incident",
+      "send_notification"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "CI Ownership Transferred To Robin",
+      "description": "Verify that configuration item CI_025 is now owned by Robin Monroe.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM configuration_item WHERE configuration_item_id = 'CI_025' AND owner_id = 'USER_031'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Ownership Transfer Incident Created",
+      "description": "Verify that an informational incident was created to track the CI ownership transfer.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE caller_id = 'USER_039' AND assigned_to = 'USER_031' AND impact = 'low' AND urgency = 'low' AND priority = 'low'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Robin Notified Of Assigned Assets",
+      "description": "Verify that Robin Monroe received a notification about the newly assigned configuration items.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE email = 'robin.monroe83@servicenow.com' AND incident_id = (SELECT incident_id FROM incident WHERE caller_id = 'USER_039' AND assigned_to = 'USER_031' AND impact = 'low' AND urgency = 'low' AND priority = 'low' LIMIT 1) AND type = 'update' AND status = 'sent'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_039"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_039"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_039\",\n  \"user_name\": \"karen.watkins\",\n  \"first_name\": \"Karen\",\n  \"last_name\": \"Watkins\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"phone\": \"+441613971941\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:45:46\",\n  \"updated_on\": \"2026-02-10T13:31:36\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 160,
+      "executed_at": "2025-12-24T09:23:58.022213"
+    }
+  },
+  {
+    "name": "get_user_using_name",
+    "arguments": {
+      "first_name": "Stephanie",
+      "last_name": "Todd"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user_using_name",
+      "parameters": {
+        "first_name": "Stephanie",
+        "last_name": "Todd"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_006\",\n  \"user_name\": \"stephanie.todd\",\n  \"first_name\": \"Stephanie\",\n  \"last_name\": \"Todd\",\n  \"email\": \"stephanie.todd@servicenow.com\",\n  \"phone\": \"+12068306386\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNiIsImlzcyI6Iml0c20ifQ.Lm0_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_789\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:37:13\",\n  \"updated_on\": \"2025-09-12T18:15:17\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 146,
+      "executed_at": "2025-12-24T09:24:36.247920"
+    }
+  },
+  {
+    "name": "get_user_using_name",
+    "arguments": {
+      "first_name": "Robin",
+      "last_name": "Monroe"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user_using_name",
+      "parameters": {
+        "first_name": "Robin",
+        "last_name": "Monroe"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_031\",\n  \"user_name\": \"robin.monroe\",\n  \"first_name\": \"Robin\",\n  \"last_name\": \"Monroe\",\n  \"email\": \"robin.monroe83@servicenow.com\",\n  \"phone\": \"+441135284684\",\n  \"role\": \"manager\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzMSIsImlzcyI6Iml0c20ifQ.Kl0_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_abc\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:49:26\",\n  \"updated_on\": \"2026-02-12T15:07:07\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 159,
+      "executed_at": "2025-12-24T09:25:03.465583"
+    }
+  },
+  {
+    "name": "find_configuration_items",
+    "arguments": {
+      "owner_id": "USER_006"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_configuration_items",
+      "parameters": {
+        "owner_id": "USER_006"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"configuration_items\": [\n    {\n      \"configuration_item_id\": \"CI_025\",\n      \"name\": \"Dell Latitude - Stephanie Todd\",\n      \"serial_number\": \"DEL-ST-1129\",\n      \"owner_id\": \"USER_006\",\n      \"location_id\": \"LOC_001\",\n      \"org_id\": \"ORG_001\",\n      \"status\": \"in_use\",\n      \"cost\": 1200.0,\n      \"created_on\": \"2023-12-02T09:00:00\",\n      \"updated_on\": \"2023-12-02T09:00:00\"\n    }\n  ],\n  \"total_count\": 1\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 175,
+      "executed_at": "2025-12-24T09:25:41.309283"
+    }
+  },
+  {
+    "name": "update_configuration_item",
+    "arguments": {
+      "configuration_item_id": "CI_025",
+      "owner_id": "USER_031"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_configuration_item",
+      "parameters": {
+        "configuration_item_id": "CI_025",
+        "owner_id": "USER_031"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"configuration_item_id\": \"CI_025\",\n  \"name\": \"Dell Latitude - Stephanie Todd\",\n  \"serial_number\": \"DEL-ST-1129\",\n  \"owner_id\": \"USER_031\",\n  \"location_id\": \"LOC_001\",\n  \"status\": \"in_use\",\n  \"cost\": 1200.0,\n  \"created_on\": \"2023-12-02T09:00:00\",\n  \"updated_on\": \"2025-12-24T09:26:13.594394\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 191,
+      "executed_at": "2025-12-24T09:26:13.646136"
+    }
+  },
+  {
+    "name": "create_incident",
+    "arguments": {
+      "caller_id": "USER_039",
+      "short_description": "Asset Transfer Complete - Configuration Items Reassigned to Robin Monroe",
+      "description": "Following the recent team restructuring, the following configuration item has been transferred from Stephanie Todd to your ownership:\n\nCI_025 - Dell Latitude - Stephanie Todd\nSerial Number: DEL-ST-1129\nStatus: in_use\nLocation: LOC_001\nCost: $1,200.00\n\nAll asset details including status, location, and cost have been preserved during this transfer. Please review and confirm receipt of this asset.",
+      "assigned_to": "USER_031",
+      "category": "inquiry-help",
+      "priority": "low",
+      "status": "new"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "create_incident",
+      "parameters": {
+        "caller_id": "USER_039",
+        "short_description": "Asset Transfer Complete - Configuration Items Reassigned to Robin Monroe",
+        "description": "Following the recent team restructuring, the following configuration item has been transferred from Stephanie Todd to your ownership:\n\nCI_025 - Dell Latitude - Stephanie Todd\nSerial Number: DEL-ST-1129\nStatus: in_use\nLocation: LOC_001\nCost: $1,200.00\n\nAll asset details including status, location, and cost have been preserved during this transfer. Please review and confirm receipt of this asset.",
+        "assigned_to": "USER_031",
+        "category": "inquiry-help",
+        "priority": "low",
+        "status": "new"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_101\",\n  \"number\": \"INC-000101\",\n  \"service\": null,\n  \"service_offering\": null,\n  \"configuration_item\": null,\n  \"caller_id\": \"USER_039\",\n  \"channel\": null,\n  \"status\": \"new\",\n  \"category\": \"inquiry-help\",\n  \"short_description\": \"Asset Transfer Complete - Configuration Items Reassigned to Robin Monroe\",\n  \"description\": \"Following the recent team restructuring, the following configuration item has been transferred from Stephanie Todd to your ownership:\\n\\nCI_025 - Dell Latitude - Stephanie Todd\\nSerial Number: DEL-ST-1129\\nStatus: in_use\\nLocation: LOC_001\\nCost: $1,200.00\\n\\nAll asset details including status, location, and cost have been preserved during this transfer. Please review and confirm receipt of this asset.\",\n  \"impact\": \"low\",\n  \"urgency\": \"low\",\n  \"priority\": \"low\",\n  \"assigned_to\": \"USER_031\",\n  \"assignment_group\": null,\n  \"worknotes\": null,\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-24T09:26:51.013574\",\n  \"updated_at\": \"2025-12-24T09:26:51.013574\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 197,
+      "executed_at": "2025-12-24T09:26:51.076990"
+    }
+  },
+  {
+    "name": "send_notification",
+    "arguments": {
+      "incident_id": "INC_101",
+      "email": "robin.monroe83@servicenow.com",
+      "type": "update",
+      "subject": "Asset Transfer Complete - Configuration Items Reassigned to You",
+      "message": "Dear Robin Monroe,\n\nFollowing the recent team restructuring, configuration items previously owned by Stephanie Todd have been transferred to your ownership.\n\nASSETS TRANSFERRED TO YOU:\n\n1. Dell Latitude - Stephanie Todd\n   - Configuration Item ID: CI_025\n   - Serial Number: DEL-ST-1129\n   - Status: In Use\n   - Location: LOC_001\n   - Cost: $1,200.00\n\nSUMMARY:\n- Total Items Transferred: 1\n- Total Asset Value: $1,200.00\n\nAll asset details including status, location, and cost data have been preserved during this transfer. These assets are now under your ownership and responsibility.\n\nPlease review this information and contact IT Asset Management if you have any questions.\n\nBest regards,\nIT Asset Management Team",
+      "status": "sent"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "send_notification",
+      "parameters": {
+        "incident_id": "INC_101",
+        "email": "robin.monroe83@servicenow.com",
+        "type": "update",
+        "subject": "Asset Transfer Complete - Configuration Items Reassigned to You",
+        "message": "Dear Robin Monroe,\n\nFollowing the recent team restructuring, configuration items previously owned by Stephanie Todd have been transferred to your ownership.\n\nASSETS TRANSFERRED TO YOU:\n\n1. Dell Latitude - Stephanie Todd\n   - Configuration Item ID: CI_025\n   - Serial Number: DEL-ST-1129\n   - Status: In Use\n   - Location: LOC_001\n   - Cost: $1,200.00\n\nSUMMARY:\n- Total Items Transferred: 1\n- Total Asset Value: $1,200.00\n\nAll asset details including status, location, and cost data have been preserved during this transfer. These assets are now under your ownership and responsibility.\n\nPlease review this information and contact IT Asset Management if you have any questions.\n\nBest regards,\nIT Asset Management Team",
+        "status": "sent"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_101\",\n  \"email\": \"robin.monroe83@servicenow.com\",\n  \"type\": \"update\",\n  \"status\": \"sent\",\n  \"subject\": \"Asset Transfer Complete - Configuration Items Reassigned to You\",\n  \"message\": \"Dear Robin Monroe,\\n\\nFollowing the recent team restructuring, configuration items previously owned by Stephanie Todd have been transferred to your ownership.\\n\\nASSETS TRANSFERRED TO YOU:\\n\\n1. Dell Latitude - Stephanie Todd\\n   - Configuration Item ID: CI_025\\n   - Serial Number: DEL-ST-1129\\n   - Status: In Use\\n   - Location: LOC_001\\n   - Cost: $1,200.00\\n\\nSUMMARY:\\n- Total Items Transferred: 1\\n- Total Asset Value: $1,200.00\\n\\nAll asset details including status, location, and cost data have been preserved during this transfer. These assets are now under your ownership and responsibility.\\n\\nPlease review this information and contact IT Asset Management if you have any questions.\\n\\nBest regards,\\nIT Asset Management Team\",\n  \"notification_id\": \"NOTIF_031\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-24T09:27:24.289425\",\n  \"updated_on\": \"2025-12-24T09:27:24.289425\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 209,
+      "executed_at": "2025-12-24T09:27:24.342687"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1766041959910_acgazljcp",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      }
+    }
+  ],
+  "priority": "low",
+  "estimated_hours": 1,
+  "task_descriptions": "Transfer active configuration item ownership from Stephanie Todd to Robin Monroe and notify Robin of the changes.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"CMDB",
+"L2":"Configuration Items",
+"L3":"CI Registry & Attributes"
+}

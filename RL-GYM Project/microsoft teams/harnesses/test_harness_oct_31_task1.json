@@ -1,0 +1,45 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation agent with full administrative permissions to manage users, teams, channels, roles, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Create a group and assign two owners.",
+      "conversation_mode": true,
+      "context": {
+        "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "We're preparing for the upcoming sprint cycle; create a group named 'Engineering Sprint Council', add Alice Johnson (alice.manager@techcorp.com) and Carol White (carol.white@techcorp.com) as owners.",
+          "expected_tools": [
+            "create_group",
+            "list_users",
+            "add_group_owner",
+            "add_group_owner"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM groups WHERE display_name = 'Engineering Sprint Council'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM groups g, json_each(g.owners) o WHERE g.display_name = 'Engineering Sprint Council' AND json_extract(o.value, '$.displayName') = 'Alice Johnson') AND EXISTS (SELECT 1 FROM groups g2, json_each(g2.owners) o2 WHERE g2.display_name = 'Engineering Sprint Council' AND json_extract(o2.value, '$.displayName') = 'Carol White') THEN 1 ELSE 0 END AS count",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

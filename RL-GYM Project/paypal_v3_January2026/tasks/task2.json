@@ -1,0 +1,86 @@
+{
+  "scenario_config": {
+    "scenario_name": "paypal_create_healthpro_subscription_service",
+    "scenario_description": "Create a digital subscription product for HealthPro Monitoring and configure three subscription tiers (Basic, Premium, Annual) with correct trial, pricing, tax, payment preferences, and quantity-based pricing disabled.",
+    "system_prompt": "You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I need to establish a digital subscription service for 'HealthPro Monitoring', a fitness tracking platform categorized under health and personal care that delivers real-time wellness metrics and personalized coaching. The service website is hosted at https://www.healthpro-app.com. Please set up three subscription tiers: a Basic plan at $9.99 per month with no trial period, a Premium plan at $19.99 per month featuring a 14-day complimentary trial with immediate payment enforcement post-trial, 2 payment failure retry attempts, and 8% tax, and an Annual plan priced at $199.99 per year with a 30-day discounted trial period at $4.99. Ensure that quantity-based pricing is disabled across all plans.",
+    "restricted_tools": [],
+    "selected_tools": [],
+    "expected_tools": [
+      "paypal_create_product",
+      "create_billing_plan",
+      "create_billing_plan",
+      "create_billing_plan"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Product Created - HealthPro Monitoring",
+      "description": "Verify that the HealthPro Monitoring digital product is created with the correct category and website URL.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM products WHERE name = 'HealthPro Monitoring' AND type = 'DIGITAL' AND category = 'HEALTH_AND_PERSONAL_CARE' AND home_url = 'https://www.healthpro-app.com/'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Basic Monthly Plan Created (9.99 USD, No Trial, Quantity Disabled)",
+      "description": "Verify the Basic monthly plan exists with correct billing cycle definition and quantity-based pricing disabled.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE product_id = (SELECT id FROM products WHERE name = 'HealthPro Monitoring' LIMIT 1) AND quantity_supported = 0 AND json_extract(billing_cycles, '$[0].tenure_type') = 'REGULAR' AND json_extract(billing_cycles, '$[0].sequence') = 1 AND json_extract(billing_cycles, '$[0].total_cycles') = 0 AND json_extract(billing_cycles, '$[0].frequency.interval_unit') = 'MONTH' AND json_extract(billing_cycles, '$[0].frequency.interval_count') = 1 AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.value') = '9.99'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Premium Monthly Plan Created (14-Day Trial, 19.99 USD, Tax 8%, Prefs Set, Quantity Disabled)",
+      "description": "Verify the Premium monthly plan exists with the correct trial and regular billing cycles, payment preferences, tax, and quantity-based pricing disabled.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE product_id = (SELECT id FROM products WHERE name = 'HealthPro Monitoring' LIMIT 1) AND quantity_supported = 0 AND json_extract(billing_cycles, '$[0].tenure_type') = 'TRIAL' AND json_extract(billing_cycles, '$[0].sequence') = 1 AND json_extract(billing_cycles, '$[0].total_cycles') = 1 AND json_extract(billing_cycles, '$[0].frequency.interval_unit') = 'DAY' AND json_extract(billing_cycles, '$[0].frequency.interval_count') = 14 AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.value') = '0' AND json_extract(billing_cycles, '$[1].tenure_type') = 'REGULAR' AND json_extract(billing_cycles, '$[1].sequence') = 2 AND json_extract(billing_cycles, '$[1].total_cycles') = 0 AND json_extract(billing_cycles, '$[1].frequency.interval_unit') = 'MONTH' AND json_extract(billing_cycles, '$[1].frequency.interval_count') = 1 AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.value') = '19.99' AND json_extract(payment_preferences, '$.auto_bill_outstanding') = 1 AND json_extract(payment_preferences, '$.payment_failure_threshold') = 2 AND json_extract(taxes, '$.percentage') = '8' AND json_extract(taxes, '$.inclusive') = 0",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Annual Plan Created (30-Day Trial 4.99 USD, 199.99 USD Yearly, Quantity Disabled)",
+      "description": "Verify the Annual plan exists with a 30-day discounted trial and correct yearly billing cycle, with quantity-based pricing disabled.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE product_id = (SELECT id FROM products WHERE name = 'HealthPro Monitoring' LIMIT 1) AND quantity_supported = 0 AND json_extract(billing_cycles, '$[0].tenure_type') = 'TRIAL' AND json_extract(billing_cycles, '$[0].sequence') = 1 AND json_extract(billing_cycles, '$[0].total_cycles') = 1 AND json_extract(billing_cycles, '$[0].frequency.interval_unit') = 'DAY' AND json_extract(billing_cycles, '$[0].frequency.interval_count') = 30 AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[0].pricing_scheme.fixed_price.value') = '4.99' AND json_extract(billing_cycles, '$[1].tenure_type') = 'REGULAR' AND json_extract(billing_cycles, '$[1].sequence') = 2 AND json_extract(billing_cycles, '$[1].total_cycles') = 0 AND json_extract(billing_cycles, '$[1].frequency.interval_unit') = 'YEAR' AND json_extract(billing_cycles, '$[1].frequency.interval_count') = 1 AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.value') = '199.99'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "paypal-internal-prod",
+      "database_id": "db_1769100301440_ic0trxfb7",
+      "context": {
+        "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create the HealthPro Monitoring digital product and configure Basic, Premium, and Annual subscription billing plans with correct pricing, trials, tax, payment preferences, and quantity disabled.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": false,
+    "enableVerifier": true
+  }
+}

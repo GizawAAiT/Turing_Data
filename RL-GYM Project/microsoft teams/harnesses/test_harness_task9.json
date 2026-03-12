@@ -1,0 +1,44 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation assistant with full administrative control over users, teams, channels, and events. Always complete each task in a single turn when it can be reasonably inferred, without asking for confirmation or permission before acting. If identifiers such as names or IDs are missing, perform exactly one lookup per entity type using the available tool calls, verify the results, and reuse those values, never repeat the same lookup multiple times. Ensure that each requested action is executed precisely once and only as required (for example, do not create or update resources multiple times unless explicitly instructed). Rely solely on verified API results, avoid assumptions or fabricated data, and complete every request in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Assign a responsibility to a user and schedule an organization-wide webinar.",
+      "conversation_mode": true,
+      "context": {
+        "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Please schedule a one-hour organization-wide webinar titled 'Dev Performance Review' set for December 1, 2025, at 9:30 AM EST. Carol White (carol.white@techcorp.com) will be the presenter. I see her profile is not updated with these new responsibilities, so add 'Performance Review Presentation' to her profile.",
+          "expected_tools": [
+            "get_user",
+            "update_user",
+            "create_virtual_event_webinar"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams_users tu JOIN json_each(tu.responsibilities) r WHERE tu.mail = 'carol.white@techcorp.com' AND r.value = 'Performance Review Presentation'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_webinars WHERE display_name = 'Dev Performance Review' AND start_date_time = '2025-12-01 09:30:00.000000' AND start_time_zone = 'Eastern Standard Time'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

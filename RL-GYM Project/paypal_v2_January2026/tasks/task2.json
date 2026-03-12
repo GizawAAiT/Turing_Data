@@ -1,0 +1,384 @@
+{
+  "scenario_config": {
+    "scenario_name": "shopify_theme_support_subscription_setup",
+    "scenario_description": "Update Shopify theme product, create support billing plan, deactivate unrelated plans, and subscribe customer",
+    "system_prompt": "You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Update the product listing for 'Premium Shopify Theme - Modern Store' with an enhanced description that explicitly mentions the theme supports local development and testing before production deployment. Create a new monthly billing plan named 'Theme Support Plan' for this product at $29.00/month (USD) with 7.5% exclusive tax and a maximum of five payment retry attempts before subscription failure. Ensure this product only displays the relevant Theme Support Plan by deactivating any other unrelated subscription plans currently associated with it. Finally, create an immediate subscription for Sarah Mitchell (sarah.mitchell@shopify-store.com) to the new Theme Support Plan, with no shipping address required.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "paypal_list_products",
+      "paypal_update_product",
+      "list_billing_plans",
+      "create_billing_plan",
+      "deactivate_billing_plan",
+      "create_subscription"
+    ],
+    "expected_tools": [
+      "paypal_list_products",
+      "paypal_update_product",
+      "list_billing_plans",
+      "create_billing_plan",
+      "deactivate_billing_plan",
+      "create_subscription"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Product Description Updated",
+      "description": "Verify Shopify theme product description updated without affecting other fields",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM products WHERE id = 'PROD-5YE932MEQK4MS001A' AND name = 'Premium Shopify Theme - Modern Store' AND type = 'DIGITAL' AND category = 'SOFTWARE' AND image_url = 'https://cdn.shopify.com/theme-store/modern-store-preview.jpg' AND home_url = 'https://themes.shopify.com/modern-store' AND description LIKE '%support%' AND description LIKE '%local%' AND description LIKE '%develop%' AND description LIKE '%test%' AND description LIKE '%deploy%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Theme Support Billing Plan Created",
+      "description": "Verify billing plan created with correct pricing, billing cycle, taxes, and payment preferences",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans bp WHERE bp.product_id = 'PROD-5YE932MEQK4MS001A' AND bp.name = 'Theme Support Plan' AND bp.status = 'ACTIVE' AND EXISTS (SELECT 1 FROM json_each(bp.billing_cycles) bc WHERE json_extract(bc.value, '$.tenure_type') = 'REGULAR' AND json_extract(bc.value, '$.sequence') = 1 AND json_extract(bc.value, '$.frequency.interval_unit') = 'MONTH' AND json_extract(bc.value, '$.frequency.interval_count') = 1 AND json_extract(bc.value, '$.pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(bc.value, '$.pricing_scheme.fixed_price.value') = '29.00') AND json_extract(bp.payment_preferences, '$.auto_bill_outstanding') = 1 AND json_extract(bp.payment_preferences, '$.setup_fee_failure_action') = 'CONTINUE' AND json_extract(bp.payment_preferences, '$.payment_failure_threshold') = 5 AND json_extract(bp.taxes, '$.percentage') = '7.5' AND json_extract(bp.taxes, '$.inclusive') = 0",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Unrelated Billing Plan Deactivated",
+      "description": "Verify unrelated streaming service billing plan is deactivated",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE id = 'P-5ML4271244454362WXNWU5NQ' AND status = 'INACTIVE'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Sarah Subscription Created",
+      "description": "Verify subscription created with correct plan and application context",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM subscriptions s WHERE s.plan_id = (SELECT id FROM billing_plans WHERE name = 'Theme Support Plan') AND json_extract(s.application_context, '$.shipping_preference') = 'NO_SHIPPING' AND json_extract(s.application_context, '$.user_action') = 'SUBSCRIBE_NOW'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Sarah Added as Subscriber",
+      "description": "Verify Sarah Mitchell is listed as a subscriber for the Theme Support Plan",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM subscribers WHERE email_address = 'sarah.mitchell@shopify-store.com' AND given_name = 'Sarah' AND surname = 'Mitchell'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "paypal_list_products",
+    "arguments": {
+      "page": 1,
+      "page_size": 20,
+      "total_required": true
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "paypal_list_products",
+      "parameters": {
+        "page": 1,
+        "page_size": 20,
+        "total_required": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"products\": [\n    {\n      \"id\": \"PROD-4NL72MQWS8KP60000\",\n      \"name\": \"Electric Standing Desk\",\n      \"description\": \"Height-adjustable electric standing desk with memory presets, cable management, and bamboo desktop - 60x30 inches\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://office-furniture.com/products/electric-standing-desk.jpg\",\n      \"home_url\": \"https://office-furniture.com/desks/standing/electric-60\",\n      \"create_time\": \"2024-12-08T10:40:00Z\",\n      \"update_time\": \"2024-12-21T14:55:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7WP93KQNM5VX80000\",\n      \"name\": \"Weekend City Tour Package\",\n      \"description\": \"2-day guided tour including transportation, museum entries, local cuisine experiences, and professional photography\",\n      \"type\": \"SERVICE\",\n      \"category\": \"TRAVEL_AND_TOURISM\",\n      \"image_url\": \"https://city-tours.com/packages/weekend-explorer.jpg\",\n      \"home_url\": \"https://city-tours.com/tours/weekend-package\",\n      \"create_time\": \"2024-12-05T13:25:00Z\",\n      \"update_time\": \"2024-12-21T08:30:20Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3QK85NWMS7PL40000\",\n      \"name\": \"Language Learning App - Lifetime Access\",\n      \"description\": \"Learn 14 languages with AI-powered lessons, native speaker recordings, and interactive exercises - one-time purchase\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://polyglot-app.com/assets/lifetime-access.png\",\n      \"home_url\": \"https://polyglot-app.com/pricing/lifetime\",\n      \"create_time\": \"2024-12-01T09:10:00Z\",\n      \"update_time\": \"2024-12-20T11:15:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9TY62KLNP4MV80000\",\n      \"name\": \"Artisan Chocolate Gift Box\",\n      \"description\": \"Luxury collection of 24 handcrafted chocolates with unique flavors, beautifully packaged for gifting\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://chocolate-boutique.com/products/luxury-gift-box.jpg\",\n      \"home_url\": \"https://chocolate-boutique.com/gifts/premium-collection\",\n      \"create_time\": \"2024-11-12T14:35:00Z\",\n      \"update_time\": \"2024-12-19T16:20:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-5LM83WQPT7KN20000\",\n      \"name\": \"Digital Marketing Strategy Package\",\n      \"description\": \"Comprehensive digital marketing audit, strategy development, and 3-month implementation plan with analytics setup\",\n      \"type\": \"SERVICE\",\n      \"category\": \"PROFESSIONAL_SERVICES\",\n      \"image_url\": \"https://digital-agency.com/services/strategy-package.jpg\",\n      \"home_url\": \"https://digital-agency.com/services/marketing-strategy\",\n      \"create_time\": \"2024-10-05T11:20:00Z\",\n      \"update_time\": \"2024-12-18T09:45:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-2KP47NQMS8YL60000\",\n      \"name\": \"Yoga Studio Membership - Monthly\",\n      \"description\": \"Unlimited access to all yoga classes, workshops, and meditation sessions at our downtown location\",\n      \"type\": \"SERVICE\",\n      \"category\": \"MEMBERSHIP_CLUBS_AND_ORGANIZATIONS\",\n      \"image_url\": \"https://zen-yoga-studio.com/membership/unlimited.jpg\",\n      \"home_url\": \"https://zen-yoga-studio.com/membership\",\n      \"create_time\": \"2024-09-10T08:30:00Z\",\n      \"update_time\": \"2024-12-15T12:00:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-8XQ95TMLP3NV70000\",\n      \"name\": \"Smart Home Security System\",\n      \"description\": \"Complete home security package with 4 cameras, motion sensors, smart doorbell, and 24/7 professional monitoring\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://secure-home-tech.com/products/complete-system.jpg\",\n      \"home_url\": \"https://secure-home-tech.com/systems/professional\",\n      \"create_time\": \"2024-08-21T10:15:00Z\",\n      \"update_time\": \"2024-12-09T14:50:25Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6VB72JQNK8XM40000\",\n      \"name\": \"Web Development Bootcamp\",\n      \"description\": \"12-week intensive bootcamp covering HTML, CSS, JavaScript, React, Node.js, and MongoDB with job placement assistance\",\n      \"type\": \"SERVICE\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://tech-academy.com/bootcamps/web-development.jpg\",\n      \"home_url\": \"https://tech-academy.com/bootcamps/full-stack\",\n      \"create_time\": \"2024-07-07T13:50:00Z\",\n      \"update_time\": \"2024-12-11T08:25:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-4MZ86WQLS7PT30000\",\n      \"name\": \"Handcrafted Leather Wallet\",\n      \"description\": \"Premium full-grain leather bifold wallet with RFID blocking, 8 card slots, and bill compartment - Handmade in Italy\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://leather-goods.com/products/classic-bifold-wallet.jpg\",\n      \"home_url\": \"https://leather-goods.com/wallets/classic-bifold\",\n      \"create_time\": \"2024-06-14T16:25:00Z\",\n      \"update_time\": \"2024-12-08T11:40:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7HN93KXMP4BV50000\",\n      \"name\": \"Fitness Tracking App - Annual Plan\",\n      \"description\": \"Full-featured fitness tracking application with personalized workout plans, nutrition tracking, and progress analytics\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://fittrack-app.com/assets/app-preview.png\",\n      \"home_url\": \"https://fittrack-app.com/pricing/annual\",\n      \"create_time\": \"2024-05-28T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3WK58LPTN2QM90000\",\n      \"name\": \"Organic Coffee Subscription Box\",\n      \"description\": \"Monthly delivery of premium single-origin organic coffee beans from small farms worldwide - 2 bags per month\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://coffee-subscription.com/products/organic-monthly-box.jpg\",\n      \"home_url\": \"https://coffee-subscription.com/subscriptions/organic\",\n      \"create_time\": \"2024-04-18T09:10:00Z\",\n      \"update_time\": \"2024-11-20T15:55:18Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7YM35774N9055821K\",\n      \"name\": \"Wireless Noise-Canceling Headphones\",\n      \"description\": \"Premium over-ear headphones with 30-hour battery life, active noise cancellation, and Hi-Res audio support\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://electronics-store.com/products/wireless-headphones-pro.jpg\",\n      \"home_url\": \"https://electronics-store.com/audio/headphones/nc-pro\",\n      \"create_time\": \"2024-03-05T14:20:00Z\",\n      \"update_time\": \"2024-12-10T09:30:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6XB24663H4094933L\",\n      \"name\": \"Professional Video Editing Course\",\n      \"description\": \"Complete 40-hour masterclass on Adobe Premiere Pro and After Effects with lifetime access and certification\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://courses.creativepro.com/video-editing-masterclass.jpg\",\n      \"home_url\": \"https://creativepro.com/courses/video-editing\",\n      \"create_time\": \"2024-02-10T08:15:00Z\",\n      \"update_time\": \"2024-11-28T16:45:12Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-5YE932MEQK4MS001A\",\n      \"name\": \"Premium Shopify Theme - Modern Store\",\n      \"description\": \"Professional responsive e-commerce theme with advanced customization options, mobile-first design, and built-in SEO optimization\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://cdn.shopify.com/theme-store/modern-store-preview.jpg\",\n      \"home_url\": \"https://themes.shopify.com/modern-store\",\n      \"create_time\": \"2024-01-15T10:30:00Z\",\n      \"update_time\": \"2024-12-01T14:22:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5YE932MEQK4MS001A\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5YE932MEQK4MS001A\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9PQ47JKNM6YR80000\",\n      \"name\": \"Monthly Business Consulting\",\n      \"description\": \"4 hours of strategic business consulting per month including market analysis, growth planning, and performance optimization\",\n      \"type\": \"SERVICE\",\n      \"category\": \"PROFESSIONAL_SERVICES\",\n      \"image_url\": \"https://consulting-firm.com/services/business-strategy.jpg\",\n      \"home_url\": \"https://consulting-firm.com/services/monthly-consulting\",\n      \"create_time\": \"2023-11-15T11:45:00Z\",\n      \"update_time\": \"2024-12-05T13:15:20Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9PQ47JKNM6YR80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9PQ47JKNM6YR80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    }\n  ],\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products?page=1&page_size=20\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ],\n  \"total_items\": 15,\n  \"total_pages\": 1\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 422,
+      "executed_at": "2026-01-12T23:08:08.094006"
+    }
+  },
+  {
+    "name": "paypal_update_product",
+    "arguments": {
+      "product_id": "PROD-5YE932MEQK4MS001A",
+      "patch_operations": [
+        {
+          "op": "replace",
+          "path": "/description",
+          "value": "Professional responsive e-commerce theme with advanced customization options, mobile-first design, and built-in SEO optimization. This theme supports full local development and testing capabilities, allowing you to work on your customizations locally before deploying to your production Shopify store. Perfect for developers who prefer a local-first workflow with complete version control."
+        }
+      ]
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "paypal_update_product",
+      "parameters": {
+        "product_id": "PROD-5YE932MEQK4MS001A",
+        "patch_operations": [
+          {
+            "op": "replace",
+            "path": "/description",
+            "value": "Professional responsive e-commerce theme with advanced customization options, mobile-first design, and built-in SEO optimization. This theme supports full local development and testing capabilities, allowing you to work on your customizations locally before deploying to your production Shopify store. Perfect for developers who prefer a local-first workflow with complete version control."
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Product PROD-5YE932MEQK4MS001A updated successfully"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 1410,
+      "executed_at": "2026-01-12T23:08:13.177828"
+    }
+  },
+  {
+    "name": "list_billing_plans",
+    "arguments": {
+      "product_id": "PROD-5YE932MEQK4MS001A",
+      "page": 1,
+      "page_size": 20,
+      "total_required": true
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "list_billing_plans",
+      "parameters": {
+        "product_id": "PROD-5YE932MEQK4MS001A",
+        "page": 1,
+        "page_size": 20,
+        "total_required": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"plans\": [\n    {\n      \"id\": \"P-5ML4271244454362WXNWU5NQ\",\n      \"name\": \"Premium Streaming Service - Monthly\",\n      \"description\": \"Ad-free streaming with 4K quality and offline downloads\",\n      \"links\": [\n        {\n          \"href\": \"https://api.paypal.com/v1/billing/plans/P-5ML4271244454362WXNWU5NQ\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.paypal.com/v1/billing/plans/P-5ML4271244454362WXNWU5NQ\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        },\n        {\n          \"href\": \"https://api.paypal.com/v1/payments/billing-plans/P-5ML4271244454362WXNWU5NQ/deactivate\",\n          \"rel\": \"deactivate\",\n          \"method\": \"POST\"\n        }\n      ]\n    }\n  ],\n  \"total_items\": \"1\",\n  \"total_pages\": \"1\",\n  \"links\": [\n    {\n      \"href\": \"https://api.paypal.com/v1/payments/billing-plans?product_id=PROD-5YE932MEQK4MS001A&page_size=20&total_required=true&page=1\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 222,
+      "executed_at": "2026-01-12T23:08:20.132136"
+    }
+  },
+  {
+    "name": "create_billing_plan",
+    "arguments": {
+      "product_id": "PROD-5YE932MEQK4MS001A",
+      "name": "Theme Support Plan",
+      "description": "Monthly technical support for Premium Shopify Theme including priority support, bug fixes, and updates",
+      "status": "ACTIVE",
+      "billing_cycles": [
+        {
+          "tenure_type": "REGULAR",
+          "sequence": 1,
+          "total_cycles": 0,
+          "frequency": {
+            "interval_unit": "MONTH",
+            "interval_count": 1
+          },
+          "pricing_scheme": {
+            "fixed_price": {
+              "currency_code": "USD",
+              "value": "29.00"
+            }
+          }
+        }
+      ],
+      "payment_preferences": {
+        "auto_bill_outstanding": true,
+        "setup_fee_failure_action": "CONTINUE",
+        "payment_failure_threshold": 5
+      },
+      "taxes": {
+        "percentage": "7.5",
+        "inclusive": false
+      }
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "create_billing_plan",
+      "parameters": {
+        "product_id": "PROD-5YE932MEQK4MS001A",
+        "name": "Theme Support Plan",
+        "description": "Monthly technical support for Premium Shopify Theme including priority support, bug fixes, and updates",
+        "status": "ACTIVE",
+        "billing_cycles": [
+          {
+            "tenure_type": "REGULAR",
+            "sequence": 1,
+            "total_cycles": 0,
+            "frequency": {
+              "interval_unit": "MONTH",
+              "interval_count": 1
+            },
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "29.00"
+              }
+            }
+          }
+        ],
+        "payment_preferences": {
+          "auto_bill_outstanding": true,
+          "setup_fee_failure_action": "CONTINUE",
+          "payment_failure_threshold": 5
+        },
+        "taxes": {
+          "percentage": "7.5",
+          "inclusive": false
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"P-LIWIUIVA254F5FVD9JPUFDNS\",\n  \"product_id\": \"PROD-5YE932MEQK4MS001A\",\n  \"name\": \"Theme Support Plan\",\n  \"description\": \"Monthly technical support for Premium Shopify Theme including priority support, bug fixes, and updates\",\n  \"status\": \"ACTIVE\",\n  \"billing_cycles\": [\n    {\n      \"frequency\": {\n        \"interval_unit\": \"MONTH\",\n        \"interval_count\": 1\n      },\n      \"tenure_type\": \"REGULAR\",\n      \"sequence\": 1,\n      \"total_cycles\": 0,\n      \"pricing_scheme\": {\n        \"fixed_price\": {\n          \"currency_code\": \"USD\",\n          \"value\": \"29.00\"\n        },\n        \"version\": 1,\n        \"create_time\": \"2026-01-12T23:08:54.420831Z\",\n        \"update_time\": \"2026-01-12T23:08:54.420835Z\"\n      }\n    }\n  ],\n  \"payment_preferences\": {\n    \"auto_bill_outstanding\": true,\n    \"setup_fee_failure_action\": \"CONTINUE\",\n    \"payment_failure_threshold\": 5\n  },\n  \"taxes\": {\n    \"percentage\": \"7.5\",\n    \"inclusive\": false\n  },\n  \"quantity_supported\": false,\n  \"create_time\": \"2026-01-12T23:08:54.420831Z\",\n  \"update_time\": \"2026-01-12T23:08:54.420835Z\",\n  \"links\": [\n    {\n      \"href\": \"https://api.paypal.com/v1/billing/plans/P-LIWIUIVA254F5FVD9JPUFDNS\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.paypal.com/v1/billing/plans/P-LIWIUIVA254F5FVD9JPUFDNS\",\n      \"rel\": \"edit\",\n      \"method\": \"PATCH\"\n    },\n    {\n      \"href\": \"https://api.paypal.com/v1/payments/billing-plans/P-LIWIUIVA254F5FVD9JPUFDNS/deactivate\",\n      \"rel\": \"deactivate\",\n      \"method\": \"POST\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 30480,
+      "executed_at": "2026-01-12T23:09:24.669824"
+    }
+  },
+  {
+    "name": "deactivate_billing_plan",
+    "arguments": {
+      "plan_id": "P-5ML4271244454362WXNWU5NQ"
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "deactivate_billing_plan",
+      "parameters": {
+        "plan_id": "P-5ML4271244454362WXNWU5NQ"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 204,\n  \"debug_id\": null,\n  \"message\": \"Plan deactivated successfully\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 263,
+      "executed_at": "2026-01-12T23:10:23.533587"
+    }
+  },
+  {
+    "name": "create_subscription",
+    "arguments": {
+      "plan_id": "P-LIWIUIVA254F5FVD9JPUFDNS",
+      "subscriber": {
+        "email_address": "sarah.mitchell@shopify-store.com",
+        "name": {
+          "given_name": "Sarah",
+          "surname": "Mitchell"
+        }
+      },
+      "application_context": {
+        "shipping_preference": "NO_SHIPPING",
+        "user_action": "SUBSCRIBE_NOW"
+      },
+      "start_time": "2026-01-12T22:00:00Z"
+    },
+    "context": {
+      "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "create_subscription",
+      "parameters": {
+        "plan_id": "P-LIWIUIVA254F5FVD9JPUFDNS",
+        "subscriber": {
+          "email_address": "sarah.mitchell@shopify-store.com",
+          "name": {
+            "given_name": "Sarah",
+            "surname": "Mitchell"
+          }
+        },
+        "application_context": {
+          "shipping_preference": "NO_SHIPPING",
+          "user_action": "SUBSCRIBE_NOW"
+        },
+        "start_time": "2026-01-12T22:00:00Z"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"I-80LXO3KT7M5NU8QUM\",\n  \"plan_id\": \"P-LIWIUIVA254F5FVD9JPUFDNS\",\n  \"status\": \"APPROVAL_PENDING\",\n  \"status_change_note\": null,\n  \"status_update_time\": \"2026-01-12T23:10:39.070607\",\n  \"start_time\": \"2026-01-12T22:00:00\",\n  \"quantity\": null,\n  \"custom_id\": null,\n  \"plan_overridden\": false,\n  \"shipping_amount\": null,\n  \"subscriber\": {\n    \"email_address\": \"sarah.mitchell@shopify-store.com\",\n    \"payer_id\": null,\n    \"name\": {\n      \"given_name\": \"Sarah\",\n      \"surname\": \"Mitchell\"\n    },\n    \"shipping_address\": {\n      \"name\": {\n        \"full_name\": null\n      },\n      \"address\": {\n        \"address_line_1\": null,\n        \"address_line_2\": null,\n        \"admin_area_2\": null,\n        \"admin_area_1\": null,\n        \"postal_code\": null,\n        \"country_code\": null\n      },\n      \"type\": null,\n      \"options\": []\n    },\n    \"phone_number\": null\n  },\n  \"plan\": {\n    \"id\": \"P-LIWIUIVA254F5FVD9JPUFDNS\",\n    \"product_id\": \"PROD-5YE932MEQK4MS001A\",\n    \"name\": \"Theme Support Plan\",\n    \"description\": \"Monthly technical support for Premium Shopify Theme including priority support, bug fixes, and updates\",\n    \"status\": \"ACTIVE\",\n    \"billing_cycles\": [\n      {\n        \"frequency\": {\n          \"interval_unit\": \"MONTH\",\n          \"interval_count\": 1\n        },\n        \"tenure_type\": \"REGULAR\",\n        \"sequence\": 1,\n        \"total_cycles\": 0,\n        \"pricing_scheme\": {\n          \"fixed_price\": {\n            \"currency_code\": \"USD\",\n            \"value\": \"29.00\"\n          },\n          \"version\": 1,\n          \"create_time\": \"2026-01-12T23:08:54.420831Z\",\n          \"update_time\": \"2026-01-12T23:08:54.420835Z\"\n        }\n      }\n    ],\n    \"payment_preferences\": {\n      \"auto_bill_outstanding\": true,\n      \"setup_fee_failure_action\": \"CONTINUE\",\n      \"payment_failure_threshold\": 5\n    },\n    \"taxes\": {\n      \"percentage\": \"7.5\",\n      \"inclusive\": false\n    },\n    \"quantity_supported\": false,\n    \"create_time\": \"2026-01-12T23:08:54.420831Z\",\n    \"update_time\": \"2026-01-12T23:08:54.420835Z\",\n    \"links\": [\n      {\n        \"href\": \"https://api.paypal.com/v1/billing/plans/P-LIWIUIVA254F5FVD9JPUFDNS\",\n        \"rel\": \"self\",\n        \"method\": \"GET\"\n      },\n      {\n        \"href\": \"https://api.paypal.com/v1/billing/plans/P-LIWIUIVA254F5FVD9JPUFDNS\",\n        \"rel\": \"edit\",\n        \"method\": \"PATCH\"\n      },\n      {\n        \"href\": \"https://api.paypal.com/v1/payments/billing-plans/P-LIWIUIVA254F5FVD9JPUFDNS/deactivate\",\n        \"rel\": \"deactivate\",\n        \"method\": \"POST\"\n      }\n    ]\n  },\n  \"links\": [\n    {\n      \"rel\": \"self\",\n      \"href\": \"https://api.paypal.com/v1/billing/subscriptions/I-80LXO3KT7M5NU8QUM\"\n    },\n    {\n      \"rel\": \"cancel\",\n      \"href\": \"https://api.paypal.com/v1/billing/subscriptions/I-80LXO3KT7M5NU8QUM/cancel\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 444,
+      "executed_at": "2026-01-12T23:10:39.311620"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "paypal-internal-prod",
+      "database_id": "db_1768324427776_50pp9l2dx",
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Update Shopify theme product, configure support billing plan, deactivate unrelated plans, and subscribe customer.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

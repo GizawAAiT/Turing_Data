@@ -1,0 +1,103 @@
+{
+  "scenario_config": {
+    "scenario_name": "no_meeting_window",
+    "scenario_description": "Enforce No-Meeting Period",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "From October 2 to 13, 2025, enforce a no-meeting window from 12:30 PM to 3 PM America/New_York on my sales schedule. For any confirmed event conflicting with that window, move it to the earlier time so that it will be completed just before the no-meeting window starts. Update each moved event to have background color #dc2127 and foreground color #1d1d1d, add a shared extended property { \"policy\": \"no_morning_meetings_dec_2025\" }, and set a pop-up reminder 20 minutes prior. Finally, ensure the sales schedule is visible in my list and set a 14-day event watch to https://devops.techcorp.com/dev-schedule/watch with token NMM_DEC.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "get_colors",
+      "patch_event",
+      "update_calendar_in_list",
+      "watch_events"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "get_colors",
+      "patch_event",
+      "update_calendar_in_list",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Event Time Adjusted",
+      "description": "Check if conflicting event is moved",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-006' AND start_datetime = '2025-10-09 10:30:00.000000' AND end_datetime = '2025-10-09 12:30:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York' AND status = 'confirmed' AND color_id = 11",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Calendar Visibility",
+      "description": "Check calendar is visible",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE calendar_id = 'dave-sales' AND hidden = 0",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Watch Channel Setup",
+      "description": "Verify event-change watch is set",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE webhook_address = 'https://devops.techcorp.com/dev-schedule/watch' AND calendar_id = 'dave-sales' AND user_id = 'dave_sales' AND webhook_token = 'NMM_DEC' AND is_active = 'true'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Extended Property Set",
+      "description": "Check shared extended property set correctly",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-006' AND scope = 'shared' AND json_extract(properties, '$.department') = 'sales' AND json_extract(properties, '$.policy') = 'no_morning_meetings_dec_2025'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Reminder Set",
+      "description": "Check 20-minute pop-up reminder",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-006' AND method = 'popup' AND minutes = 20",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Enforce no-meeting window, adjust events, and configure reminders, extended properties, and event watch.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

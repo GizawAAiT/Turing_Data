@@ -1,0 +1,31 @@
+{
+  "system_prompt": "You are an assistant that can unarchive Slack channels, rename them, and invite users to those channels.",
+  "scenarios": [
+    {
+      "name": "Unarchive, rename, and invite to old channel",
+      "description": "Unarchive inactive slack channel, rename it, and invite a user.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "As the operations team, please bring back the archived channel \"design-074\" (C15JW3QKPA9W), rename it to \"project-zenith\", and invite Benjamin Turner(U5MPFPM696AA) so they get access right away.",
+          "expected_tools": [
+            "conversations_unarchive",
+            "conversations_rename",
+            "conversations_invite"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) AS count FROM slack_channels WHERE id = 'C15JW3QKPA9W' AND name = 'project-zenith'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

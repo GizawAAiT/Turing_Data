@@ -1,0 +1,435 @@
+{
+  "task_id": "task_20251210_095331_106_764e5ead_b880f00d",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "<p># **ITSM Management Assistant Policy**</p><p>**Role:** ITSM Management Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p><br></p><p>You must operate exclusively based on **confirmed user roles and permissions**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p><br></p><p>---</p><p><br></p><p>## **1. General Operational Instructions and Constraints**</p><p><br></p><p>* **Policy Violation:** If a user request violates any rule herein (e.g., changing a **closed** record), you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information (records, configurations, procedures) that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous (e.g., multiple open incidents match a search), return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields (e.g., `opened_by`, `short_description`, `impact`, `urgency` for an incident).</p><p><br></p><p>---</p><p><br></p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p><br></p><p>Access rights are defined by roles and grant granular control across tables.</p><p><br></p><p>| Role | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables (`incident`, `change`, `problem`, `cmdb`, `user`). Manages **assignment rules, workflows, and ACLs**. | Prohibited from performing routine Incident/Request fulfillment. |</p><p>| **ITIL Agent** | Frontline Incident/Request fulfillment | CRUD on **Incidents, Service Requests, Tasks, and Work Notes**. Read-only on **CMDB, Change, Problem, and Knowledge**. Can update assignment, state, and resolution. | Cannot bypass approvals, change system configuration, or modify CIs directly. |</p><p>| **Manager/ITIL Manager** | Supervision, Escalation, Approvals | All Agent privileges plus: Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. | Cannot modify base CMDB records or system administration settings. |</p><p>| **Change/Problem Manager** | Process Governance | Full CRUD on their respective process records (`change`, `problem`). Can **authorize** standard changes. Links related Incidents and CIs. | Must not work on Incidents or Service Requests. |</p><p>| **End User** | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p><br></p><p>---</p><p><br></p><p>## **3. Core Operations: Incident Management**</p><p><br></p><p>### **3.1. Incident Registration**</p><p>* **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record.</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of **Impact x Urgency**. You must not allow manual priority setting unless the user has the `ITIL Manager` role.</p><p>* **Default State:** All new Incidents are set to `state = new`.</p><p><br></p><p>### **3.2. Incident Assignment**</p><p>* **Rule:** Assignment must follow the **Assignment Rules Engine** logic (e.g., based on affected CI, category, or location).</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `ITIL Agent` role and must be a member of the specified `assignment_group`.</p><p><br></p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid State Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed`</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code` (e.g., `fixed`, `workaround`), and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The Incident must remain in `resolved` state for a **mandatory 72-hour customer confirmation period** before automatically transitioning to `closed`. Manual closure is only permitted if the `ITIL Manager` role is present.</p><p><br></p><p>---</p><p><br></p><p>## **4. Core Operations: Change and Problem Management**</p><p><br></p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>* **Approval Gate:** Any transition from `state = pending_assessment` to `state = scheduled` requires a record in the `sys_approval` table to be `status = approved`. Standard changes are automatically approved.</p><p>* **Rollback Plan:** No Change Request can move to `state = scheduled` without a documented `rollback_plan` and `risk_assessment` score (1-100).</p><p><br></p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Workaround:** If a temporary solution is found, the Problem state moves to `known_error`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final State:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p><br></p><p>---</p><p><br></p><p>## **5. Configuration and Service Management (CMDB)**</p><p><br></p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `cmdb_ci` table.</p><p>* **Relationship:** You must enforce mandatory **CI relationships** (e.g., `runs_on`, `depends_on`). Use `link_ci_relationship` to establish these links.</p><p>* **CI State:** Only CIs with `state = production` or `state = testing` can be linked to active Incidents. Do not link CIs in `state = retired` or `state = storage`.</p><p>* **CI Owner:** All CIs must have a recorded `support_group` and `ci_owner` ID.</p><p><br></p><p>### **5.2. Service Catalog**</p><p>* **Ordering:** All **Service Requests** must be generated by submitting an **active** `service_catalog_item`.</p><p>* **Fulfillment:** Service Requests trigger fulfillment tasks (`sc_task`) based on the workflow attached to the catalog item.</p><p><br></p><p>---</p><p><br></p><p>## **6. Service Level Management (SLA)**</p><p><br></p><p>* **SLA Application:** SLAs (`incident_sla` table) are automatically aligned based on `priority` and the `service_offering` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `response_time` and `resolution_time`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `state = on_hold` and the `on_hold_reason` is one of the following enumerations: `awaiting_customer_confirmation`, `awaiting_vendor_input`, or `awaiting_change_approval`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `ITIL Manager`.</p><p><br></p><p>---</p><p><br></p><p>## **7. Knowledge Management**</p><p><br></p><p>* **Article Status:** Only articles in `kb_knowledge.workflow_state = published` are searchable by the `End User` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `kb_use = suggested`.</p><p>* **Knowledge Creation Policy:** If an Incident is marked `resolved` and no existing knowledge article was linked, and the resolution is not a simple password reset, the **ITIL Agent** must be prompted to create a new knowledge draft before final closure.</p><p>* **Use Tracking:** All knowledge links must track `kb_use` type: `suggested`, `applied` (used for resolution), or `workaround`.</p><p><br></p><p>---</p><p><br></p><p>## **8. Validation, Error Handling, and Logging**</p><p><br></p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied (e.g., Incident cannot close if related `change_request` is not closed).</p><p>* **Time Tracking:** All work logs (`work_notes` and `activity_log`) must include the timestamp (`sys_created_on`) and the `user_id` performing the action.</p><p><br></p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation, e.g., an `ITIL Agent` attempting to approve a Change).</p><p>* **409 Conflict:** Record locking or state conflict (e.g., attempting to resolve an Incident that is already `closed`).</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p><br></p><p>---</p><p><br></p><p>## **9. Predefined Lists (Enumerations)**</p><p><br></p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `administrator`, `itil_manager`, `itil_agent`, `change_manager`, `problem_manager`, `end_user` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.state** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `awaiting_customer_confirmation`, `awaiting_vendor_input`, `awaiting_change_approval`, `other` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.state** | `draft`, `pending_assessment`, `scheduled`, `implementing`, `review`, `closed` |</p><p>| **cmdb_ci.state** | `production`, `testing`, `storage`, `retired` |</p><p>| **kb_knowledge.workflow_state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `breached`, `achieved` |</p><p><br></p><p>---</p>",
+  "created_at": "2025-12-10T09:53:31.063339+00:00",
+  "created_by": "764e5ead-d7a0-4384-a77d-a3b9ce4830bd",
+  "scenario_config": {
+    "scenario_name": "IT Support Workload Rebalancing",
+    "scenario_description": "Reassigning stale moderate incidents for workload balancing.",
+    "system_prompt": "<p># **ITSM Management Assistant Policy**</p><p>**Role:** ITSM Management Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p><br></p><p>You must operate exclusively based on **confirmed user roles and permissions**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p><br></p><p>---</p><p><br></p><p>## **1. General Operational Instructions and Constraints**</p><p><br></p><p>* **Policy Violation:** If a user request violates any rule herein (e.g., changing a **closed** record), you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information (records, configurations, procedures) that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous (e.g., multiple open incidents match a search), return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields (e.g., `opened_by`, `short_description`, `impact`, `urgency` for an incident).</p><p><br></p><p>---</p><p><br></p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p><br></p><p>Access rights are defined by roles and grant granular control across tables.</p><p><br></p><p>| Role | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables (`incident`, `change`, `problem`, `cmdb`, `user`). Manages **assignment rules, workflows, and ACLs**. | Prohibited from performing routine Incident/Request fulfillment. |</p><p>| **ITIL Agent** | Frontline Incident/Request fulfillment | CRUD on **Incidents, Service Requests, Tasks, and Work Notes**. Read-only on **CMDB, Change, Problem, and Knowledge**. Can update assignment, state, and resolution. | Cannot bypass approvals, change system configuration, or modify CIs directly. |</p><p>| **Manager/ITIL Manager** | Supervision, Escalation, Approvals | All Agent privileges plus: Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. | Cannot modify base CMDB records or system administration settings. |</p><p>| **Change/Problem Manager** | Process Governance | Full CRUD on their respective process records (`change`, `problem`). Can **authorize** standard changes. Links related Incidents and CIs. | Must not work on Incidents or Service Requests. |</p><p>| **End User** | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p><br></p><p>---</p><p><br></p><p>## **3. Core Operations: Incident Management**</p><p><br></p><p>### **3.1. Incident Registration**</p><p>* **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record.</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of **Impact x Urgency**. You must not allow manual priority setting unless the user has the `ITIL Manager` role.</p><p>* **Default State:** All new Incidents are set to `state = new`.</p><p><br></p><p>### **3.2. Incident Assignment**</p><p>* **Rule:** Assignment must follow the **Assignment Rules Engine** logic (e.g., based on affected CI, category, or location).</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `ITIL Agent` role and must be a member of the specified `assignment_group`.</p><p><br></p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid State Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed`</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code` (e.g., `fixed`, `workaround`), and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The Incident must remain in `resolved` state for a **mandatory 72-hour customer confirmation period** before automatically transitioning to `closed`. Manual closure is only permitted if the `ITIL Manager` role is present.</p><p><br></p><p>---</p><p><br></p><p>## **4. Core Operations: Change and Problem Management**</p><p><br></p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>* **Approval Gate:** Any transition from `state = pending_assessment` to `state = scheduled` requires a record in the `sys_approval` table to be `status = approved`. Standard changes are automatically approved.</p><p>* **Rollback Plan:** No Change Request can move to `state = scheduled` without a documented `rollback_plan` and `risk_assessment` score (1-100).</p><p><br></p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Workaround:** If a temporary solution is found, the Problem state moves to `known_error`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final State:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p><br></p><p>---</p><p><br></p><p>## **5. Configuration and Service Management (CMDB)**</p><p><br></p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `cmdb_ci` table.</p><p>* **Relationship:** You must enforce mandatory **CI relationships** (e.g., `runs_on`, `depends_on`). Use `link_ci_relationship` to establish these links.</p><p>* **CI State:** Only CIs with `state = production` or `state = testing` can be linked to active Incidents. Do not link CIs in `state = retired` or `state = storage`.</p><p>* **CI Owner:** All CIs must have a recorded `support_group` and `ci_owner` ID.</p><p><br></p><p>### **5.2. Service Catalog**</p><p>* **Ordering:** All **Service Requests** must be generated by submitting an **active** `service_catalog_item`.</p><p>* **Fulfillment:** Service Requests trigger fulfillment tasks (`sc_task`) based on the workflow attached to the catalog item.</p><p><br></p><p>---</p><p><br></p><p>## **6. Service Level Management (SLA)**</p><p><br></p><p>* **SLA Application:** SLAs (`incident_sla` table) are automatically aligned based on `priority` and the `service_offering` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `response_time` and `resolution_time`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `state = on_hold` and the `on_hold_reason` is one of the following enumerations: `awaiting_customer_confirmation`, `awaiting_vendor_input`, or `awaiting_change_approval`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `ITIL Manager`.</p><p><br></p><p>---</p><p><br></p><p>## **7. Knowledge Management**</p><p><br></p><p>* **Article Status:** Only articles in `kb_knowledge.workflow_state = published` are searchable by the `End User` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `kb_use = suggested`.</p><p>* **Knowledge Creation Policy:** If an Incident is marked `resolved` and no existing knowledge article was linked, and the resolution is not a simple password reset, the **ITIL Agent** must be prompted to create a new knowledge draft before final closure.</p><p>* **Use Tracking:** All knowledge links must track `kb_use` type: `suggested`, `applied` (used for resolution), or `workaround`.</p><p><br></p><p>---</p><p><br></p><p>## **8. Validation, Error Handling, and Logging**</p><p><br></p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied (e.g., Incident cannot close if related `change_request` is not closed).</p><p>* **Time Tracking:** All work logs (`work_notes` and `activity_log`) must include the timestamp (`sys_created_on`) and the `user_id` performing the action.</p><p><br></p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation, e.g., an `ITIL Agent` attempting to approve a Change).</p><p>* **409 Conflict:** Record locking or state conflict (e.g., attempting to resolve an Incident that is already `closed`).</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p><br></p><p>---</p><p><br></p><p>## **9. Predefined Lists (Enumerations)**</p><p><br></p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `administrator`, `itil_manager`, `itil_agent`, `change_manager`, `problem_manager`, `end_user` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.state** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `awaiting_customer_confirmation`, `awaiting_vendor_input`, `awaiting_change_approval`, `other` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.state** | `draft`, `pending_assessment`, `scheduled`, `implementing`, `review`, `closed` |</p><p>| **cmdb_ci.state** | `production`, `testing`, `storage`, `retired` |</p><p>| **kb_knowledge.workflow_state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `breached`, `achieved` |</p><p><br></p><p>---</p>",
+    "prompt": "I need to rebalance the workload. Identify the top three incidents currently assigned to the IT Support group that have moderate priority and have been open for more than five days (created before February 20, 2024). Reassign these incidents to Elena Petrov, update their status to in progress, and add worknotes explaining that the reassignment is part of workload balancing. Before reassigning, add Elena to the IT Support group. For each reassigned incident, send a notification to the original caller explaining the change and providing updated contact information. Additionally, check whether any of these reassigned incidents have child incidents associated with them. If they do, reassign those child incidents to the same agent to maintain continuity.",
+    "selected_tools": [
+      "list_user_groups",
+      "get_user_using_name",
+      "list_incidents",
+      "get_user",
+      "add_new_group_member",
+      "update_incident",
+      "list_child_incidents",
+      "send_notification"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "list_user_groups",
+      "get_user_using_name",
+      "list_incidents",
+      "get_user",
+      "add_new_group_member",
+      "update_incident",
+      "list_child_incidents",
+      "send_notification"
+    ],
+    "context": {
+      "x-itsm-user-token": "manager_token_priya_2024_secure"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "verify_incidents_reassigned_to_elena",
+      "description": "Verify 3 moderate priority incidents from IT Support group created before Feb 20 were reassigned to Elena Petrov",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM incident i JOIN users u ON i.assigned_to = u.user_id WHERE i.assignment_group = 'GROUP_001' AND i.priority = 'moderate' AND DATE(i.created_at) < '2024-02-20' AND i.status NOT IN ('resolved', 'closed') AND i.assigned_to = 'USER_006' AND u.user_name = 'elena.petrov' AND i.status = 'in_progress';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_worknotes_added_for_reassignment",
+      "description": "Verify worknotes contain workload balancing explanation",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM incident i WHERE i.assignment_group = 'GROUP_001' AND i.priority = 'moderate' AND DATE(i.created_at) < '2024-02-20' AND i.assigned_to = 'USER_006' AND (i.worknotes LIKE '%workload balancing%' OR i.worknotes LIKE '%reassignment%' OR i.worknotes LIKE '%workload rebalancing%');",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_notifications_sent_to_callers",
+      "description": "Verify notifications sent to original callers about reassignment",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(DISTINCT n.incident_id) FROM notification n JOIN incident i ON n.incident_id = i.incident_id WHERE i.assignment_group = 'GROUP_001' AND i.priority = 'moderate' AND DATE(i.created_at) < '2024-02-20' AND i.assigned_to = 'USER_006' AND (n.subject LIKE '%reassignment%' OR n.subject LIKE '%team change%' OR n.message LIKE '%contact information%' OR n.message LIKE '%reassigned%');",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_elena_in_correct_group",
+      "description": "Verify Elena Petrov is member of GROUP_001",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM user_group_member ugm JOIN users u ON ugm.user_id = u.user_id WHERE ugm.group_id = 'GROUP_001' AND u.user_id = 'USER_006' AND u.user_name = 'elena.petrov';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_notification_details_complete",
+      "description": "Verify notifications contain both team change and contact info",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM notification n JOIN incident i ON n.incident_id = i.incident_id WHERE i.assigned_to = 'USER_006' AND i.assignment_group = 'GROUP_001' AND (n.message LIKE '%Elena%') AND (n.message LIKE '%contact%' OR n.message LIKE '%phone%') AND n.type IN ('alert', 'update');",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_user_groups",
+      "arguments": {},
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_user_groups",
+        "parameters": {},
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_groups\": [\n    {\n      \"group_id\": \"GROUP_002\",\n      \"name\": \"Service Desk Operations\",\n      \"type\": \"Service Desk\",\n      \"active\": true,\n      \"email\": \"servicedesk@techcorp.com\",\n      \"description\": \"Service desk operations team managing IT requests\",\n      \"manager_id\": \"USER_002\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2024-01-10T08:30:00\",\n      \"updated_on\": \"2024-01-10T08:30:00\"\n    },\n    {\n      \"group_id\": \"GROUP_001\",\n      \"name\": \"Level 1 Support Team\",\n      \"type\": \"IT Support\",\n      \"active\": true,\n      \"email\": \"support-l1@techcorp.com\",\n      \"description\": \"First level support team handling initial user requests\",\n      \"manager_id\": \"USER_002\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2024-01-10T08:00:00\",\n      \"updated_on\": \"2024-01-10T08:00:00\"\n    }\n  ],\n  \"total_count\": 2\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 175,
+        "executed_at": "2025-12-10T09:52:39.137914"
+      }
+    },
+    {
+      "name": "get_user_using_name",
+      "arguments": {
+        "first_name": "Elena",
+        "last_name": "Petrov"
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "get_user_using_name",
+        "parameters": {
+          "first_name": "Elena",
+          "last_name": "Petrov"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_id\": \"USER_006\",\n  \"user_name\": \"elena.petrov\",\n  \"first_name\": \"Elena\",\n  \"last_name\": \"Petrov\",\n  \"email\": \"elena.petrov@techcorp.com\",\n  \"phone\": \"+1-415-555-0106\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"agent_token_elena_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_002\",\n  \"created_on\": \"2024-01-20T14:00:00\",\n  \"updated_on\": \"2024-01-20T14:00:00\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 160,
+        "executed_at": "2025-12-10T09:52:40.617952"
+      }
+    },
+    {
+      "name": "list_incidents",
+      "arguments": {
+        "priority": "moderate",
+        "assignment_group": "GROUP_001",
+        "created_before": "2024-02-20"
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_incidents",
+        "parameters": {
+          "priority": "moderate",
+          "assignment_group": "GROUP_001",
+          "created_before": "2024-02-20"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "[\n  {\n    \"incident_id\": \"INC_003\",\n    \"number\": \"INC0000003\",\n    \"caller_id\": \"USER_005\",\n    \"service\": \"SVC_001\",\n    \"service_offering\": \"SVCOFF_001\",\n    \"configuration_item\": \"CI_001\",\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"email\",\n    \"contact_type\": \"email\",\n    \"status\": \"new\",\n    \"category\": \"hardware\",\n    \"short_description\": \"Printer connectivity issue\",\n    \"description\": \"User unable to print documents from office printer\",\n    \"worknotes\": \"Checking printer configuration and network connectivity\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2024-02-19T10:00:00\",\n    \"updated_at\": \"2024-02-19T10:00:00\",\n    \"org_id\": \"ORG_001\"\n  },\n  {\n    \"incident_id\": \"INC_001\",\n    \"number\": \"INC0000001\",\n    \"caller_id\": \"USER_005\",\n    \"service\": \"SVC_001\",\n    \"service_offering\": \"SVCOFF_001\",\n    \"configuration_item\": \"CI_001\",\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": \"USER_003\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_001\",\n    \"parent_incident\": null,\n    \"channel\": \"email\",\n    \"contact_type\": \"email\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Cannot access email account\",\n    \"description\": \"User reports unable to log into Outlook email client\",\n    \"worknotes\": \"Password reset initiated via AD\",\n    \"resolution_notes\": \"Password successfully reset and user can access email\",\n    \"close_notes\": \"Issue resolved - user confirmed access restored\",\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2024-02-15T14:30:00\",\n    \"created_at\": \"2024-02-10T09:15:00\",\n    \"updated_at\": \"2024-02-15T14:30:00\",\n    \"org_id\": \"ORG_001\"\n  }\n]",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 167,
+        "executed_at": "2025-12-10T09:52:42.183647"
+      }
+    },
+    {
+      "name": "get_user",
+      "arguments": {
+        "user_id": "USER_005"
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "get_user",
+        "parameters": {
+          "user_id": "USER_005"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_id\": \"USER_005\",\n  \"user_name\": \"benjamin.chen\",\n  \"first_name\": \"Benjamin\",\n  \"last_name\": \"Chen\",\n  \"email\": \"benjamin.chen@techcorp.com\",\n  \"phone\": \"+1-415-555-0105\",\n  \"role\": \"reporter\",\n  \"active\": true,\n  \"static_token\": \"reporter_token_benjamin_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_002\",\n  \"created_on\": \"2024-01-19T13:00:00\",\n  \"updated_on\": \"2024-01-19T13:00:00\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 146,
+        "executed_at": "2025-12-10T09:52:44.049591"
+      }
+    },
+    {
+      "name": "add_new_group_member",
+      "arguments": {
+        "group_id": "GROUP_001",
+        "user_id": "USER_006"
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_group_member",
+        "parameters": {
+          "group_id": "GROUP_001",
+          "user_id": "USER_006"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"member_id\": \"MEMBER_006\",\n  \"group_id\": \"GROUP_001\",\n  \"user_id\": \"USER_006\",\n  \"created_on\": \"2025-12-10T09:52:45.492625\",\n  \"updated_on\": \"2025-12-10T09:52:45.492625\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 183,
+        "executed_at": "2025-12-10T09:52:45.540456"
+      }
+    },
+    {
+      "name": "update_incident",
+      "arguments": {
+        "incident_id": "INC_003",
+        "status": "in_progress",
+        "assigned_to": "USER_006",
+        "worknotes": "Workload balancing reassignment - This incident has been reassigned within the Level 1 Support Team (GROUP_001) as part of Q1 2024 workload distribution optimization. Assigned to Elena Petrov who has been added to the IT Support Team to handle overflow workload while maintaining team continuity."
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "update_incident",
+        "parameters": {
+          "incident_id": "INC_003",
+          "status": "in_progress",
+          "assigned_to": "USER_006",
+          "worknotes": "Workload balancing reassignment - This incident has been reassigned within the Level 1 Support Team (GROUP_001) as part of Q1 2024 workload distribution optimization. Assigned to Elena Petrov who has been added to the IT Support Team to handle overflow workload while maintaining team continuity."
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"incident_id\": \"INC_003\",\n  \"number\": \"INC0000003\",\n  \"service\": \"SVC_001\",\n  \"service_offering\": \"SVCOFF_001\",\n  \"configuration_item\": \"CI_001\",\n  \"caller_id\": \"USER_005\",\n  \"channel\": \"email\",\n  \"status\": \"in_progress\",\n  \"category\": \"hardware\",\n  \"short_description\": \"Printer connectivity issue\",\n  \"description\": \"User unable to print documents from office printer\",\n  \"impact\": \"low\",\n  \"urgency\": \"medium\",\n  \"priority\": \"moderate\",\n  \"assigned_to\": \"USER_006\",\n  \"assignment_group\": \"GROUP_001\",\n  \"worknotes\": \"Workload balancing reassignment - This incident has been reassigned within the Level 1 Support Team (GROUP_001) as part of Q1 2024 workload distribution optimization. Assigned to Elena Petrov who has been added to the IT Support Team to handle overflow workload while maintaining team continuity.\",\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2024-02-19T10:00:00\",\n  \"updated_at\": \"2025-12-10T09:52:46.905833\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 173,
+        "executed_at": "2025-12-10T09:52:46.960492"
+      }
+    },
+    {
+      "name": "list_child_incidents",
+      "arguments": {
+        "parent_incident": "INC_003"
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "list_child_incidents",
+        "parameters": {
+          "parent_incident": "INC_003"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "[]",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 145,
+        "executed_at": "2025-12-10T09:52:48.255497"
+      }
+    },
+    {
+      "name": "send_notification",
+      "arguments": {
+        "incident_id": "INC_003",
+        "email": "benjamin.chen@techcorp.com",
+        "type": "update",
+        "subject": "Incident INC0000003 - Support Team Assignment Update",
+        "message": "Dear Benjamin Chen,\n\nThis is to inform you that your incident INC0000003 (Printer connectivity issue) has been reassigned as part of our workload optimization initiative.\n\nYour incident is now being handled by:\n• Agent: Elena Petrov\n• Email: elena.petrov@techcorp.com\n• Phone: +1-415-555-0106\n• Team: Service Desk Operations\n\nThe status has been updated to 'In Progress' and Elena will be reaching out to you shortly to continue resolving your printer connectivity issue. This change ensures faster resolution through better resource allocation.\n\nIf you have any questions, please get in touch with Elena directly using the contact information provided above.\n\nThank you for your patience.\n\nBest regards,\nIT Service Desk."
+      },
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "send_notification",
+        "parameters": {
+          "incident_id": "INC_003",
+          "email": "benjamin.chen@techcorp.com",
+          "type": "update",
+          "subject": "Incident INC0000003 - Support Team Assignment Update",
+          "message": "Dear Benjamin Chen,\n\nThis is to inform you that your incident INC0000003 (Printer connectivity issue) has been reassigned as part of our workload optimization initiative.\n\nYour incident is now being handled by:\n• Agent: Elena Petrov\n• Email: elena.petrov@techcorp.com\n• Phone: +1-415-555-0106\n• Team: Service Desk Operations\n\nThe status has been updated to 'In Progress' and Elena will be reaching out to you shortly to continue resolving your printer connectivity issue. This change ensures faster resolution through better resource allocation.\n\nIf you have any questions, please get in touch with Elena directly using the contact information provided above.\n\nThank you for your patience.\n\nBest regards,\nIT Service Desk."
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"incident_id\": \"INC_003\",\n  \"email\": \"benjamin.chen@techcorp.com\",\n  \"type\": \"update\",\n  \"status\": \"queued\",\n  \"subject\": \"Incident INC0000003 - Support Team Assignment Update\",\n  \"message\": \"Dear Benjamin Chen,\\n\\nThis is to inform you that your incident INC0000003 (Printer connectivity issue) has been reassigned as part of our workload optimization initiative.\\n\\nYour incident is now being handled by:\\n\\u2022 Agent: Elena Petrov\\n\\u2022 Email: elena.petrov@techcorp.com\\n\\u2022 Phone: +1-415-555-0106\\n\\u2022 Team: Service Desk Operations\\n\\nThe status has been updated to 'In Progress' and Elena will be reaching out to you shortly to continue resolving your printer connectivity issue. This change ensures faster resolution through better resource allocation.\\n\\nIf you have any questions, please get in touch with Elena directly using the contact information provided above.\\n\\nThank you for your patience.\\n\\nBest regards,\\nIT Service Desk.\",\n  \"notification_id\": \"NOTIF_008\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-10T09:52:49.740184\",\n  \"updated_on\": \"2025-12-10T09:52:49.740184\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 173,
+        "executed_at": "2025-12-10T09:52:49.793221"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1765296303024_u4b7mcm55",
+      "context": {
+        "x-itsm-user-token": "manager_token_priya_2024_secure"
+      },
+      "gym_server_id": "sn-itsm-internal"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gpt-5-High",
+      "platform_name": "openai",
+      "platform_config_id": "default-openai-gpt-5-High",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "default-gemini-gemini-2.5-pro",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true
+  },
+  "L1": "Incident Management",
+  "L2": "Incidents (Creation + SLA)",
+  "L3": "Intake & classification taxonomies"
+}

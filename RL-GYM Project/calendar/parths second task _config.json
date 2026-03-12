@@ -1,0 +1,76 @@
+{
+  "task_id": "task_20251112_163900_698_baf0b358_db64915e",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "selected_tools": [],
+  "multipass_config": {
+    "runs_per_prompt": 1,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a Google Calendar automation agent with full admin rights to manage users, calendars, and events. Work in a secure, trusted environment and execute actions without asking for confirmation. Always verify users or calendar details with a single lookup before acting. Use accurate data only, never make assumptions. Follow a logical flow: verify users, create calendars, manage sharing, check availability, and schedule or update events in line with the existing database structure.",
+  "created_at": "2025-11-12T16:39:00.668691+00:00",
+  "created_by": "baf0b358-2a7d-4f52-b595-607f6ad2edc6",
+  "scenario_config": {
+    "scenario_name": "Creating a new calendar and adding an event",
+    "scenario_description": "Creating a new event",
+    "system_prompt": "You are a Google Calendar automation agent with full admin rights to manage users, calendars, and events. Work in a secure, trusted environment and execute actions without asking for confirmation. Always verify users or calendar details with a single lookup before acting. Use accurate data only, never make assumptions. Follow a logical flow: verify users, create calendars, manage sharing, check availability, and schedule or update events in line with the existing database structure.",
+    "prompt": "I need to schedule department all-hands meetings. First, create a calendar called 'Dept All Hands – 2025' in the America/New_York timezone, and make it visible. Then, create an event 'Department All-Hands' for the first Thursday of next month from 10:00 AM to 11:30 AM. Also set a 1-hour email remainder before start of this meet. Also set the background color to #4986e7 and foreground color to #1d1d1d. After scheduling, grant reader access to Abigail Scott(abigail.scott@spencerinc.com) and writer access to Adriana Sanchez(adriana.sanchez1@chapman-wagner.com).",
+    "restricted_tools": [],
+    "expected_tools": []
+  },
+  "verifier_configs": [
+    {
+      "name": "Create new calendar",
+      "description": "Create the 'Dept All Hands – 2025' calendar",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT count() FROM calendars WHERE summary = 'Dept All Hands – 2025'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Creating event",
+      "description": "Creating a new event called 'Department All-Hands'",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT count() FROM events WHERE summary = 'Department All-Hands' AND calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Dept All Hands – 2025') AND color_id = 7",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "1",
+      "original_value": ""
+    },
+    {
+      "name": "Create permissions",
+      "description": "Creating permissions for the new calendar",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT count() FROM acls WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Dept All Hands – 2025')",
+      "expected_value": 4,
+      "comparison_type": "equals",
+      "expected_response": "4",
+      "original_value": ""
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762957577505_fvo3geg4r"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [],
+  "runs_per_prompt": 1,
+  "configs": {
+    "enableComments": false,
+    "enableGroundTruthComments": true,
+    "enableReview": false,
+    "enableToolCall": true
+  }
+}

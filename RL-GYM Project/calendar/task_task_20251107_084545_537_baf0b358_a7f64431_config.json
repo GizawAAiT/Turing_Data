@@ -1,0 +1,77 @@
+{
+  "task_id": "task_20251107_084545_537_baf0b358_a7f64431",
+  "task_name": "Clearing up the calendar",
+  "description": "Clearing up the calendar",
+  "version": "1.0",
+  "selected_tools": [],
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a Google Calendar automation agent with full admin rights to manage users, calendars, and events. Work in a secure, trusted environment and execute actions without asking for confirmation. Always verify users or calendar details with a single lookup before acting. Use accurate data only, never make assumptions. Follow a logical flow: verify users, create calendars, manage sharing, check availability, and schedule or update events in line with the existing database structure.",
+  "created_at": "2025-11-07T08:45:45.509042+00:00",
+  "created_by": "baf0b358-2a7d-4f52-b595-607f6ad2edc6",
+  "scenario_config": {
+    "scenario_name": "Celaring the calendar",
+    "scenario_description": "Clearing the events in the calendar",
+    "system_prompt": "You are a Google Calendar automation agent with full admin rights to manage users, calendars, and events. Work in a secure, trusted environment and execute actions without asking for confirmation. Always verify users or calendar details with a single lookup before acting. Use accurate data only, never make assumptions. Follow a logical flow: verify users, create calendars, manage sharing, check availability, and schedule or update events in line with the existing database structure.",
+    "prompt": "I need to reorganize my calendar. First, please update the 'Project Management' calendar's title to 'Study Calendar'. Next, remove all the events from the calendar. Lastly, please let me know which settings are enabled.",
+    "restricted_tools": [
+      "get_calendar_list",
+      "update_calendar",
+      "list_events",
+      "delete_event",
+      "list_settings"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "update_calendar",
+      "list_events",
+      "delete_event",
+      "list_settings"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Change title",
+      "description": "Change the channel title",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT count(*) FROM calendars WHERE summary = 'Study Calendar'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Clear calendar",
+      "description": "Clear events from the calendar",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT 1 FROM (SELECT calendar_id FROM calendars WHERE summary = 'Study Calendar') AS sub WHERE NOT EXISTS (SELECT 1 FROM events WHERE event_id = 'event-corrected-001')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "CALENDER_INTERNAL_PROD",
+      "database_id": "db_1762357287560_15qd37kn6"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Clearing up the calendar",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": false,
+    "enableGroundTruthComments": true,
+    "enableReview": false,
+    "enableToolCall": true
+  }
+}

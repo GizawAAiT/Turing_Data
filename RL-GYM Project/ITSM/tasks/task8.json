@@ -1,0 +1,735 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_close_change_core_switch_linecard",
+    "scenario_description": "Finalize the core switch line card replacement change: ensure change-to-incident/problem linkage, verify no blockers, close change with notes, and notify the caller.",
+    "system_prompt": "You are a helpful Customer Service Drive Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "We've completed the work on the core switch line card replacement and everything is stable now. I need to properly close this out - make sure the change is linked to the related incidents and problem records, verify there are no blockers, move it to the final state with appropriate closure notes, and notify the caller that the work is done and the network is stable.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user",
+      "list_changes",
+      "list_incidents",
+      "list_problems",
+      "list_change_request_mappings",
+      "find_configuration_items",
+      "find_incident_by_id",
+      "find_incident_by_id",
+      "list_incident_affected_cis",
+      "get_user",
+      "find_incident_by_id",
+      "map_change_request",
+      "update_incident",
+      "link_affected_ci_to_incident",
+      "update_problem",
+      "update_change",
+      "send_notification"
+    ],
+    "expected_tools": [
+      "get_user",
+      "list_changes",
+      "list_incidents",
+      "list_problems",
+      "list_change_request_mappings",
+      "find_configuration_items",
+      "find_incident_by_id",
+      "find_incident_by_id",
+      "list_incident_affected_cis",
+      "get_user",
+      "find_incident_by_id",
+      "map_change_request",
+      "update_incident",
+      "link_affected_ci_to_incident",
+      "update_problem",
+      "update_change",
+      "send_notification"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Incident Linked To Change",
+      "description": "Verify that INC_012 is mapped to CHG_002.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM change_request_mapping WHERE incident_id = 'INC_012' AND change_id = 'CHG_002'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Incident Linked To Problem",
+      "description": "Verify that INC_012 references problem PRB_002.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_012' AND problem = 'PRB_002'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Affected CI Linked To Incident",
+      "description": "Verify CI_004 is linked as an affected CI to INC_012.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident_affected_cis WHERE configuration_item = 'CI_004' AND incident_id = 'INC_012'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Problem Closed",
+      "description": "Verify PRB_002 is in closed status.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM problem WHERE problem_id = 'PRB_002' AND status = 'closed'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Change Closed With Closure Details",
+      "description": "Verify CHG_002 is closed with non-empty close notes and close code.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM change WHERE change_id = 'CHG_002' AND status = 'closed' AND COALESCE(close_notes, '') <> '' AND COALESCE(close_code, '') <> ''",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Caller Notified Of Completion",
+      "description": "Verify a notification was sent to the reporter confirming completion and stability.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE email = 'karen.watkins@servicenow.com' AND incident_id = 'INC_012' AND COALESCE(subject, '') <> '' AND COALESCE(message, '') <> ''",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_037"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_037"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_037\",\n  \"user_name\": \"randy.martinez\",\n  \"first_name\": \"Randy\",\n  \"last_name\": \"Martinez\",\n  \"email\": \"randy.martinez94@servicenow.com\",\n  \"phone\": \"+916831462491\",\n  \"role\": \"manager\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_004\",\n  \"created_on\": \"2025-08-27T15:35:56\",\n  \"updated_on\": \"2026-04-02T16:58:39\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 179,
+      "executed_at": "2025-12-19T09:20:35.794600"
+    }
+  },
+  {
+    "name": "list_changes",
+    "arguments": {
+      "short_description": "core switch"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_changes",
+      "parameters": {
+        "short_description": "core switch"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"changes\": [\n    {\n      \"change_id\": \"CHG_002\",\n      \"number\": \"CHG0000002\",\n      \"short_description\": \"Replace Line Card on Core Switch\",\n      \"requested_by\": \"USER_039\",\n      \"service\": \"SVC_043\",\n      \"service_offering\": \"SVCOFF_052\",\n      \"configuration_item\": \"CI_004\",\n      \"assigned_to\": \"USER_045\",\n      \"assignment_group\": \"GROUP_007\",\n      \"status\": \"closed\",\n      \"category\": \"hardware\",\n      \"description\": \"Replacing faulty ASIC line card in slot 1.\",\n      \"implementation_plan\": \"Hot swap card during maintenance window.\",\n      \"testing_plan\": \"Check interface status and error counters.\",\n      \"close_notes\": \"Line card replacement completed. All checks passed. Network stable. Problem PRB_002 and incident INC_012 resolved.\",\n      \"cab_required\": true,\n      \"impact\": \"high\",\n      \"priority\": \"high\",\n      \"risk\": \"medium\",\n      \"close_code\": \"successful\",\n      \"created_on\": \"2025-12-03T09:00:00\",\n      \"updated_on\": \"2025-12-19T08:21:40.584672\",\n      \"org_id\": \"ORG_001\"\n    },\n    {\n      \"change_id\": \"CHG_011\",\n      \"number\": \"CHG0000011\",\n      \"short_description\": \"Upgrade Core Switch Firmware v12.4\",\n      \"requested_by\": \"USER_039\",\n      \"service\": \"SVC_043\",\n      \"service_offering\": \"SVCOFF_052\",\n      \"configuration_item\": \"CI_004\",\n      \"assigned_to\": \"USER_045\",\n      \"assignment_group\": \"GROUP_007\",\n      \"status\": \"closed\",\n      \"category\": \"network\",\n      \"description\": \"Firmware upgrade for stability.\",\n      \"implementation_plan\": \"Flash memory reboot.\",\n      \"testing_plan\": \"Ping check.\",\n      \"close_notes\": \"Firmware corrupted boot sector. Caused outage.\",\n      \"cab_required\": true,\n      \"impact\": \"high\",\n      \"priority\": \"critical\",\n      \"risk\": \"high\",\n      \"close_code\": \"unsuccessful\",\n      \"created_on\": \"2025-12-01T08:00:00\",\n      \"updated_on\": \"2025-12-02T08:00:00\",\n      \"org_id\": \"ORG_001\"\n    }\n  ],\n  \"total_count\": 2\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 146,
+      "executed_at": "2025-12-19T09:21:33.190823"
+    }
+  },
+  {
+    "name": "list_incidents",
+    "arguments": {
+      "configuration_item": "CI_004"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_incidents",
+      "parameters": {
+        "configuration_item": "CI_004"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"incident_id\": \"INC_012\",\n    \"number\": \"INC-000012\",\n    \"caller_id\": \"USER_039\",\n    \"service\": \"SVC_043\",\n    \"service_offering\": \"SVCOFF_052\",\n    \"configuration_item\": \"CI_004\",\n    \"assigned_to\": \"USER_059\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": \"PRB_002\",\n    \"change_request\": \"CHG_002\",\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"web\",\n    \"contact_type\": \"api\",\n    \"status\": \"resolved\",\n    \"category\": \"network\",\n    \"short_description\": \"Core-Switch-HQ Port Flapping\",\n    \"description\": \"Interface GE1/0/24 flapping.\",\n    \"worknotes\": null,\n    \"resolution_notes\": \"Line card replaced successfully. Port flapping resolved after change CHG_002 implementation.\",\n    \"close_notes\": null,\n    \"impact\": \"high\",\n    \"urgency\": \"medium\",\n    \"priority\": \"high\",\n    \"resolution_code\": \"Resolved By Change\",\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-02T14:00:00\",\n    \"updated_at\": \"2025-12-19T08:21:23.848085\",\n    \"org_id\": \"ORG_001\"\n  }\n]",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 174,
+      "executed_at": "2025-12-19T09:22:04.917438"
+    }
+  },
+  {
+    "name": "list_problems",
+    "arguments": {
+      "configuration_item": "CI_004"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_problems",
+      "parameters": {
+        "configuration_item": "CI_004"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"problems\": [\n    {\n      \"problem_id\": \"PRB_002\",\n      \"number\": \"PRB0000002\",\n      \"short_description\": \"Core Switch Hardware Failure\",\n      \"problem_statement\": \"Core Switch Port 24 Flapping impacting HQ\",\n      \"opened_by\": \"USER_039\",\n      \"service\": \"SVC_043\",\n      \"service_offering\": \"SVCOFF_052\",\n      \"configuration_item\": \"CI_004\",\n      \"assigned_to\": \"USER_045\",\n      \"assignment_group\": \"GROUP_007\",\n      \"original_task\": \"INC_003\",\n      \"status\": \"closed\",\n      \"category\": \"network\",\n      \"worknotes\": \"Diagnostics failed on ASIC.\",\n      \"workaround\": \"Move uplink to Port 48.\",\n      \"fix_notes\": \"RMA processed. Line card replaced during change CHG_002. All interfaces stable, error counters cleared. Network operating normally.\",\n      \"impact\": \"high\",\n      \"urgency\": \"medium\",\n      \"priority\": \"high\",\n      \"created_on\": \"2025-12-02T16:00:00\",\n      \"updated_on\": \"2025-12-19T08:21:33.273210\",\n      \"org_id\": \"ORG_001\"\n    }\n  ],\n  \"total_count\": 1\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 166,
+      "executed_at": "2025-12-19T09:22:45.929682"
+    }
+  },
+  {
+    "name": "list_change_request_mappings",
+    "arguments": {
+      "change_id": "CHG_002"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_change_request_mappings",
+      "parameters": {
+        "change_id": "CHG_002"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"change_request_mappings\": [\n    {\n      \"change_request_mapping_id\": \"CRM_017\",\n      \"change_id\": \"CHG_002\",\n      \"incident_id\": \"INC_012\",\n      \"problem_id\": null,\n      \"org_id\": \"ORG_001\",\n      \"created_at\": \"2025-12-19T08:21:23.656801\",\n      \"updated_at\": \"2025-12-19T08:21:23.656806\"\n    },\n    {\n      \"change_request_mapping_id\": \"CRM_010\",\n      \"change_id\": \"CHG_002\",\n      \"incident_id\": null,\n      \"problem_id\": \"PRB_002\",\n      \"org_id\": \"ORG_001\",\n      \"created_at\": \"2025-12-03T09:05:00\",\n      \"updated_at\": \"2025-12-03T09:05:00\"\n    },\n    {\n      \"change_request_mapping_id\": \"CRM_005\",\n      \"change_id\": \"CHG_002\",\n      \"incident_id\": \"INC_003\",\n      \"problem_id\": null,\n      \"org_id\": \"ORG_001\",\n      \"created_at\": \"2025-12-03T09:00:00\",\n      \"updated_at\": \"2025-12-03T09:00:00\"\n    }\n  ],\n  \"total_count\": 3\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 156,
+      "executed_at": "2025-12-19T09:23:15.410126"
+    }
+  },
+  {
+    "name": "find_configuration_items",
+    "arguments": {
+      "configuration_item_id": "CI_004"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_configuration_items",
+      "parameters": {
+        "configuration_item_id": "CI_004"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"configuration_items\": [\n    {\n      \"configuration_item_id\": \"CI_004\",\n      \"name\": \"Core-Switch-HQ (Cisco)\",\n      \"serial_number\": \"NET-CS-8899\",\n      \"owner_id\": \"USER_039\",\n      \"location_id\": \"LOC_001\",\n      \"org_id\": \"ORG_001\",\n      \"status\": \"in_use\",\n      \"cost\": 25000.0,\n      \"created_on\": \"2023-01-15T11:00:00\",\n      \"updated_on\": \"2023-01-15T11:00:00\"\n    }\n  ],\n  \"total_count\": 1\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 152,
+      "executed_at": "2025-12-19T09:23:44.241861"
+    }
+  },
+  {
+    "name": "find_incident_by_id",
+    "arguments": {
+      "incident_id": "INC_003"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_incident_by_id",
+      "parameters": {
+        "incident_id": "INC_003"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_003\",\n  \"number\": \"INC-000003\",\n  \"caller_id\": \"USER_008\",\n  \"service\": \"SVC_041\",\n  \"service_offering\": \"SVCOFF_050\",\n  \"configuration_item\": \"CI_096\",\n  \"assigned_to\": \"USER_026\",\n  \"assignment_group\": \"GROUP_005\",\n  \"resolved_by\": \"USER_026\",\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"incident_template\": \"TMPL_003\",\n  \"parent_incident\": null,\n  \"channel\": \"phone\",\n  \"contact_type\": \"phone\",\n  \"status\": \"resolved\",\n  \"category\": \"hardware\",\n  \"short_description\": \"Printer Jam / Failure\",\n  \"description\": \"Paper stuck.\",\n  \"worknotes\": \"Cleared tray.\",\n  \"resolution_notes\": \"Test page printed ok.\",\n  \"close_notes\": \"Fixed.\",\n  \"impact\": \"low\",\n  \"urgency\": \"low\",\n  \"priority\": \"planning\",\n  \"resolution_code\": \"Solution Provided\",\n  \"on_hold_reason\": null,\n  \"resolved\": \"2025-12-02T14:00:00\",\n  \"created_at\": \"2025-12-02T13:00:00\",\n  \"updated_at\": \"2025-12-02T14:00:00\",\n  \"org_id\": \"ORG_004\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 186,
+      "executed_at": "2025-12-19T09:24:20.772240"
+    }
+  },
+  {
+    "name": "find_incident_by_id",
+    "arguments": {
+      "incident_id": "INC_012"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_incident_by_id",
+      "parameters": {
+        "incident_id": "INC_012"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_012\",\n  \"number\": \"INC-000012\",\n  \"caller_id\": \"USER_039\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"assigned_to\": \"USER_059\",\n  \"assignment_group\": \"GROUP_007\",\n  \"resolved_by\": null,\n  \"problem\": \"PRB_002\",\n  \"change_request\": \"CHG_002\",\n  \"caused_by_change\": null,\n  \"incident_template\": null,\n  \"parent_incident\": null,\n  \"channel\": \"web\",\n  \"contact_type\": \"api\",\n  \"status\": \"resolved\",\n  \"category\": \"network\",\n  \"short_description\": \"Core-Switch-HQ Port Flapping\",\n  \"description\": \"Interface GE1/0/24 flapping.\",\n  \"worknotes\": null,\n  \"resolution_notes\": \"Line card replaced successfully. Port flapping resolved after change CHG_002 implementation.\",\n  \"close_notes\": null,\n  \"impact\": \"high\",\n  \"urgency\": \"medium\",\n  \"priority\": \"high\",\n  \"resolution_code\": \"Resolved By Change\",\n  \"on_hold_reason\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-02T14:00:00\",\n  \"updated_at\": \"2025-12-19T08:21:23.848085\",\n  \"org_id\": \"ORG_001\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 151,
+      "executed_at": "2025-12-19T09:24:49.542594"
+    }
+  },
+  {
+    "name": "list_incident_affected_cis",
+    "arguments": {
+      "configuration_item": "CI_004"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_incident_affected_cis",
+      "parameters": {
+        "configuration_item": "CI_004"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_affected_cis\": [\n    {\n      \"incident_affected_cis_id\": \"TASKCI_015\",\n      \"configuration_item\": \"CI_004\",\n      \"incident_id\": \"INC_012\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2025-12-19T08:21:24.048061\",\n      \"updated_on\": \"2025-12-19T08:21:24.048061\"\n    },\n    {\n      \"incident_affected_cis_id\": \"TASKCI_013\",\n      \"configuration_item\": \"CI_004\",\n      \"incident_id\": \"INC_035\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2025-12-03T08:50:00\",\n      \"updated_on\": \"2025-12-03T08:50:00\"\n    }\n  ],\n  \"total_count\": 2\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 273,
+      "executed_at": "2025-12-19T09:25:19.936833"
+    }
+  },
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_039"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_039"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_039\",\n  \"user_name\": \"karen.watkins\",\n  \"first_name\": \"Karen\",\n  \"last_name\": \"Watkins\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"phone\": \"+441613971941\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:45:46\",\n  \"updated_on\": \"2026-02-10T13:31:36\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 169,
+      "executed_at": "2025-12-19T09:25:44.062883"
+    }
+  },
+  {
+    "name": "find_incident_by_id",
+    "arguments": {
+      "incident_id": "INC_035"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_incident_by_id",
+      "parameters": {
+        "incident_id": "INC_035"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_035\",\n  \"number\": \"INC-000035\",\n  \"caller_id\": \"USER_020\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_056\",\n  \"assigned_to\": \"USER_046\",\n  \"assignment_group\": \"GROUP_007\",\n  \"resolved_by\": null,\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"incident_template\": null,\n  \"parent_incident\": null,\n  \"channel\": \"phone\",\n  \"contact_type\": \"phone\",\n  \"status\": \"new\",\n  \"category\": \"network\",\n  \"short_description\": \"Network Lag\",\n  \"description\": \"Latency.\",\n  \"worknotes\": null,\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"impact\": \"high\",\n  \"urgency\": \"high\",\n  \"priority\": \"critical\",\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-03T08:45:00\",\n  \"updated_at\": \"2025-12-03T08:45:00\",\n  \"org_id\": \"ORG_011\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 139,
+      "executed_at": "2025-12-19T09:26:12.663051"
+    }
+  },
+  {
+    "name": "map_change_request",
+    "arguments": {
+      "change_id": "CHG_002",
+      "incident_id": "INC_012"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "map_change_request",
+      "parameters": {
+        "change_id": "CHG_002",
+        "incident_id": "INC_012"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"change_request_mapping_id\": \"CRM_017\",\n  \"change_id\": \"CHG_002\",\n  \"incident_id\": \"INC_012\",\n  \"problem_id\": null,\n  \"org_id\": \"ORG_001\",\n  \"created_at\": \"2025-12-19T09:27:26.625722\",\n  \"updated_at\": \"2025-12-19T09:27:26.625728\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 315,
+      "executed_at": "2025-12-19T09:27:26.747085"
+    }
+  },
+  {
+    "name": "update_incident",
+    "arguments": {
+      "incident_id": "INC_012",
+      "problem": "PRB_002",
+      "change_request": "CHG_002",
+      "status": "resolved",
+      "resolution_code": "Resolved By Change",
+      "resolution_notes": "Line card replaced successfully. Port flapping resolved after change CHG_002 implementation."
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_incident",
+      "parameters": {
+        "incident_id": "INC_012",
+        "problem": "PRB_002",
+        "change_request": "CHG_002",
+        "status": "resolved",
+        "resolution_code": "Resolved By Change",
+        "resolution_notes": "Line card replaced successfully. Port flapping resolved after change CHG_002 implementation."
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_012\",\n  \"number\": \"INC-000012\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"caller_id\": \"USER_039\",\n  \"channel\": \"web\",\n  \"status\": \"resolved\",\n  \"category\": \"network\",\n  \"short_description\": \"Core-Switch-HQ Port Flapping\",\n  \"description\": \"Interface GE1/0/24 flapping.\",\n  \"impact\": \"high\",\n  \"urgency\": \"medium\",\n  \"priority\": \"high\",\n  \"assigned_to\": \"USER_059\",\n  \"assignment_group\": \"GROUP_007\",\n  \"worknotes\": null,\n  \"resolution_notes\": \"Line card replaced successfully. Port flapping resolved after change CHG_002 implementation.\",\n  \"close_notes\": null,\n  \"resolution_code\": \"Resolved By Change\",\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": \"PRB_002\",\n  \"change_request\": \"CHG_002\",\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-02T14:00:00\",\n  \"updated_at\": \"2025-12-19T09:28:03.029290\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 212,
+      "executed_at": "2025-12-19T09:28:03.094655"
+    }
+  },
+  {
+    "name": "link_affected_ci_to_incident",
+    "arguments": {
+      "configuration_item": "CI_004",
+      "incident_id": "INC_012"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "link_affected_ci_to_incident",
+      "parameters": {
+        "configuration_item": "CI_004",
+        "incident_id": "INC_012"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_affected_cis_id\": \"TASKCI_015\",\n  \"configuration_item\": \"CI_004\",\n  \"incident_id\": \"INC_012\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-19T09:28:45.028118\",\n  \"updated_on\": \"2025-12-19T09:28:45.028118\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 221,
+      "executed_at": "2025-12-19T09:28:45.085039"
+    }
+  },
+  {
+    "name": "update_problem",
+    "arguments": {
+      "problem_id": "PRB_002",
+      "status": "closed",
+      "fix_notes": "RMA processed. Line card replaced during change CHG_002. All interfaces stable, error counters cleared. Network operating normally."
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_problem",
+      "parameters": {
+        "problem_id": "PRB_002",
+        "status": "closed",
+        "fix_notes": "RMA processed. Line card replaced during change CHG_002. All interfaces stable, error counters cleared. Network operating normally."
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"problem_id\": \"PRB_002\",\n  \"number\": \"PRB0000002\",\n  \"problem_statement\": \"Core Switch Port 24 Flapping impacting HQ\",\n  \"short_description\": \"Core Switch Hardware Failure\",\n  \"opened_by\": \"USER_039\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"assigned_to\": \"USER_045\",\n  \"assignment_group\": \"GROUP_007\",\n  \"original_task\": \"INC_003\",\n  \"status\": \"closed\",\n  \"category\": \"network\",\n  \"worknotes\": \"Diagnostics failed on ASIC.\",\n  \"workaround\": \"Move uplink to Port 48.\",\n  \"fix_notes\": \"RMA processed. Line card replaced during change CHG_002. All interfaces stable, error counters cleared. Network operating normally.\",\n  \"impact\": \"high\",\n  \"urgency\": \"medium\",\n  \"priority\": \"high\",\n  \"created_on\": \"2025-12-02T16:00:00\",\n  \"updated_on\": \"2025-12-19T09:29:19.867749\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 204,
+      "executed_at": "2025-12-19T09:29:19.918587"
+    }
+  },
+  {
+    "name": "update_change",
+    "arguments": {
+      "change_id": "CHG_002",
+      "status": "closed",
+      "close_code": "successful",
+      "close_notes": "Line card replacement completed. All checks passed. Network stable. Problem PRB_002 and incident INC_012 resolved."
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_change",
+      "parameters": {
+        "change_id": "CHG_002",
+        "status": "closed",
+        "close_code": "successful",
+        "close_notes": "Line card replacement completed. All checks passed. Network stable. Problem PRB_002 and incident INC_012 resolved."
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"change_id\": \"CHG_002\",\n  \"number\": \"CHG0000002\",\n  \"requested_by\": \"USER_039\",\n  \"short_description\": \"Replace Line Card on Core Switch\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"status\": \"closed\",\n  \"category\": \"hardware\",\n  \"description\": \"Replacing faulty ASIC line card in slot 1.\",\n  \"implementation_plan\": \"Hot swap card during maintenance window.\",\n  \"testing_plan\": \"Check interface status and error counters.\",\n  \"cab_required\": true,\n  \"impact\": \"high\",\n  \"risk\": \"medium\",\n  \"priority\": \"high\",\n  \"assigned_to\": \"USER_045\",\n  \"assignment_group\": \"GROUP_007\",\n  \"close_code\": \"successful\",\n  \"close_notes\": \"Line card replacement completed. All checks passed. Network stable. Problem PRB_002 and incident INC_012 resolved.\",\n  \"created_on\": \"2025-12-03T09:00:00\",\n  \"updated_on\": \"2025-12-19T09:30:09.768252\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 182,
+      "executed_at": "2025-12-19T09:30:09.821876"
+    }
+  },
+  {
+    "name": "send_notification",
+    "arguments": {
+      "incident_id": "INC_012",
+      "email": "karen.watkins@servicenow.com",
+      "type": "update",
+      "status": "sent",
+      "subject": "Change CHG0000002 Completed - Core Switch Line Card Replacement",
+      "message": "The core switch line card replacement has been completed successfully. The faulty ASIC line card in slot 1 has been replaced and all systems are now stable. All interface status checks have passed with error counters cleared. The network is operating normally. Change CHG0000002 has been closed as successful. Related problem PRB0000002 and incident INC-000012 have been resolved."
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "send_notification",
+      "parameters": {
+        "incident_id": "INC_012",
+        "email": "karen.watkins@servicenow.com",
+        "type": "update",
+        "status": "sent",
+        "subject": "Change CHG0000002 Completed - Core Switch Line Card Replacement",
+        "message": "The core switch line card replacement has been completed successfully. The faulty ASIC line card in slot 1 has been replaced and all systems are now stable. All interface status checks have passed with error counters cleared. The network is operating normally. Change CHG0000002 has been closed as successful. Related problem PRB0000002 and incident INC-000012 have been resolved."
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_012\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"type\": \"update\",\n  \"status\": \"sent\",\n  \"subject\": \"Change CHG0000002 Completed - Core Switch Line Card Replacement\",\n  \"message\": \"The core switch line card replacement has been completed successfully. The faulty ASIC line card in slot 1 has been replaced and all systems are now stable. All interface status checks have passed with error counters cleared. The network is operating normally. Change CHG0000002 has been closed as successful. Related problem PRB0000002 and incident INC-000012 have been resolved.\",\n  \"notification_id\": \"NOTIF_031\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-19T09:30:37.141271\",\n  \"updated_on\": \"2025-12-19T09:30:37.141271\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 222,
+      "executed_at": "2025-12-19T09:30:37.196000"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1766127900603_ou80oi04d",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Close out the core switch line card change by ensuring correct mappings to related records, verifying no blockers, closing with notes, and notifying the caller.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+  "L1":"Change Management",
+  "L2":"Changes",
+  "L3":"Change Request Lifecycle"
+}

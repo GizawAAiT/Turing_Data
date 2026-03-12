@@ -1,0 +1,44 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation assistant with full administrative access to manage users, teams, members, and roles. Complete each request in a single turn when it can be reasonably inferred, without asking for confirmation or permission before acting. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type using available tool calls, verify the results, and reuse those values — never repeat the same lookup. Execute each requested action precisely once and only as required. Rely solely on verified API results and complete every task in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Update team member roles to match new ownership structure.",
+      "conversation_mode": true,
+      "context": {
+        "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "We're updating team ownership to keep things in sync with our current project structure. In the TechCorp Solutions Team, Bob Smith has taken over as the project lead, and Alice Johnson will now focus on individual contributions. Please make Bob the team owner and update Alice's role to member so the permissions match their new responsibilities. This will help ensure the right people have administrative access while maintaining proper visibility for the rest of the team.",
+          "expected_tools": [
+            "list_teams",
+            "list_team_members",
+            "update_team_member"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams, json_each(json_extract(members, '$')) AS m WHERE display_name = 'TechCorp Solutions Team' AND json_extract(m.value, '$.displayName') = 'Alice Johnson' AND json_extract(m.value, '$.roles[0]') = 'member'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams, json_each(json_extract(members, '$')) AS m WHERE display_name = 'TechCorp Solutions Team' AND json_extract(m.value, '$.displayName') = 'Bob Smith' AND json_extract(m.value, '$.roles[0]') = 'owner'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

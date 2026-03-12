@@ -1,0 +1,122 @@
+{
+  "scenario_config": {
+    "scenario_name": "ux_research_hub",
+    "scenario_description": "UX Research Consolidation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Consolidate all upcoming sessions tagged as planning, research, review, or collaboration into the calendar “UX Research Hub”. After migrating these events, remove them from their original calendars to avoid duplicates. Keep guest notifications off and set an email reminder for me ten minutes before each event. Also, give Bob editor access, Carol reader access, and set up alerts for any changes to this calendar via https://design-tools.techcorp.com/ux-research/hook",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "list_events",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "list_events",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Exists",
+      "description": "Check UX Research Hub calendar exists",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'alice_manager' AND summary = 'UX Research Hub'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Migrated",
+      "description": "Confirm events moved to UX Research Hub",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'UX Research Hub')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Reminder Set",
+      "description": "Verify email reminder for event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-001' AND method = 'email' AND minutes = 10",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob's Access",
+      "description": "Check Bob's editor access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'UX Research Hub') AND user_id = 'alice_manager' AND scope_id LIKE '%bob%' AND role = 'writer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carol's Access",
+      "description": "Check Carol's reader access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'UX Research Hub') AND user_id = 'alice_manager' AND scope_id LIKE '%carol%' AND role = 'reader'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Alerts Setup",
+      "description": "Verify alert setup for calendar changes",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'UX Research Hub') AND user_id = 'alice_manager' AND webhook_address = 'https://design-tools.techcorp.com/ux-research/hook'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Consolidate events into UX Research Hub, set reminders, ACL, and alerts",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

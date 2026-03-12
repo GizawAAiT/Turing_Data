@@ -1,0 +1,89 @@
+{
+  "scenario_config": {
+    "scenario_name": "sprint_event_update",
+    "scenario_description": "Event Reschedule & ACL",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I have a scheduling conflict with the event “Sprint Planning & Architecture Review.” Move this event from my “Project Management” calendar to the “Team Coordination” calendar. Rename it to “Sprint Planning Reschedule,” change the start time to 2:00 PM (keeping the same duration), and add the shared extended property \"movedReason\": \"team_conflict\". After moving, grant domain-wide reader access to techcorp.com on the Team Coordination calendar.",
+    "restricted_tools": [
+      "get_calendar_list",
+      "list_events",
+      "move_event",
+      "patch_event",
+      "insert_acl_rule"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "move_event",
+      "patch_event",
+      "insert_acl_rule"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Event Calendar Move",
+      "description": "Verify event moved to Team Coordination calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Sprint Planning Reschedule' AND calendar_id = 'alice-team'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Time Update",
+      "description": "Check event timing updated correctly",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Sprint Planning Reschedule' AND start_datetime = '2025-11-11 14:00:00.000000' AND end_datetime = '2025-11-11 16:00:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Extended Property Added",
+      "description": "Confirm extended properties set correctly",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'event-corrected-001' AND scope = 'shared' AND json_extract(properties, '$.meetingType') = 'sprint_planning' AND json_extract(properties, '$.priority') = 'high' AND json_extract(properties, '$.movedReason') = 'team_conflict'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Domain Access Set",
+      "description": "Verify domain-wide reader access granted",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'alice-team' AND scope_id LIKE '%domain%' AND role = 'reader'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Reschedule sprint event, update extended property, and grant domain-wide access",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

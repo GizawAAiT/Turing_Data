@@ -1,0 +1,31 @@
+{
+  "system_prompt": "You are a helpful assistant for commerce and subscription management tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Rename a plan, adjust failure threshold, and list sibling plans.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'd like to make a few updates to my subscription plan. For plan P-BOLQ10YYD2PNFECXE, could you rename it to 'Student Plan - eBook Collection 34 with AI Reviews'? Also, I've received some compliance feedback that payment process is sometimes not smooth, so please increase the number of allowed payment failures before a purchase is cancelled to 3. Finally, could you list the names of all billing plans that are linked to the same product as this plan?",
+          "expected_tools": [
+            "update_billing_plan",
+            "get_billing_plan_by_id",
+            "list_billing_plans"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) AS count FROM billing_plans bp WHERE bp.id = 'P-BOLQ10YYD2PNFECXE' AND bp.name = 'Student Plan - eBook Collection 34 with AI Reviews' AND json_extract(bp.payment_preferences, '$.payment_failure_threshold') = 3",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

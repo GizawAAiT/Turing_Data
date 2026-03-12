@@ -1,0 +1,45 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation agent with full administrative permissions to manage users, teams, channels, roles, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S_CrossOrg_Webinar_Announcement",
+      "description": "Schedule a cross-org webinar and announce it in the shared channel.",
+      "conversation_mode": true,
+      "context": {
+        "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Please schedule a joint webinar titled 'Cross-Org Product Launch' with participants from both the TechCorp Solutions Team and the GlobalEx Industries Team on December 10, 2025, at 11:00 AM EST for two hours. Also, post a message in the 'Cross-Team Collaboration' channel stating, 'The Cross-Org Product Launch webinar has been scheduled for December 10 from 11:00 AM to 1:00 PM EST. Please check your calendar for the invite and be prepared to join on time'.",
+          "expected_tools": [
+            "create_virtual_event_webinar",
+            "list_teams",
+            "list_channels",
+            "send_channel_message"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_webinars WHERE display_name = 'Cross-Org Product Launch' AND start_date_time = '2025-12-10 11:00:00.000000' AND start_time_zone = 'Eastern Standard Time'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM channel_messages WHERE body_json LIKE '%The Cross-Org Product Launch webinar has been scheduled for December 10 from 11:00 AM to 1:00 PM EST. Please check your calendar for the invite and be prepared to join on time%'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

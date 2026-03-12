@@ -1,0 +1,129 @@
+{
+  "scenario_config": {
+    "scenario_name": "sprint_event_cleanup",
+    "scenario_description": "Clean sprint attendees and attachments",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Please help me organize my existing Sprint Planning event by inviting Adam Anderson (adam.anderson@servicenow.com) as an attendee. Also, grant all current attendees, including Adam, permission to modify the event details directly.\n\nAdditionally, remove any attendees who do not have an email address listed, while preserving those who have valid email addresses.\n\nThen, remove any attachments of this event except spreadsheets. To ensure removed attachments are preserved, create a secondary calendar named \"Archived Attachments,\" and within it, set up an event titled \"Sprint Planning Attachment Archive\" to store these removed attachments securely.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "create_calendar",
+      "create_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "create_calendar",
+      "create_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Final Attendees",
+      "description": "Verify final attendee set",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN (SELECT COUNT(*) FROM attendees WHERE event_id = 'event-corrected-001') = 4 AND EXISTS (SELECT 1 FROM attendees WHERE event_id = 'event-corrected-001' AND user_id = 'alice_manager') AND EXISTS (SELECT 1 FROM attendees WHERE event_id = 'event-corrected-001' AND user_id = 'bob_developer') AND EXISTS (SELECT 1 FROM attendees WHERE event_id = 'event-corrected-001' AND user_id = 'carol_designer') AND EXISTS (SELECT 1 FROM attendees WHERE event_id = 'event-corrected-001' AND user_id = 'adam_anderson') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Guests Can Modify",
+      "description": "Verify guestsCanModify enabled",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-001' AND guestscanmodify = 1",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Non-Sheets Removed",
+      "description": "Verify non-spreadsheet attachments removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attachments WHERE event_id = 'event-corrected-001' AND file_url NOT LIKE '%spreadsheets%'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Sheets Retained",
+      "description": "Verify spreadsheet attachments kept",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attachments WHERE event_id = 'event-corrected-001' AND file_url LIKE '%spreadsheets%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Archive Calendar",
+      "description": "Verify archive calendar created",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'alice_manager' AND summary = 'Archived Attachments'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Archive Event",
+      "description": "Verify archive event created",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Sprint Planning Attachment Archive' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alice_manager' AND summary = 'Archived Attachments')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Attachment Backed Up",
+      "description": "Verify removed attachment stored in archive",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attachments WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Sprint Planning Attachment Archive' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alice_manager' AND summary = 'Archived Attachments')) AND file_url = 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Update sprint event attendees, clean attachments, and archive removed files.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

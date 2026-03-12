@@ -1,0 +1,682 @@
+{
+  "task_id": "task_20251210_202826_839_764e5ead_543b010d",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "<p># **ITSM Management Assistant Policy**</p><p>**Role:** ITSM Management Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p><br></p><p>You must operate exclusively based on **confirmed user roles and permissions**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p><br></p><p>---</p><p><br></p><p>## **1. General Operational Instructions and Constraints**</p><p><br></p><p>* **Policy Violation:** If a user request violates any rule herein (e.g., changing a **closed** record), you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information (records, configurations, procedures) that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous (e.g., multiple open incidents match a search), return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields (e.g., `opened_by`, `short_description`, `impact`, `urgency` for an incident).</p><p>* You do not need to ask for confirmation or permission before taking action.</p><p>* When identifiers such as names or IDs are missing, perform lookups, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.</p><p>* Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. The same is the case of optional or default arguments.</p><p>* Complete each task in a logical, and efficient execution flow.</p><p>---</p><p><br></p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p><br></p><p>Access rights are defined by roles and grant granular control across tables.</p><p><br></p><p>| Role | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables (`incident`, `change`, `problem`, `cmdb`, `user`). Manages **assignment rules, workflows, and ACLs**. | Prohibited from performing routine Incident/Request fulfillment. |</p><p>| **ITIL Agent** | Frontline Incident/Request fulfillment | CRUD on **Incidents, Service Requests, Tasks, and Work Notes**. Read-only on **CMDB, Change, Problem, and Knowledge**. Can update assignment, state, and resolution. | Cannot bypass approvals, change system configuration, or modify CIs directly. |</p><p>| **ITIL Manager** | Supervision, Escalation, Approvals | All Agent privileges plus: Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. | Cannot modify base CMDB records or system administration settings. |</p><p>| **Change/Problem Manager** | Process Governance | Full CRUD on their respective process records (`change`, `problem`). Can **authorize** standard changes. Links related Incidents and CIs. | Must not work on Incidents or Service Requests. |</p><p>| **End User** | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p><br></p><p>---</p><p><br></p><p>## **3. Core Operations: Incident Management**</p><p><br></p><p>### **3.1. Incident Registration**</p><p>* **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record.</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of **Impact x Urgency**. You must not allow manual priority setting unless the user has the `ITIL Manager` role.</p><p>* **Default State:** All new Incidents are set to `state = new`.</p><p><br></p><p>### **3.2. Incident Assignment**</p><p>* **Rule:** Assignment must follow the **Assignment Rules Engine** logic (e.g., based on affected CI, category, or location).</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `ITIL Agent` role and must be a member of the specified `assignment_group`.</p><p><br></p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid State Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed`</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code` (e.g., `fixed`, `workaround`), and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The Incident must remain in `resolved` state for a **mandatory 72-hour customer confirmation period** before automatically transitioning to `closed`. Manual closure is only permitted if the `ITIL Manager` role is present.</p><p><br></p><p>---</p><p><br></p><p>## **4. Core Operations: Change and Problem Management**</p><p><br></p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>* **Approval Gate:** Any transition from `state = pending_assessment` to `state = scheduled` requires a record in the `sys_approval` table to be `status = approved`. Standard changes are automatically approved.</p><p>* **Rollback Plan:** No Change Request can move to `state = scheduled` without a documented `rollback_plan` and `risk_assessment` score (1-100).</p><p><br></p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Workaround:** If a temporary solution is found, the Problem state moves to `known_error`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final State:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p><br></p><p>---</p><p><br></p><p>## **5. Configuration and Service Management (CMDB)**</p><p><br></p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `cmdb_ci` table.</p><p>* **Relationship:** You must enforce mandatory **CI relationships** (e.g., `runs_on`, `depends_on`). Use `link_ci_relationship` to establish these links.</p><p>* **CI State:** Only CIs with `state = production` or `state = testing` can be linked to active Incidents. Do not link CIs in `state = retired` or `state = storage`.</p><p>* **CI Owner:** All CIs must have a recorded `support_group` and `ci_owner` ID.</p><p><br></p><p>### **5.2. Service Catalog**</p><p>* **Ordering:** All **Service Requests** must be generated by submitting an **active** `service_catalog_item`.</p><p>* **Fulfillment:** Service Requests trigger fulfillment tasks (`sc_task`) based on the workflow attached to the catalog item.</p><p><br></p><p>---</p><p><br></p><p>## **6. Service Level Management (SLA)**</p><p><br></p><p>* **SLA Application:** SLAs (`incident_sla` table) are automatically aligned based on `priority` and the `service_offering` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `response_time` and `resolution_time`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `state = on_hold` and the `on_hold_reason` is one of the following enumerations: `awaiting_customer_confirmation`, `awaiting_vendor_input`, or `awaiting_change_approval`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `ITIL Manager`.</p><p><br></p><p>---</p><p><br></p><p>## **7. Knowledge Management**</p><p><br></p><p>* **Article Status:** Only articles in `kb_knowledge.workflow_state = published` are searchable by the `End User` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `kb_use = suggested`.</p><p>* **Knowledge Creation Policy:** If an Incident is marked `resolved` and no existing knowledge article was linked, and the resolution is not a simple password reset, the **ITIL Agent** must be prompted to create a new knowledge draft before final closure.</p><p>* **Use Tracking:** All knowledge links must track `kb_use` type: `suggested`, `applied` (used for resolution), or `workaround`.</p><p><br></p><p>---</p><p><br></p><p>## **8. Validation, Error Handling, and Logging**</p><p><br></p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied (e.g., Incident cannot close if related `change_request` is not closed).</p><p>* **Time Tracking:** All work logs (`work_notes` and `activity_log`) must include the timestamp (`sys_created_on`) and the `user_id` performing the action.</p><p><br></p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation, e.g., an `ITIL Agent` attempting to approve a Change).</p><p>* **409 Conflict:** Record locking or state conflict (e.g., attempting to resolve an Incident that is already `closed`).</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p><br></p><p>---</p><p><br></p><p>## **9. Predefined Lists (Enumerations)**</p><p><br></p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `administrator`, `itil_manager`, `itil_agent`, `change_manager`, `problem_manager`, `end_user` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.state** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `awaiting_customer_confirmation`, `awaiting_vendor_input`, `awaiting_change_approval`, `other` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.state** | `draft`, `pending_assessment`, `scheduled`, `implementing`, `review`, `closed` |</p><p>| **cmdb_ci.state** | `production`, `testing`, `storage`, `retired` |</p><p>| **kb_knowledge.workflow_state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `breached`, `achieved` |</p><p><br></p><p>---</p>",
+  "created_at": "2025-12-10T20:28:26.804687+00:00",
+  "created_by": "764e5ead-d7a0-4384-a77d-a3b9ce4830bd",
+  "scenario_config": {
+    "scenario_name": "Berlin Regional Office IT Setup",
+    "scenario_description": "Establishing the IT infrastructure for a new European office.",
+    "system_prompt": "<p># **ITSM Management Assistant Policy**</p><p>**Role:** ITSM Management Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p><br></p><p>You must operate exclusively based on **confirmed user roles and permissions**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p><br></p><p>---</p><p><br></p><p>## **1. General Operational Instructions and Constraints**</p><p><br></p><p>* **Policy Violation:** If a user request violates any rule herein (e.g., changing a **closed** record), you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information (records, configurations, procedures) that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous (e.g., multiple open incidents match a search), return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields (e.g., `opened_by`, `short_description`, `impact`, `urgency` for an incident).</p><p>* You do not need to ask for confirmation or permission before taking action.</p><p>* When identifiers such as names or IDs are missing, perform lookups, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.</p><p>* Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. The same is the case of optional or default arguments.</p><p>* Complete each task in a logical, and efficient execution flow.</p><p>---</p><p><br></p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p><br></p><p>Access rights are defined by roles and grant granular control across tables.</p><p><br></p><p>| Role | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables (`incident`, `change`, `problem`, `cmdb`, `user`). Manages **assignment rules, workflows, and ACLs**. | Prohibited from performing routine Incident/Request fulfillment. |</p><p>| **ITIL Agent** | Frontline Incident/Request fulfillment | CRUD on **Incidents, Service Requests, Tasks, and Work Notes**. Read-only on **CMDB, Change, Problem, and Knowledge**. Can update assignment, state, and resolution. | Cannot bypass approvals, change system configuration, or modify CIs directly. |</p><p>| **ITIL Manager** | Supervision, Escalation, Approvals | All Agent privileges plus: Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. | Cannot modify base CMDB records or system administration settings. |</p><p>| **Change/Problem Manager** | Process Governance | Full CRUD on their respective process records (`change`, `problem`). Can **authorize** standard changes. Links related Incidents and CIs. | Must not work on Incidents or Service Requests. |</p><p>| **End User** | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p><br></p><p>---</p><p><br></p><p>## **3. Core Operations: Incident Management**</p><p><br></p><p>### **3.1. Incident Registration**</p><p>* **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record.</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of **Impact x Urgency**. You must not allow manual priority setting unless the user has the `ITIL Manager` role.</p><p>* **Default State:** All new Incidents are set to `state = new`.</p><p><br></p><p>### **3.2. Incident Assignment**</p><p>* **Rule:** Assignment must follow the **Assignment Rules Engine** logic (e.g., based on affected CI, category, or location).</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `ITIL Agent` role and must be a member of the specified `assignment_group`.</p><p><br></p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid State Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed`</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code` (e.g., `fixed`, `workaround`), and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The Incident must remain in `resolved` state for a **mandatory 72-hour customer confirmation period** before automatically transitioning to `closed`. Manual closure is only permitted if the `ITIL Manager` role is present.</p><p><br></p><p>---</p><p><br></p><p>## **4. Core Operations: Change and Problem Management**</p><p><br></p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>* **Approval Gate:** Any transition from `state = pending_assessment` to `state = scheduled` requires a record in the `sys_approval` table to be `status = approved`. Standard changes are automatically approved.</p><p>* **Rollback Plan:** No Change Request can move to `state = scheduled` without a documented `rollback_plan` and `risk_assessment` score (1-100).</p><p><br></p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Workaround:** If a temporary solution is found, the Problem state moves to `known_error`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final State:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p><br></p><p>---</p><p><br></p><p>## **5. Configuration and Service Management (CMDB)**</p><p><br></p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `cmdb_ci` table.</p><p>* **Relationship:** You must enforce mandatory **CI relationships** (e.g., `runs_on`, `depends_on`). Use `link_ci_relationship` to establish these links.</p><p>* **CI State:** Only CIs with `state = production` or `state = testing` can be linked to active Incidents. Do not link CIs in `state = retired` or `state = storage`.</p><p>* **CI Owner:** All CIs must have a recorded `support_group` and `ci_owner` ID.</p><p><br></p><p>### **5.2. Service Catalog**</p><p>* **Ordering:** All **Service Requests** must be generated by submitting an **active** `service_catalog_item`.</p><p>* **Fulfillment:** Service Requests trigger fulfillment tasks (`sc_task`) based on the workflow attached to the catalog item.</p><p><br></p><p>---</p><p><br></p><p>## **6. Service Level Management (SLA)**</p><p><br></p><p>* **SLA Application:** SLAs (`incident_sla` table) are automatically aligned based on `priority` and the `service_offering` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `response_time` and `resolution_time`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `state = on_hold` and the `on_hold_reason` is one of the following enumerations: `awaiting_customer_confirmation`, `awaiting_vendor_input`, or `awaiting_change_approval`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `ITIL Manager`.</p><p><br></p><p>---</p><p><br></p><p>## **7. Knowledge Management**</p><p><br></p><p>* **Article Status:** Only articles in `kb_knowledge.workflow_state = published` are searchable by the `End User` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `kb_use = suggested`.</p><p>* **Knowledge Creation Policy:** If an Incident is marked `resolved` and no existing knowledge article was linked, and the resolution is not a simple password reset, the **ITIL Agent** must be prompted to create a new knowledge draft before final closure.</p><p>* **Use Tracking:** All knowledge links must track `kb_use` type: `suggested`, `applied` (used for resolution), or `workaround`.</p><p><br></p><p>---</p><p><br></p><p>## **8. Validation, Error Handling, and Logging**</p><p><br></p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied (e.g., Incident cannot close if related `change_request` is not closed).</p><p>* **Time Tracking:** All work logs (`work_notes` and `activity_log`) must include the timestamp (`sys_created_on`) and the `user_id` performing the action.</p><p><br></p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation, e.g., an `ITIL Agent` attempting to approve a Change).</p><p>* **409 Conflict:** Record locking or state conflict (e.g., attempting to resolve an Incident that is already `closed`).</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p><br></p><p>---</p><p><br></p><p>## **9. Predefined Lists (Enumerations)**</p><p><br></p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `administrator`, `itil_manager`, `itil_agent`, `change_manager`, `problem_manager`, `end_user` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.state** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `awaiting_customer_confirmation`, `awaiting_vendor_input`, `awaiting_change_approval`, `other` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.state** | `draft`, `pending_assessment`, `scheduled`, `implementing`, `review`, `closed` |</p><p>| **cmdb_ci.state** | `production`, `testing`, `storage`, `retired` |</p><p>| **kb_knowledge.workflow_state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `breached`, `achieved` |</p><p><br></p><p>---</p>",
+    "prompt": "We're opening a new regional office in Berlin, Germany to support our European expansion, and I need the full IT setup put in place. Please create a new active location for our Berlin office at Plot 42, Friedrichstrasse, Berlin, Germany. We're appointing Sarah Mueller as the team lead, she'll be a manager and should have an active account with the email sarah.mueller@techcorp.com and phone number +49-309-550-0201, and she should be based at the Berlin location. We also need to onboard three support agents: Lars Jensen (lars.jensen@techcorp.com, +49-305-550-0202), Dmitri Volkov (dmitri.volkov@techcorp.com, +49-305-550-0203), and Yuki Tanaka (yuki.tanaka@techcorp.com, +49-305-550-0204), all with active accounts and complete details assigned to the Berlin office. Please create a new active user group called 'Berlin Support Team' with a small description for IT Support, set the group email to berlin-support@techcorp.com, assign Sarah Mueller as the manager, and add the three agents as group members. Finally, register two configuration items for the Berlin office: a laptop called 'Sarah Manager Laptop' with serial number LAPTOP-BER-MGR-001, assigned to Sarah, marked as in use, with a cost of 1800.00, and an under maintenance server called 'Berlin Email Relay Server' with serial number SERVER-BER-RELAY-001, assigned to me (Marcus Thompson), with a cost of 8500.00.",
+    "selected_tools": [
+      "add_location",
+      "add_new_user",
+      "add_new_user_group",
+      "add_new_group_member",
+      "get_user_using_name",
+      "register_configuration_item"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "add_location",
+      "add_new_user",
+      "add_new_user_group",
+      "add_new_group_member",
+      "get_user_using_name",
+      "register_configuration_item"
+    ],
+    "context": {
+      "x-itsm-user-token": "admin_token_marcus_2024_secure"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "verify_berlin_location_created",
+      "description": "Verify Berlin location was created and is active",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM location WHERE city = 'Berlin' AND country = 'Germany' AND street = 'Friedrichstrasse' AND plot_no = '42' AND active = 1 AND org_id = 'ORG_001';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_sarah_mueller_created",
+      "description": "Verify Sarah Mueller manager account was created with correct updated phone",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM users WHERE email = 'sarah.mueller@techcorp.com' AND role = 'manager' AND phone = '+49-309-550-0201' AND (user_name = 'sarah.mueller' OR user_name IS NOT NULL) AND active = 1 AND org_id = 'ORG_001';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_three_agents_created",
+      "description": "Verify three agent accounts were created for Berlin team",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM users WHERE email IN ('lars.jensen@techcorp.com', 'dmitri.volkov@techcorp.com', 'yuki.tanaka@techcorp.com') AND phone IN ('+49-305-550-0202', '+49-305-550-0203', '+49-305-550-0204') AND role = 'agent' AND user_id IS NOT NULL AND active = 1 AND org_id = 'ORG_001';",
+      "expected_value": 3,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_berlin_support_team_created",
+      "description": "Verify Berlin Support Team group was created with updated description",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM user_group WHERE name = 'Berlin Support Team' AND type = 'IT Support' AND email = 'berlin-support@techcorp.com' AND description IS NOT NULL AND active = 1 AND org_id = 'ORG_001';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_sarah_is_group_manager",
+      "description": "Verify Sarah Mueller is set as manager of Berlin Support Team",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM user_group ug JOIN users u ON ug.manager_id = u.user_id WHERE ug.name = 'Berlin Support Team' AND u.email = 'sarah.mueller@techcorp.com' AND ug.org_id = 'ORG_001';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_three_group_members_added",
+      "description": "Verify three agents were added as members of Berlin Support Team",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM user_group_member ugm JOIN users u ON ugm.user_id = u.user_id JOIN user_group ug ON ugm.group_id = ug.group_id WHERE ug.name = 'Berlin Support Team' AND u.email IN ('lars.jensen@techcorp.com', 'dmitri.volkov@techcorp.com', 'yuki.tanaka@techcorp.com') AND ugm.org_id = 'ORG_001';",
+      "expected_value": 3,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_two_cis_registered",
+      "description": "Verify two configuration items were registered for Berlin office",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM configuration_item ci JOIN location l ON ci.location_id = l.location_id WHERE ci.serial_number IN ('LAPTOP-BER-MGR-001', 'SERVER-BER-RELAY-001') AND ci.cost IN (1800, 8500) AND l.name = 'Berlin Office' AND ci.org_id = 'ORG_001';",
+      "expected_value": 2,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "verify_server_in_maintenance",
+      "description": "Verify Berlin Email Relay Server status was updated to MAINTENANCE",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM configuration_item WHERE serial_number = 'SERVER-BER-RELAY-001' AND status = 'maintenance' AND org_id = 'ORG_001';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "add_location",
+      "arguments": {
+        "name": "Berlin Office",
+        "active": true,
+        "plot_no": "42",
+        "street": "Friedrichstrasse",
+        "city": "Berlin",
+        "country": "Germany"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_location",
+        "parameters": {
+          "name": "Berlin Office",
+          "active": true,
+          "plot_no": "42",
+          "street": "Friedrichstrasse",
+          "city": "Berlin",
+          "country": "Germany"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"name\": \"Berlin Office\",\n  \"active\": true,\n  \"plot_no\": \"42\",\n  \"street\": \"Friedrichstrasse\",\n  \"city\": \"Berlin\",\n  \"state\": null,\n  \"country\": \"Germany\",\n  \"location_id\": \"LOC_004\",\n  \"created_on\": \"2025-12-10T20:26:54.399576\",\n  \"updated_on\": \"2025-12-10T20:26:54.399576\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 184,
+        "executed_at": "2025-12-10T20:26:54.447870"
+      }
+    },
+    {
+      "name": "add_new_user",
+      "arguments": {
+        "first_name": "Sarah",
+        "last_name": "Mueller",
+        "email": "sarah.mueller@techcorp.com",
+        "phone": "+49-309-550-0201",
+        "role": "manager",
+        "active": true,
+        "user_name": "sarah.mueller",
+        "location_id": "LOC_004"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_user",
+        "parameters": {
+          "first_name": "Sarah",
+          "last_name": "Mueller",
+          "email": "sarah.mueller@techcorp.com",
+          "phone": "+49-309-550-0201",
+          "role": "manager",
+          "active": true,
+          "user_name": "sarah.mueller",
+          "location_id": "LOC_004"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_name\": \"sarah.mueller\",\n  \"first_name\": \"Sarah\",\n  \"last_name\": \"Mueller\",\n  \"email\": \"sarah.mueller@techcorp.com\",\n  \"phone\": \"+49-309-550-0201\",\n  \"role\": \"manager\",\n  \"active\": true,\n  \"location_id\": \"LOC_004\",\n  \"user_id\": \"USER_011\",\n  \"static_token\": \"token_ALWFbkxVXwc2XTVbU_YDhqkh0Eervy2jwzrOS9X9qG8\",\n  \"created_on\": \"2025-12-10T20:26:57.449557\",\n  \"updated_on\": \"2025-12-10T20:26:57.449557\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 211,
+        "executed_at": "2025-12-10T20:26:57.505468"
+      }
+    },
+    {
+      "name": "add_new_user",
+      "arguments": {
+        "first_name": "Lars",
+        "last_name": "Jensen",
+        "email": "lars.jensen@techcorp.com",
+        "phone": "+49-305-550-0202",
+        "role": "agent",
+        "active": true,
+        "user_name": "lars.jensen",
+        "location_id": "LOC_004"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_user",
+        "parameters": {
+          "first_name": "Lars",
+          "last_name": "Jensen",
+          "email": "lars.jensen@techcorp.com",
+          "phone": "+49-305-550-0202",
+          "role": "agent",
+          "active": true,
+          "user_name": "lars.jensen",
+          "location_id": "LOC_004"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_name\": \"lars.jensen\",\n  \"first_name\": \"Lars\",\n  \"last_name\": \"Jensen\",\n  \"email\": \"lars.jensen@techcorp.com\",\n  \"phone\": \"+49-305-550-0202\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"location_id\": \"LOC_004\",\n  \"user_id\": \"USER_012\",\n  \"static_token\": \"token_A_aTR20Z_DoK1Z68rDGW4EU43-swqk2OoZFhYCUoMzg\",\n  \"created_on\": \"2025-12-10T20:26:59.404904\",\n  \"updated_on\": \"2025-12-10T20:26:59.404904\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 166,
+        "executed_at": "2025-12-10T20:26:59.456547"
+      }
+    },
+    {
+      "name": "add_new_user",
+      "arguments": {
+        "first_name": "Dmitri",
+        "last_name": "Volkov",
+        "email": "dmitri.volkov@techcorp.com",
+        "phone": "+49-305-550-0203",
+        "role": "agent",
+        "active": true,
+        "user_name": "dmitri.volkov",
+        "location_id": "LOC_004"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_user",
+        "parameters": {
+          "first_name": "Dmitri",
+          "last_name": "Volkov",
+          "email": "dmitri.volkov@techcorp.com",
+          "phone": "+49-305-550-0203",
+          "role": "agent",
+          "active": true,
+          "user_name": "dmitri.volkov",
+          "location_id": "LOC_004"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_name\": \"dmitri.volkov\",\n  \"first_name\": \"Dmitri\",\n  \"last_name\": \"Volkov\",\n  \"email\": \"dmitri.volkov@techcorp.com\",\n  \"phone\": \"+49-305-550-0203\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"location_id\": \"LOC_004\",\n  \"user_id\": \"USER_013\",\n  \"static_token\": \"token_1l9I-9zgIoS4goE3jOTEPXub5UfDhag94h5HugRW9Ms\",\n  \"created_on\": \"2025-12-10T20:27:01.953401\",\n  \"updated_on\": \"2025-12-10T20:27:01.953401\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 180,
+        "executed_at": "2025-12-10T20:27:02.006546"
+      }
+    },
+    {
+      "name": "add_new_user",
+      "arguments": {
+        "first_name": "Yuki",
+        "last_name": "Tanaka",
+        "email": "yuki.tanaka@techcorp.com",
+        "phone": "+49-305-550-0204",
+        "role": "agent",
+        "active": true,
+        "user_name": "yuki.tanaka",
+        "location_id": "LOC_004"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_user",
+        "parameters": {
+          "first_name": "Yuki",
+          "last_name": "Tanaka",
+          "email": "yuki.tanaka@techcorp.com",
+          "phone": "+49-305-550-0204",
+          "role": "agent",
+          "active": true,
+          "user_name": "yuki.tanaka",
+          "location_id": "LOC_004"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_name\": \"yuki.tanaka\",\n  \"first_name\": \"Yuki\",\n  \"last_name\": \"Tanaka\",\n  \"email\": \"yuki.tanaka@techcorp.com\",\n  \"phone\": \"+49-305-550-0204\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"location_id\": \"LOC_004\",\n  \"user_id\": \"USER_014\",\n  \"static_token\": \"token_G2uslMHg-ZWsSqs2hzjVGV8Oj3d3SVsR5aow56ckTNY\",\n  \"created_on\": \"2025-12-10T20:27:03.350580\",\n  \"updated_on\": \"2025-12-10T20:27:03.350580\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 174,
+        "executed_at": "2025-12-10T20:27:03.406513"
+      }
+    },
+    {
+      "name": "add_new_user_group",
+      "arguments": {
+        "name": "Berlin Support Team",
+        "type": "IT Support",
+        "active": true,
+        "email": "berlin-support@techcorp.com",
+        "description": "New Berlin IT support team",
+        "manager_id": "USER_011"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_user_group",
+        "parameters": {
+          "name": "Berlin Support Team",
+          "type": "IT Support",
+          "active": true,
+          "email": "berlin-support@techcorp.com",
+          "description": "New Berlin IT support team",
+          "manager_id": "USER_011"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"name\": \"Berlin Support Team\",\n  \"type\": \"IT Support\",\n  \"active\": true,\n  \"email\": \"berlin-support@techcorp.com\",\n  \"description\": \"New Berlin IT support team\",\n  \"manager_id\": \"USER_011\",\n  \"group_id\": \"GROUP_005\",\n  \"created_on\": \"2025-12-10T20:27:04.784107\",\n  \"updated_on\": \"2025-12-10T20:27:04.784107\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 179,
+        "executed_at": "2025-12-10T20:27:04.837475"
+      }
+    },
+    {
+      "name": "add_new_group_member",
+      "arguments": {
+        "group_id": "GROUP_005",
+        "user_id": "USER_012"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_group_member",
+        "parameters": {
+          "group_id": "GROUP_005",
+          "user_id": "USER_012"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"member_id\": \"MEMBER_006\",\n  \"group_id\": \"GROUP_005\",\n  \"user_id\": \"USER_012\",\n  \"created_on\": \"2025-12-10T20:27:06.689434\",\n  \"updated_on\": \"2025-12-10T20:27:06.689434\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 225,
+        "executed_at": "2025-12-10T20:27:06.742902"
+      }
+    },
+    {
+      "name": "add_new_group_member",
+      "arguments": {
+        "group_id": "GROUP_005",
+        "user_id": "USER_013"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_group_member",
+        "parameters": {
+          "group_id": "GROUP_005",
+          "user_id": "USER_013"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"member_id\": \"MEMBER_007\",\n  \"group_id\": \"GROUP_005\",\n  \"user_id\": \"USER_013\",\n  \"created_on\": \"2025-12-10T20:27:08.488807\",\n  \"updated_on\": \"2025-12-10T20:27:08.488807\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 186,
+        "executed_at": "2025-12-10T20:27:08.534529"
+      }
+    },
+    {
+      "name": "add_new_group_member",
+      "arguments": {
+        "group_id": "GROUP_005",
+        "user_id": "USER_014"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "add_new_group_member",
+        "parameters": {
+          "group_id": "GROUP_005",
+          "user_id": "USER_014"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"member_id\": \"MEMBER_008\",\n  \"group_id\": \"GROUP_005\",\n  \"user_id\": \"USER_014\",\n  \"created_on\": \"2025-12-10T20:27:10.706037\",\n  \"updated_on\": \"2025-12-10T20:27:10.706037\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 192,
+        "executed_at": "2025-12-10T20:27:10.771039"
+      }
+    },
+    {
+      "name": "get_user_using_name",
+      "arguments": {
+        "first_name": "Marcus",
+        "last_name": "Thompson"
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "get_user_using_name",
+        "parameters": {
+          "first_name": "Marcus",
+          "last_name": "Thompson"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"user_id\": \"USER_001\",\n  \"user_name\": \"marcus.thompson\",\n  \"first_name\": \"Marcus\",\n  \"last_name\": \"Thompson\",\n  \"email\": \"marcus.thompson@techcorp.com\",\n  \"phone\": \"+1-415-555-0101\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"admin_token_marcus_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2024-01-15T09:00:00\",\n  \"updated_on\": \"2024-01-15T09:00:00\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 148,
+        "executed_at": "2025-12-10T20:27:12.462179"
+      }
+    },
+    {
+      "name": "register_configuration_item",
+      "arguments": {
+        "name": "Sarah Manager Laptop",
+        "owner_id": "USER_011",
+        "location_id": "LOC_004",
+        "serial_number": "LAPTOP-BER-MGR-001",
+        "status": "in_use",
+        "cost": 1800
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "register_configuration_item",
+        "parameters": {
+          "name": "Sarah Manager Laptop",
+          "owner_id": "USER_011",
+          "location_id": "LOC_004",
+          "serial_number": "LAPTOP-BER-MGR-001",
+          "status": "in_use",
+          "cost": 1800
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"configuration_item_id\": \"CI_005\",\n  \"name\": \"Sarah Manager Laptop\",\n  \"serial_number\": \"LAPTOP-BER-MGR-001\",\n  \"owner_id\": \"USER_011\",\n  \"location_id\": \"LOC_004\",\n  \"status\": \"in_use\",\n  \"cost\": 1800.0,\n  \"created_on\": \"2025-12-10T20:27:14.074874\",\n  \"updated_on\": \"2025-12-10T20:27:14.074874\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 203,
+        "executed_at": "2025-12-10T20:27:14.137544"
+      }
+    },
+    {
+      "name": "register_configuration_item",
+      "arguments": {
+        "name": "Berlin Email Relay Server",
+        "owner_id": "USER_001",
+        "location_id": "LOC_004",
+        "serial_number": "SERVER-BER-RELAY-001",
+        "status": "maintenance",
+        "cost": 8500
+      },
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-itsm-internal",
+        "tool_name": "register_configuration_item",
+        "parameters": {
+          "name": "Berlin Email Relay Server",
+          "owner_id": "USER_001",
+          "location_id": "LOC_004",
+          "serial_number": "SERVER-BER-RELAY-001",
+          "status": "maintenance",
+          "cost": 8500
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"configuration_item_id\": \"CI_006\",\n  \"name\": \"Berlin Email Relay Server\",\n  \"serial_number\": \"SERVER-BER-RELAY-001\",\n  \"owner_id\": \"USER_001\",\n  \"location_id\": \"LOC_004\",\n  \"status\": \"maintenance\",\n  \"cost\": 8500.0,\n  \"created_on\": \"2025-12-10T20:27:16.522346\",\n  \"updated_on\": \"2025-12-10T20:27:16.522346\"\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 173,
+        "executed_at": "2025-12-10T20:27:16.568250"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1765296303024_u4b7mcm55",
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      },
+      "gym_server_id": "sn-itsm-internal"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gpt-5-High",
+      "platform_name": "openai",
+      "platform_config_id": "default-openai-gpt-5-High",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "default-gemini-gemini-2.5-pro",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true
+  },
+  "L1": "CMDB",
+  "L2": "Configuration Items",
+  "L3": "Status"
+}
