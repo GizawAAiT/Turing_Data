@@ -1,0 +1,65 @@
+{
+  "scenario_config": {
+    "scenario_name": "sprint_event_reschedule",
+    "scenario_description": "Event Rescheduling",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I have a scheduling conflict with the event \"Sprint Planning & Architecture Review\". Move this event from my \"Project Management\" calendar to the \"Team Coordination\" calendar. Update the event title to \"Sprint Planning Reschedule\" and set the new start time to 2:00 PM, maintaining the original duration.",
+    "restricted_tools": [
+      "get_calendar_list",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Move Verification",
+      "description": "Check event moved to correct calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Sprint Planning Reschedule' AND calendar_id = 'alice-team'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Timing Verification",
+      "description": "Check event rescheduled correctly",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Sprint Planning Reschedule' AND start_datetime = '2025-11-11 14:00:00.000000' AND end_datetime = '2025-11-11 16:00:00.000000' AND start_timezone = 'America/New_York' AND end_timezone = 'America/New_York'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Reschedule sprint event to Team Coordination calendar",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

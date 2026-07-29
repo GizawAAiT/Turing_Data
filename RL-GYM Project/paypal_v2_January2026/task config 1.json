@@ -1,0 +1,455 @@
+{
+  "task_id": "task_20260112_160258_069_baf0b358_a22f75a6",
+  "task_name": "There is an urgent requirement for a 2000 Yen test order with the description 'Test Order for JP Launch'. Executing the order successfully requires a 'Japan Checkout' page web profile ('commit' user action), which needs to be created first.\n\nThe actual item is a 'SuperWidget JP' in the toys/games category with a 'Monthly Toy Box JP' subscription plan to it with this specific pricing: a 1-month trial at 100 JPY, a second 1-month trial at 500 JPY, and then 2000 JPY regular recurring.\n\nMake sure there are no duplicates.",
+  "description": "There is an urgent requirement for a 2000 Yen test order with the description 'Test Order for JP Launch'. Executing the order successfully requires a 'Japan Checkout' page web profile ('commit' user action), which needs to be created first.\n\nThe actual item is a 'SuperWidget JP' in the toys/games category with a 'Monthly Toy Box JP' subscription plan to it with this specific pricing: a 1-month trial at 100 JPY, a second 1-month trial at 500 JPY, and then 2000 JPY regular recurring.\n\nMake sure there are no duplicates.",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "<p>You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.</p>",
+  "created_at": "2026-01-12T16:02:58.039853+00:00",
+  "created_by": "baf0b358-2a7d-4f52-b595-607f6ad2edc6",
+  "scenario_config": {
+    "scenario_name": "Task 1",
+    "scenario_description": "Task 1",
+    "system_prompt": "<p>You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.</p>",
+    "prompt": "There is an urgent requirement for a 2000 Yen test order with the description 'Test Order for JP Launch'. Executing the order successfully requires a 'Japan Checkout' page web profile ('commit' user action), which needs to be created first.\n\nThe actual item is a 'SuperWidget JP' in the toys/games category with a 'Monthly Toy Box JP' subscription plan to it with this specific pricing: a 1-month trial at 100 JPY, a second 1-month trial at 500 JPY, and then 2000 JPY regular recurring.\n\nMake sure there are no duplicates.",
+    "selected_tools": [
+      "paypal_list_products",
+      "list_web_profiles",
+      "paypal_create_product",
+      "create_web_profile",
+      "create_billing_plan",
+      "create_order"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "paypal_list_products",
+      "list_web_profiles",
+      "paypal_create_product",
+      "create_web_profile",
+      "create_billing_plan",
+      "create_order"
+    ],
+    "context": {
+      "x-user-email": "aaron.hicks@reyesinc.com"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Checking products",
+      "description": "Checking products",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "select count(*) from products where name = 'SuperWidget JP' and type = 'PHYSICAL' and category = 'TOYS_AND_GAMES'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Creation of the the billing page",
+      "description": "Creation of the the billing page",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "select count(*) from web_profiles where name = 'Japan Checkout' and flow_config like '%billing%' and presentation like '%ja_JP%'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Creating billing plan",
+      "description": "Creating billing plan",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM billing_plans WHERE name = 'Monthly Toy Box JP' AND product_id = (SELECT id FROM products WHERE name = 'SuperWidget JP');\n",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "checking 100 yen cycle",
+      "description": "checking 100 yen cycle",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM billing_plans WHERE name = 'Monthly Toy Box JP' and billing_cycles like '%\"value\": \"100\"%' AND product_id = (SELECT id FROM products WHERE name = 'SuperWidget JP');\n",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "checking 500 yen cycle",
+      "description": "checking 500 yen cycle",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM billing_plans WHERE name = 'Monthly Toy Box JP' and billing_cycles like '%\"value\": \"500\"%' AND product_id = (SELECT id FROM products WHERE name = 'SuperWidget JP');\n",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "checking 2000 yen cycle",
+      "description": "checking 2000 yen cycle",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM billing_plans WHERE name = 'Monthly Toy Box JP' and billing_cycles like '%\"value\": \"2000\"%' AND product_id = (SELECT id FROM products WHERE name = 'SuperWidget JP');\n",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Placing order",
+      "description": "Placing order",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "select count(*) from purchase_units where currency_code = 'JPY' and value = 2000 and description = 'Test Order for JP Launch'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "paypal_list_products",
+      "arguments": {
+        "page": 1,
+        "page_size": 20,
+        "total_required": false
+      },
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "paypal_list_products",
+        "parameters": {
+          "page": 1,
+          "page_size": 20,
+          "total_required": false
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"products\": [\n    {\n      \"id\": \"PROD-4NL72MQWS8KP60000\",\n      \"name\": \"Electric Standing Desk\",\n      \"description\": \"Height-adjustable electric standing desk with memory presets, cable management, and bamboo desktop - 60x30 inches\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://office-furniture.com/products/electric-standing-desk.jpg\",\n      \"home_url\": \"https://office-furniture.com/desks/standing/electric-60\",\n      \"create_time\": \"2024-12-08T10:40:00Z\",\n      \"update_time\": \"2024-12-21T14:55:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7WP93KQNM5VX80000\",\n      \"name\": \"Weekend City Tour Package\",\n      \"description\": \"2-day guided tour including transportation, museum entries, local cuisine experiences, and professional photography\",\n      \"type\": \"SERVICE\",\n      \"category\": \"TRAVEL_AND_TOURISM\",\n      \"image_url\": \"https://city-tours.com/packages/weekend-explorer.jpg\",\n      \"home_url\": \"https://city-tours.com/tours/weekend-package\",\n      \"create_time\": \"2024-12-05T13:25:00Z\",\n      \"update_time\": \"2024-12-21T08:30:20Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3QK85NWMS7PL40000\",\n      \"name\": \"Language Learning App - Lifetime Access\",\n      \"description\": \"Learn 14 languages with AI-powered lessons, native speaker recordings, and interactive exercises - one-time purchase\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://polyglot-app.com/assets/lifetime-access.png\",\n      \"home_url\": \"https://polyglot-app.com/pricing/lifetime\",\n      \"create_time\": \"2024-12-01T09:10:00Z\",\n      \"update_time\": \"2024-12-20T11:15:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9TY62KLNP4MV80000\",\n      \"name\": \"Artisan Chocolate Gift Box\",\n      \"description\": \"Luxury collection of 24 handcrafted chocolates with unique flavors, beautifully packaged for gifting\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://chocolate-boutique.com/products/luxury-gift-box.jpg\",\n      \"home_url\": \"https://chocolate-boutique.com/gifts/premium-collection\",\n      \"create_time\": \"2024-11-12T14:35:00Z\",\n      \"update_time\": \"2024-12-19T16:20:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-5LM83WQPT7KN20000\",\n      \"name\": \"Digital Marketing Strategy Package\",\n      \"description\": \"Comprehensive digital marketing audit, strategy development, and 3-month implementation plan with analytics setup\",\n      \"type\": \"SERVICE\",\n      \"category\": \"PROFESSIONAL_SERVICES\",\n      \"image_url\": \"https://digital-agency.com/services/strategy-package.jpg\",\n      \"home_url\": \"https://digital-agency.com/services/marketing-strategy\",\n      \"create_time\": \"2024-10-05T11:20:00Z\",\n      \"update_time\": \"2024-12-18T09:45:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-2KP47NQMS8YL60000\",\n      \"name\": \"Yoga Studio Membership - Monthly\",\n      \"description\": \"Unlimited access to all yoga classes, workshops, and meditation sessions at our downtown location\",\n      \"type\": \"SERVICE\",\n      \"category\": \"MEMBERSHIP_CLUBS_AND_ORGANIZATIONS\",\n      \"image_url\": \"https://zen-yoga-studio.com/membership/unlimited.jpg\",\n      \"home_url\": \"https://zen-yoga-studio.com/membership\",\n      \"create_time\": \"2024-09-10T08:30:00Z\",\n      \"update_time\": \"2024-12-15T12:00:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-8XQ95TMLP3NV70000\",\n      \"name\": \"Smart Home Security System\",\n      \"description\": \"Complete home security package with 4 cameras, motion sensors, smart doorbell, and 24/7 professional monitoring\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://secure-home-tech.com/products/complete-system.jpg\",\n      \"home_url\": \"https://secure-home-tech.com/systems/professional\",\n      \"create_time\": \"2024-08-21T10:15:00Z\",\n      \"update_time\": \"2024-12-09T14:50:25Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6VB72JQNK8XM40000\",\n      \"name\": \"Web Development Bootcamp\",\n      \"description\": \"12-week intensive bootcamp covering HTML, CSS, JavaScript, React, Node.js, and MongoDB with job placement assistance\",\n      \"type\": \"SERVICE\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://tech-academy.com/bootcamps/web-development.jpg\",\n      \"home_url\": \"https://tech-academy.com/bootcamps/full-stack\",\n      \"create_time\": \"2024-07-07T13:50:00Z\",\n      \"update_time\": \"2024-12-11T08:25:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-4MZ86WQLS7PT30000\",\n      \"name\": \"Handcrafted Leather Wallet\",\n      \"description\": \"Premium full-grain leather bifold wallet with RFID blocking, 8 card slots, and bill compartment - Handmade in Italy\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://leather-goods.com/products/classic-bifold-wallet.jpg\",\n      \"home_url\": \"https://leather-goods.com/wallets/classic-bifold\",\n      \"create_time\": \"2024-06-14T16:25:00Z\",\n      \"update_time\": \"2024-12-08T11:40:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7HN93KXMP4BV50000\",\n      \"name\": \"Fitness Tracking App - Annual Plan\",\n      \"description\": \"Full-featured fitness tracking application with personalized workout plans, nutrition tracking, and progress analytics\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://fittrack-app.com/assets/app-preview.png\",\n      \"home_url\": \"https://fittrack-app.com/pricing/annual\",\n      \"create_time\": \"2024-05-28T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3WK58LPTN2QM90000\",\n      \"name\": \"Organic Coffee Subscription Box\",\n      \"description\": \"Monthly delivery of premium single-origin organic coffee beans from small farms worldwide - 2 bags per month\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://coffee-subscription.com/products/organic-monthly-box.jpg\",\n      \"home_url\": \"https://coffee-subscription.com/subscriptions/organic\",\n      \"create_time\": \"2024-04-18T09:10:00Z\",\n      \"update_time\": \"2024-11-20T15:55:18Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7YM35774N9055821K\",\n      \"name\": \"Wireless Noise-Canceling Headphones\",\n      \"description\": \"Premium over-ear headphones with 30-hour battery life, active noise cancellation, and Hi-Res audio support\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://electronics-store.com/products/wireless-headphones-pro.jpg\",\n      \"home_url\": \"https://electronics-store.com/audio/headphones/nc-pro\",\n      \"create_time\": \"2024-03-05T14:20:00Z\",\n      \"update_time\": \"2024-12-10T09:30:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6XB24663H4094933L\",\n      \"name\": \"Professional Video Editing Course\",\n      \"description\": \"Complete 40-hour masterclass on Adobe Premiere Pro and After Effects with lifetime access and certification\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://courses.creativepro.com/video-editing-masterclass.jpg\",\n      \"home_url\": \"https://creativepro.com/courses/video-editing\",\n      \"create_time\": \"2024-02-10T08:15:00Z\",\n      \"update_time\": \"2024-11-28T16:45:12Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-5YE932MEQK4MS001A\",\n      \"name\": \"Premium Shopify Theme - Modern Store\",\n      \"description\": \"Professional responsive e-commerce theme with advanced customization options, mobile-first design, and built-in SEO optimization\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://cdn.shopify.com/theme-store/modern-store-preview.jpg\",\n      \"home_url\": \"https://themes.shopify.com/modern-store\",\n      \"create_time\": \"2024-01-15T10:30:00Z\",\n      \"update_time\": \"2024-12-01T14:22:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5YE932MEQK4MS001A\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5YE932MEQK4MS001A\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9PQ47JKNM6YR80000\",\n      \"name\": \"Monthly Business Consulting\",\n      \"description\": \"4 hours of strategic business consulting per month including market analysis, growth planning, and performance optimization\",\n      \"type\": \"SERVICE\",\n      \"category\": \"PROFESSIONAL_SERVICES\",\n      \"image_url\": \"https://consulting-firm.com/services/business-strategy.jpg\",\n      \"home_url\": \"https://consulting-firm.com/services/monthly-consulting\",\n      \"create_time\": \"2023-11-15T11:45:00Z\",\n      \"update_time\": \"2024-12-05T13:15:20Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9PQ47JKNM6YR80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9PQ47JKNM6YR80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    }\n  ],\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products?page=1&page_size=20\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 275,
+        "executed_at": "2026-01-12T15:56:47.060251"
+      }
+    },
+    {
+      "name": "list_web_profiles",
+      "arguments": {},
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "list_web_profiles",
+        "parameters": {},
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status_code\": 200,\n  \"body\": [\n    {\n      \"id\": \"XP-M3N8-BC4E-FGHI-6Q9U\",\n      \"name\": \"Test Profile 18\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Test Store 18\",\n        \"logo_image\": \"https://teststore18.com/logo.png\",\n        \"locale_code\": \"FR\"\n      }\n    },\n    {\n      \"id\": \"XP-G7H2-VW8Y-ZABC-0K3O\",\n      \"name\": \"Global Travel Booking Portal\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"bank_txn_pending_url\": \"https://globaltravel.com/booking/bank-payment\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 1,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Global Travel Adventures\",\n        \"logo_image\": \"https://globaltravel.com/brand/logo-main.jpg\",\n        \"locale_code\": \"GB\"\n      }\n    },\n    {\n      \"id\": \"XP-N4O9-CD5F-GHIJ-7R0V\",\n      \"name\": \"Test Profile 19\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"user_action\": \"commit\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 1,\n        \"address_override\": 1\n      },\n      \"presentation\": {\n        \"brand_name\": \"Test Store 19\",\n        \"logo_image\": \"https://teststore19.com/logo.jpg\",\n        \"locale_code\": \"IT\"\n      }\n    },\n    {\n      \"id\": \"XP-O5P0-DE6G-HIJK-8S1W\",\n      \"name\": \"Test Profile 20\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"bank_txn_pending_url\": \"https://teststore20.com/pending\",\n        \"user_action\": \"commit\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 2,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Test Store 20\",\n        \"logo_image\": \"https://teststore20.com/logo.png\",\n        \"locale_code\": \"ES\"\n      }\n    },\n    {\n      \"id\": \"XP-K1L6-ZA2C-DEFG-4O7S\",\n      \"name\": \"Full Featured E-commerce\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"bank_txn_pending_url\": \"https://fullecommerce.com/checkout/bank-processing\",\n        \"user_action\": \"commit\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 1\n      },\n      \"presentation\": {\n        \"brand_name\": \"Full Featured Store\",\n        \"logo_image\": \"https://fullecommerce.com/images/store-logo.jpg\",\n        \"locale_code\": \"pt_BR\"\n      }\n    },\n    {\n      \"id\": \"XP-P6Q1-EF7H-IJKL-9T2X\",\n      \"name\": \"Test Profile 21 - Should Not Appear\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 1\n      },\n      \"presentation\": {\n        \"brand_name\": \"Test Store 21\",\n        \"logo_image\": \"https://teststore21.com/logo.gif\",\n        \"locale_code\": \"NL\"\n      }\n    },\n    {\n      \"id\": \"XP-F6G0-SU3Z-QWER-7J9N\",\n      \"name\": \"FitPro Equipment Store\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"FitPro Athletics\",\n        \"logo_image\": \"https://fitpro.shop/images/fitpro-logo.png\",\n        \"locale_code\": \"US\"\n      }\n    },\n    {\n      \"id\": \"XP-E5F9-RT2Y-OPAS-6I8M\",\n      \"name\": \"Academic Books Online\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"bank_txn_pending_url\": \"https://edubooks.com/payment/processing\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"EduBooks Academic Press\",\n        \"logo_image\": \"https://edubooks.com/static/logo.png\",\n        \"locale_code\": \"AU\"\n      }\n    },\n    {\n      \"id\": \"XP-C4D7-PQ9R-STUV-2G5K\",\n      \"name\": \"Premium Subscription Service\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 1,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"CloudStream Pro\",\n        \"logo_image\": \"https://cloudstream.tv/images/pro-logo.svg\",\n        \"locale_code\": \"US\"\n      }\n    },\n    {\n      \"id\": \"XP-I9J4-XY0A-BCDE-2M5Q\",\n      \"name\": \"International Marketplace\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"bank_txn_pending_url\": \"https://intlmarket.com/payment/bank-pending\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 2,\n        \"address_override\": 1\n      },\n      \"presentation\": {\n        \"brand_name\": \"Global Marketplace International\",\n        \"logo_image\": \"https://intlmarket.com/brand/global-logo.png\",\n        \"locale_code\": \"DE\"\n      }\n    },\n    {\n      \"id\": \"XP-B9K2-MN7Q-WXYZ-3F8H\",\n      \"name\": \"Handmade Artisan Marketplace\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"bank_txn_pending_url\": \"https://artisanmarket.com/order/bank-pending\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 2,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Artisan Collective\",\n        \"logo_image\": \"https://artisanmarket.com/brand/logo.jpg\",\n        \"locale_code\": \"CA\"\n      }\n    },\n    {\n      \"id\": \"XP-RFV4-PVD8-AGHJ-8E5J\",\n      \"name\": \"Digital Downloads Instant Access\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 1,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"GameHub Digital Store\",\n        \"logo_image\": \"https://gamehub.io/assets/logo-header.png\",\n        \"locale_code\": \"US\"\n      }\n    },\n    {\n      \"id\": \"XP-FASH-BOUT-IQUE-TEMP\",\n      \"name\": \"Fashion Boutique Express Checkout\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"POST\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 1\n      },\n      \"presentation\": {\n        \"brand_name\": \"Elegance Fashion House\",\n        \"logo_image\": \"https://elegancefashion.com/images/brand-logo.png\",\n        \"locale_code\": \"GB\"\n      }\n    },\n    {\n      \"id\": \"XP-L2M7-AB3D-EFGH-5P8T\",\n      \"name\": \"Digital Services Platform\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"user_action\": \"commit\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 1,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Digital Services Hub\",\n        \"logo_image\": \"https://digitalservices.com/brand/hub-logo.png\",\n        \"locale_code\": \"zh_CN\"\n      }\n    },\n    {\n      \"id\": \"XP-TECH-MARK-PLAC-TEMP\",\n      \"name\": \"TechGadgets Premium Checkout\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"billing\",\n        \"bank_txn_pending_url\": \"https://techgadgets.com/payment/pending\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"TechGadgets Store\",\n        \"logo_image\": \"https://techgadgets.com/assets/logo.png\",\n        \"locale_code\": \"US\"\n      }\n    },\n    {\n      \"id\": \"XP-H8I3-WX9Z-ABCD-1L4P\",\n      \"name\": \"Vinyl Records & Music Store\",\n      \"temporary\": false,\n      \"flow_config\": {\n        \"landing_page_type\": \"login\",\n        \"user_action\": \"continue\",\n        \"return_uri_http_method\": \"GET\"\n      },\n      \"input_fields\": {\n        \"no_shipping\": 0,\n        \"address_override\": 0\n      },\n      \"presentation\": {\n        \"brand_name\": \"Retro Vinyl Collective\",\n        \"logo_image\": \"https://retrovinyl.music/assets/vintage-logo.png\",\n        \"locale_code\": \"US\"\n      }\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 255,
+        "executed_at": "2026-01-12T15:56:51.797950"
+      }
+    },
+    {
+      "name": "paypal_create_product",
+      "arguments": {
+        "name": "SuperWidget JP",
+        "type": "PHYSICAL",
+        "category": "TOYS_AND_GAMES"
+      },
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "paypal_create_product",
+        "parameters": {
+          "name": "SuperWidget JP",
+          "type": "PHYSICAL",
+          "category": "TOYS_AND_GAMES"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"PROD-27CA0AF957CA4D798\",\n  \"status\": \"ACTIVE\",\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-27CA0AF957CA4D798\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 261,
+        "executed_at": "2026-01-12T15:56:55.619964"
+      }
+    },
+    {
+      "name": "create_web_profile",
+      "arguments": {
+        "name": "Japan Checkout",
+        "flow_config": {
+          "landing_page_type": "billing"
+        },
+        "presentation": {
+          "locale_code": "ja_JP"
+        }
+      },
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "create_web_profile",
+        "parameters": {
+          "name": "Japan Checkout",
+          "flow_config": {
+            "landing_page_type": "billing"
+          },
+          "presentation": {
+            "locale_code": "ja_JP"
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status_code\": 201,\n  \"body\": {\n    \"id\": \"XP-9IFG-XUSV-99N0-QAIY\",\n    \"name\": \"Japan Checkout\",\n    \"temporary\": false,\n    \"flow_config\": {\n      \"landing_page_type\": \"billing\"\n    },\n    \"presentation\": {\n      \"locale_code\": \"ja_JP\"\n    }\n  }\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 264,
+        "executed_at": "2026-01-12T15:57:07.700718"
+      }
+    },
+    {
+      "name": "create_billing_plan",
+      "arguments": {
+        "product_id": "PROD-27CA0AF957CA4D798",
+        "name": "Monthly Toy Box JP",
+        "billing_cycles": [
+          {
+            "sequence": 1,
+            "tenure_type": "TRIAL",
+            "frequency": {
+              "interval_unit": "MONTH",
+              "interval_count": 1
+            },
+            "total_cycles": 1,
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "JPY",
+                "value": "100"
+              }
+            }
+          },
+          {
+            "sequence": 2,
+            "tenure_type": "TRIAL",
+            "frequency": {
+              "interval_unit": "MONTH",
+              "interval_count": 1
+            },
+            "total_cycles": 1,
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "JPY",
+                "value": "500"
+              }
+            }
+          },
+          {
+            "sequence": 3,
+            "tenure_type": "REGULAR",
+            "frequency": {
+              "interval_unit": "MONTH",
+              "interval_count": 1
+            },
+            "total_cycles": 0,
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "JPY",
+                "value": "2000"
+              }
+            }
+          }
+        ],
+        "payment_preferences": {
+          "auto_bill_outstanding": true,
+          "payment_failure_threshold": 3,
+          "setup_fee_failure_action": "CANCEL"
+        }
+      },
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "create_billing_plan",
+        "parameters": {
+          "product_id": "PROD-27CA0AF957CA4D798",
+          "name": "Monthly Toy Box JP",
+          "billing_cycles": [
+            {
+              "sequence": 1,
+              "tenure_type": "TRIAL",
+              "frequency": {
+                "interval_unit": "MONTH",
+                "interval_count": 1
+              },
+              "total_cycles": 1,
+              "pricing_scheme": {
+                "fixed_price": {
+                  "currency_code": "JPY",
+                  "value": "100"
+                }
+              }
+            },
+            {
+              "sequence": 2,
+              "tenure_type": "TRIAL",
+              "frequency": {
+                "interval_unit": "MONTH",
+                "interval_count": 1
+              },
+              "total_cycles": 1,
+              "pricing_scheme": {
+                "fixed_price": {
+                  "currency_code": "JPY",
+                  "value": "500"
+                }
+              }
+            },
+            {
+              "sequence": 3,
+              "tenure_type": "REGULAR",
+              "frequency": {
+                "interval_unit": "MONTH",
+                "interval_count": 1
+              },
+              "total_cycles": 0,
+              "pricing_scheme": {
+                "fixed_price": {
+                  "currency_code": "JPY",
+                  "value": "2000"
+                }
+              }
+            }
+          ],
+          "payment_preferences": {
+            "auto_bill_outstanding": true,
+            "payment_failure_threshold": 3,
+            "setup_fee_failure_action": "CANCEL"
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"P-THNQOI300IWIZJP35J3OJNIQ\",\n  \"product_id\": \"PROD-27CA0AF957CA4D798\",\n  \"name\": \"Monthly Toy Box JP\",\n  \"description\": null,\n  \"status\": \"ACTIVE\",\n  \"billing_cycles\": [\n    {\n      \"frequency\": {\n        \"interval_unit\": \"MONTH\",\n        \"interval_count\": 1\n      },\n      \"tenure_type\": \"TRIAL\",\n      \"sequence\": 1,\n      \"total_cycles\": 1,\n      \"pricing_scheme\": {\n        \"fixed_price\": {\n          \"currency_code\": \"JPY\",\n          \"value\": \"100\"\n        },\n        \"version\": 1,\n        \"create_time\": \"2026-01-12T15:57:30.941454Z\",\n        \"update_time\": \"2026-01-12T15:57:30.941473Z\"\n      }\n    },\n    {\n      \"frequency\": {\n        \"interval_unit\": \"MONTH\",\n        \"interval_count\": 1\n      },\n      \"tenure_type\": \"TRIAL\",\n      \"sequence\": 2,\n      \"total_cycles\": 1,\n      \"pricing_scheme\": {\n        \"fixed_price\": {\n          \"currency_code\": \"JPY\",\n          \"value\": \"500\"\n        },\n        \"version\": 1,\n        \"create_time\": \"2026-01-12T15:57:30.941454Z\",\n        \"update_time\": \"2026-01-12T15:57:30.941473Z\"\n      }\n    },\n    {\n      \"frequency\": {\n        \"interval_unit\": \"MONTH\",\n        \"interval_count\": 1\n      },\n      \"tenure_type\": \"REGULAR\",\n      \"sequence\": 3,\n      \"total_cycles\": 0,\n      \"pricing_scheme\": {\n        \"fixed_price\": {\n          \"currency_code\": \"JPY\",\n          \"value\": \"2000\"\n        },\n        \"version\": 1,\n        \"create_time\": \"2026-01-12T15:57:30.941454Z\",\n        \"update_time\": \"2026-01-12T15:57:30.941473Z\"\n      }\n    }\n  ],\n  \"payment_preferences\": {\n    \"auto_bill_outstanding\": true,\n    \"setup_fee_failure_action\": \"CANCEL\",\n    \"payment_failure_threshold\": 3\n  },\n  \"taxes\": null,\n  \"quantity_supported\": false,\n  \"create_time\": \"2026-01-12T15:57:30.941454Z\",\n  \"update_time\": \"2026-01-12T15:57:30.941473Z\",\n  \"links\": [\n    {\n      \"href\": \"https://api.paypal.com/v1/billing/plans/P-THNQOI300IWIZJP35J3OJNIQ\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.paypal.com/v1/billing/plans/P-THNQOI300IWIZJP35J3OJNIQ\",\n      \"rel\": \"edit\",\n      \"method\": \"PATCH\"\n    },\n    {\n      \"href\": \"https://api.paypal.com/v1/payments/billing-plans/P-THNQOI300IWIZJP35J3OJNIQ/deactivate\",\n      \"rel\": \"deactivate\",\n      \"method\": \"POST\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 360,
+        "executed_at": "2026-01-12T15:57:31.051563"
+      }
+    },
+    {
+      "name": "create_order",
+      "arguments": {
+        "intent": "CAPTURE",
+        "purchase_units": [
+          {
+            "amount": {
+              "currency_code": "JPY",
+              "value": "2000"
+            },
+            "description": "Test Order for JP Launch"
+          }
+        ]
+      },
+      "context": null,
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "create_order",
+        "parameters": {
+          "intent": "CAPTURE",
+          "purchase_units": [
+            {
+              "amount": {
+                "currency_code": "JPY",
+                "value": "2000"
+              },
+              "description": "Test Order for JP Launch"
+            }
+          ]
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"20260112BF8AD5A71CAEB7E4\",\n  \"status\": \"CREATED\",\n  \"intent\": \"CAPTURE\",\n  \"create_time\": \"2026-01-12T15:57:37Z\",\n  \"update_time\": null,\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/20260112BF8AD5A71CAEB7E4\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/20260112BF8AD5A71CAEB7E4\",\n      \"rel\": \"update\",\n      \"method\": \"PATCH\"\n    },\n    {\n      \"href\": \"https://www.sandbox.paypal.com/checkoutnow?token=20260112BF8AD5A71CAEB7E4\",\n      \"rel\": \"approve\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/20260112BF8AD5A71CAEB7E4/capture\",\n      \"rel\": \"capture\",\n      \"method\": \"POST\"\n    }\n  ],\n  \"purchase_units\": [\n    {\n      \"reference_id\": \"default-0\",\n      \"amount\": {\n        \"currency_code\": \"JPY\",\n        \"value\": \"2000\"\n      },\n      \"description\": \"Test Order for JP Launch\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 391,
+        "executed_at": "2026-01-12T15:57:37.466675"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1768224610142_ba6s2rx1g",
+      "context": {
+        "x-user-email": "aaron.hicks@reyesinc.com"
+      },
+      "gym_server_id": "paypal-internal-prod"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "There is an urgent requirement for a 2000 Yen test order with the description 'Test Order for JP Launch'. Executing the order successfully requires a 'Japan Checkout' page web profile ('commit' user action), which needs to be created first.\n\nThe actual item is a 'SuperWidget JP' in the toys/games category with a 'Monthly Toy Box JP' subscription plan to it with this specific pricing: a 1-month trial at 100 JPY, a second 1-month trial at 500 JPY, and then 2000 JPY regular recurring.\n\nMake sure there are no duplicates.",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5"
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true,
+    "enableVerifier": true
+  },
+  "L1": null,
+  "L2": null,
+  "L3": null
+}

@@ -1,0 +1,44 @@
+{
+  "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Ensure a specific calendar exists and schedule a recurring weekly event.",
+      "conversation_mode": true,
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Our product team wants to keep track of customer feedback sessions. Verify if we already have a calendar named \"Customer Feedback\". If it doesn't exist, create it. Then schedule a recurring weekly event, \"Weekly Feedback Review\" every Thursday at 3:00 PM UTC, starting November 20th, 2025, and repeating until December 20th, 2026. Set default popup reminders for 15 minutes prior.",
+          "expected_tools": [
+            "get_calendar_list",
+            "create_calendar",
+            "create_event"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Customer Feedback' AND time_zone = 'UTC'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Weekly Feedback Review' AND start_datetime = '2026-12-17 15:00:00.000000' AND end_datetime = '2026-12-17 16:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC' AND json_extract(recurrence, '$[0]') Like '%WEEKLY%' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Customer Feedback')",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

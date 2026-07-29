@@ -1,0 +1,32 @@
+{
+  "system_prompt": "You are a helpful assistant for Microsoft Teams workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Clone a team while keeping members and visibility, and send notifications.",
+      "conversation_mode": true,
+      "context": {
+          "x-teams-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm Alice Johnson, the project manager of the team \"TechCorp Solutions Team\" team id: \"team_techcorp_001\". Please delete this team as its not gonna be used anymore",
+          "expected_tools": [
+            "delete_team"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams WHERE team_id = 'team_techcorp_001'",
+                "expected_value": 0,
+                "comparison_type": "equals"
+              }
+            }
+      ],
+      "metadata": {
+        "difficulty": "hard"
+      }
+    }
+  ]
+}]}

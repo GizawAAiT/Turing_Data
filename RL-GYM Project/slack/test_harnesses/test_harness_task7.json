@@ -1,0 +1,31 @@
+{
+  "system_prompt": "You are a helpful assistant for Slack workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Start a call, post the link, and add participants.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm Liam (UF16KS77OP34). Please start a call for the design review we'll have today using this joining link 'https://www.google.com/url?1234', and you can use 'Ex1' for external unique id. Post the link in the channel general-008 (CEOA6CCP4GPG) once it's ready for me. Also, add Liam (UF16KS77OP34) and and Amelia (U74977VD5BF4) to the call.",
+          "expected_tools": [
+            "calls_add",
+            "chat_post_message",
+            "calls_participants_add"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_calls WHERE join_url = 'https://www.google.com/url?1234'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

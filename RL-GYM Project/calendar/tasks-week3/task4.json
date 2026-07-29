@@ -1,0 +1,85 @@
+{
+  "scenario_config": {
+    "scenario_name": "customer_schedules",
+    "scenario_description": "Customer schedule consolidation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I want to streamline my customer-related schedules into a dedicated calendar. First, check if I already have a calendar with \"customer\" in its title. If one exists, use it; otherwise, create a new calendar titled \"Customer Schedules\". Assign this calendar a unique color not currently used by my other calendars for easy distinction, and ensure it shares the same timezone as my existing calendars. After the calendar is set up, review all my existing schedules and move any customer-related ones to this calendar. Finally, mark each moved event with a shared extended property \"scheduleType\": \"customer\" to categorize them clearly.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Customer Cal Created",
+      "description": "Verify customer calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Customer Schedules' AND user_id = 'abigail_scott' AND color_id NOT IN (9,10) AND time_zone = 'America/Toronto'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Customer Event Moved",
+      "description": "Verify customer event move",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'abigail_scott-evt-1027-1-default' AND user_id = 'abigail_scott' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Customer Schedules')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Customer Ext Prop",
+      "description": "Verify shared extended property",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'abigail_scott-evt-1027-1-default' AND scope = 'shared' AND json_extract(properties, '$.scheduleType') = 'customer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create or reuse customer calendar, move customer events, and tag them.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

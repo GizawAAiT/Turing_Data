@@ -1,0 +1,44 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation agent with full administrative permissions to manage users, teams, channels, roles, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow. When retrieving webinars created by the user, always use get_webinars_by_user_role to avoid permission issues.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Shift a webinar by 30 minutes and publish the updated session.",
+      "conversation_mode": true,
+      "context": {
+        "x-teams-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Please shift the webinar titled \"The Impact of Tech on Our Lives\" forward by 30 minutes to better align with internal scheduling. Publish the updated session so attendees receive the revised details.",
+          "expected_tools": [
+            "get_webinars_by_user_role",
+            "update_virtual_event_webinar",
+            "publish_virtual_event_webinar"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_webinars WHERE display_name = 'The Impact of Tech on Our Lives' AND start_date_time = '2025-11-10 10:30:00.000000' AND end_date_time = '2025-11-10 17:30:00.000000' AND start_time_zone = 'Pacific Standard Time' AND end_time_zone = 'Pacific Standard Time'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM virtual_event_webinars WHERE display_name = 'The Impact of Tech on Our Lives' AND status = 'published'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

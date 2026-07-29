@@ -1,0 +1,92 @@
+{
+  "system_prompt": "You are a helpful assistant that can create and update listings for a seller.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Gaming keyboard listing - create then update workflow",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "I just got a new shipment of gaming keyboards from my supplier and need to create a listing. Please create a listing for seller SELLER001 with SKU 'GAMING-KB-RGB01', title 'ProGamer RGB Mechanical Keyboard', price $129.99, and make it active in the US marketplace. This is a hot product for the upcoming gaming season.",
+          "expected_tools": [
+            "create_or_update_listing"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) as count FROM listings_items WHERE seller_id = 'SELLER001' AND sku = 'GAMING-KB-RGB01' AND price = 129.99 AND status = 'ACTIVE' AND title = 'ProGamer RGB Mechanical Keyboard'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "name": "S2",
+      "description": "Gaming keyboard listing - create then update workflow",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "Now I need to update this keyboard price to $119.99 (we're running a launch promotion) and change the title to 'ProGamer RGB Mechanical Keyboard - Limited Time Offer'. Also make sure it's available in both US and CA marketplaces.",
+          "expected_tools": [
+            "update_listing_partial"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) as count FROM listings_items WHERE seller_id = 'SELLER001' AND sku = 'GAMING-KB-RGB01' AND price = 119.99 AND status = 'ACTIVE' AND title LIKE '%Limited Time Offer%'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) as count FROM listings_items WHERE seller_id = 'SELLER001' AND sku = 'GAMING-KB-RGB01' AND price = 119.99 AND status = 'ACTIVE' AND title LIKE '%Limited Time Offer%'",
+                "expected_value": 2,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium",
+        "description": "This uses multiple verifiers to check the database state. Only passes when all verifiers pass."
+      }
+    },
+    {
+      "name": "S3",
+      "description": "Laptop inventory listing with tool restrictions",
+      "conversation_mode": false,
+      "prompts": [
+        {
+          "prompt_text": "I need to list my existing TechPro X15 Laptop inventory. Please create a listing for seller SELLER001 with SKU 'LAPTOP-XP15', title 'TechPro X15 Laptop', price $899.99, quantity 125, and make it active for sale. This matches my current inventory levels.",
+          "expected_tools": [
+            "create_or_update_listing",
+            "update_listing_partial"
+          ],
+          "restricted_tools": [
+            "update_listing_partial"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) as count FROM listings_items WHERE seller_id = 'SELLER001' AND sku = 'LAPTOP-XP15' AND price = 899.99 AND status = 'ACTIVE' AND title LIKE '%TechPro X15%'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

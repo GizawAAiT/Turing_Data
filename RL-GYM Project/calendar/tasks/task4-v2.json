@@ -1,0 +1,62 @@
+{
+  "scenario_config": {
+    "scenario_name": "relocate_events",
+    "scenario_description": "Event Relocation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "We've just received confirmation that the \"MegaCorp Headquarters, 123 Business Ave, New York, NY\" location will be unavailable from November 1 to November 28, 2025. Identify all events scheduled at this location during these dates and relocate them to \"TechCorp Main Campus - Building 1, Conference Room B\". For each relocated event, add a note in the description: \"Relocated due to unavailability at MegaCorp Headquarters.\"",
+    "restricted_tools": [],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Events Relocated",
+      "description": "Check events' new location",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE location = 'TechCorp Main Campus - Building 1, Conference Room B'",
+      "expected_value": "3",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Events Description Updated",
+      "description": "Check event descriptions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE description LIKE '%Relocated due to unavailability at MegaCorp Headquarters%'",
+      "expected_value": "3",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Relocate events from MegaCorp HQ to TechCorp Campus",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

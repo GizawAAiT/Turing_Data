@@ -1,0 +1,30 @@
+{
+  "system_prompt": "You are an assistant that can discover Slack channel IDs and post messages in Slack on a user's behalf.",
+  "scenarios": [
+    {
+      "name": "Post quick update after channel lookup",
+      "description": "Find the channel ID for design-009, then post the provided reminder message in that channel.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "I am Olivia (UUGZOBWYBEIV). I'd like to drop a quick update in our design-009 channel:\n'Reminder: Please upload your mockups by EOD so we can finalize tomorrows review deck.' ",
+          "expected_tools": [
+            "get_channels_list",
+            "chat_post_message"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+              "query": "SELECT COUNT(*) AS count FROM slack_messages WHERE channel = 'CZR7CLIXLMAH' AND text LIKE '%Reminder: Please upload your mockups by EOD so we can finalize tomorrows review deck.%'",
+              "expected_value": 1,
+              "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

@@ -1,0 +1,445 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_payroll_service_total_outage",
+    "scenario_description": "Log a high-priority Payroll Service outage reported by Stephanie Todd, resolve her previous ticket, and notify the regional manager and Stephanie.",
+    "system_prompt": "<p># **ITSM Assistant Policy**</p><p>**Role:** ITSM Assistant (IT Service Management)</p><p>**Mandate:** Ensure the efficient, secure, and controlled delivery of IT services by managing the full lifecycle of Incidents, Service Requests, Changes, Problems, and Configuration Items (CIs) in strict accordance with defined policies and best practices.</p><p>First you must check the user information and operate exclusively based on **confirmed user roles**, **verified record relationships**, and **ITIL/database integrity rules**. You are strictly prohibited from assuming data, executing ambiguous commands, bypassing mandatory approvals, or violating audit and compliance requirements.</p><p>---</p><p>## **1. General Operational Instructions and Constraints**</p><p>* **Policy Violation:** If a user request violates any rule herein, you **must halt the operation** and provide the specific policy reason before pausing.</p><p>* **Atomic Operations:** Perform **one validated operation at a time**, except when using approved batch endpoints. Do not allow a request to proceed if it requires data that is missing or the current record state prevents the action.</p><p>* **Knowledge Scope:** Do not disclose information that is outside the authenticated user's access scope.</p><p>* **User Clarification:** Do not ask for further information. If the request is ambiguous, return the list and state the ambiguity. If a mandatory field is missing, state which field is required.</p><p>* **Mandatory Fields:** Any request to create or update a record must validate all mandatory fields.</p><p>* You do not need to ask for confirmation or permission before taking action.</p><p>* When identifiers such as names or IDs are missing, perform lookups, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.</p><p>* Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. The same is the case of optional or default arguments.</p><p>* Complete each task in a logical, and efficient execution flow.</p><p>---</p><p>## **2. Roles &amp; Responsibilities and Access Scope**</p><p>*(Roles renamed and permissions corrected to align with DB/Tool data: `ITIL Agent` → `Agent`, `End User` → `Reporter`. Permissions for `Agent` and `Manager` corrected.)*</p><p>Access rights are defined by roles and grant granular control across tables.</p><p>| Role (DB ID) | Primary Responsibility | Core Capabilities | Critical Restrictions |</p><p>| :--- | :--- | :--- | :--- |</p><p>| **Administrator** (`admin`) | System Configuration &amp; Integrity | Full CRUD (Create, Read, Update, Delete) access across all tables.&nbsp;|</p><p>| **Manager** (`manager`) | Supervision, Escalation, Approvals | Full CRUD on operational tables (`incident`, `problem`, `change`, `knowledge`); READ access to all the tables. Can **reassign** incidents/requests. Can **approve/reject** Change Requests. Monitors SLAs and escalations. |</p><p>| **Agent** (`agent`) | Frontline Incident/Request fulfillment | **Full CRUD** on **Incidents, Service Requests, Tasks, Work Notes, CMDB, Change, Problem, and Knowledge**. READ access to all the tables. Can update assignment, state, and resolution. | Cannot bypass approvals, or change system administration settings. |</p><p>| **Reporter** (`reporter`) | IT Service Consumption | Can view and update **their own submitted Incidents/Requests**. Can search **Public Knowledge** articles. | Cannot view or modify records opened by other users, CMDB, or internal work notes. |</p><p>---</p><p>## **3. Core Operations: Incident Management**</p><p>### **3.1. Incident Registration**</p><p>* **Creation:** To log any issue/interrupted service, create an **Incident** record(create_incident).</p><p>* **Mandatory Inputs:** `opened_by` (user submitting), `caller_id` (user affected), `short_description`, `impact`, and `urgency`.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>* **Default Status:** All new Incidents are set to `status = new`.</p><p>### **3.2. Incident Assignment**</p><p>* **Constraints:** `assigned_to` must be an **active** user with the `Agent` or `Manager` role and must be a member of the specified `assignment_group`.</p><p>### **3.3. Incident Lifecycle and Closure**</p><p>* **Valid Status Transitions:**</p><p>&nbsp;&nbsp;* `new` → `in_progress` / `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `in_progress` → `on_hold` / `resolved`</p><p>&nbsp;&nbsp;* `on_hold` → `in_progress` (Must log `on_hold_reason` before transition)</p><p>&nbsp;&nbsp;* `resolved` → `closed` / 'in_progress'</p><p>* **Resolution Requirement:** An Incident cannot transition to `resolved` without mandatory fields: `resolution_code`, and `resolution_notes` (free-form text, max 2000 chars).</p><p>* **Closure Policy:** The incidents that are in `resolved` status will transition to `closed` after 72 hours.</p><p>---</p><p>## **4. Core Operations: Change and Problem Management**</p><p>### **4.1. Change Management**</p><p>* **Creation:** All changes must originate from a **Change Request** record.</p><p>* **Default Status:** All new Changes are set to `status = new`.</p><p>* **Change Types (Enumeration):** `standard` (pre-approved, low risk), `normal` (requires planning/approval), `emergency` (requires immediate CAB approval override).</p><p>### **4.2. Problem Management**</p><p>* **Trigger:** A Problem must be created (`create_problem`) when a recurring incident pattern or a major incident is identified.</p><p>* **Linking:** The Problem record **must** link all affected Incidents via the `incident_to_problem` related list.</p><p>* **Default Status:** All new Problems are set to `status = new`.</p><p>* **Workaround:** If workaround/temporary solution found, update workaround field and set status=`fix_in_progress`. The `workaround_notes` **must** be published to the linked Incidents and relevant Knowledge Articles.</p><p>* **Final Status:** A Problem transitions to `closed` only after the permanent fix has been successfully implemented via a linked `normal` or `emergency` Change Request.</p><p>* **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`, `planning`) is determined automatically by the system based on a below pre-defined matrix of **Impact x Urgency**.</p><p>&nbsp;&nbsp;| Impact | Urgency | Priority |</p><p>&nbsp;&nbsp;| --- | --- | --- |</p><p>&nbsp;&nbsp;| low | low | planning |</p><p>&nbsp;&nbsp;| low | medium | low |</p><p>&nbsp;&nbsp;| low | high | moderate |</p><p>&nbsp;&nbsp;| medium | low | low |</p><p>&nbsp;&nbsp;| medium | medium | moderate |</p><p>&nbsp;&nbsp;| medium | high | high |</p><p>&nbsp;&nbsp;| high | low | moderate |</p><p>&nbsp;&nbsp;| high | medium | high |</p><p>&nbsp;&nbsp;| high | high | critical |</p><p>---</p><p>## **5. Configuration and Service Management (CMDB)**</p><p>### **5.1. Configuration Item (CI) Integrity**</p><p>* **Table:** All IT assets must be recorded in the `configuration_item` table.</p><p>* **CI Status:** Only CIs with `status = in_use` or `status = maintenance` can be linked to active Incidents. Do not link CIs in `status = retired` or `status = disposed`.</p><p>* **CI Owner:** All CIs must have a recorded `owner_id`.</p><p>---</p><p>## **6. Service Level Management (SLA)**</p><p>* **SLA Application:** SLAs are automatically aligned based on `priority` linked to the incident.</p><p>* **Metric:** Metrics tracked are limited to `target_mins`.</p><p>* **SLA Pause:** The SLA timer **must** be paused (`stage = paused`) when the Incident is in `stage = on_hold` and the `on_hold_reason` is one of the following enumerations: `Awaiting Change`, `Awaiting Caller`, or `Awaiting Problem`.</p><p>* **Breach:** If the SLA exceeds its duration (`stage = breached`), the `escalation` flag on the Incident **must** be set to true, and an automatic notification sent to the `Manager`.</p><p>---</p><p>## **7. Knowledge Management**</p><p>* **Article Status:** Only articles in `knowledge.state = published` are searchable by the `Reporter` role.</p><p>* **Search Policy:** When an Incident is created, a search for relevant knowledge must be performed, and matching articles linked as `used_as = suggested`.</p><p>* **Use Tracking:** All knowledge links must track `used_as` type: `suggested`, `applied`, or `resolution`.</p><p>---</p><p>## **8. Validation, Error Handling, and Logging**</p><p>### **8.1. Data Integrity Checks**</p><p>* **User Status:** Ensure any user being assigned to (`assigned_to`) or updated is `users.active = true`.</p><p>* **Referential Integrity:** Before closing any record, verify that all mandatory dependencies are satisfied.</p><p>* **Time Tracking:** All work logs must include the timestamp (`created_on`) and the `user_id` performing the action.</p><p>### **8.2. Error Handling**</p><p>* **403 Forbidden:** Permission denied (user role lacks authority for the operation).</p><p>* **409 Conflict:** Record locking or state conflict.</p><p>* **Rate Limiting:** If exceeded, pause and retry using **Exponential Backoff**.</p><p>---</p><p>## **9. Predefined Lists (Enumerations)**</p><p>| Table.Field | Allowed Values |</p><p>| :--- | :--- |</p><p>| **users.role** | `admin`, `manager`, `agent`, `reporter` |</p><p>| **incident.priority** | `critical`, `high`, `moderate`, `low`, `planning` |</p><p>| **incident.impact** | `high`, `medium`, `low` |</p><p>| **incident.urgency** | `high`, `medium`, `low` |</p><p>| **incident.status** | `new`, `in_progress`, `on_hold`, `resolved`, `closed` |</p><p>| **incident.on_hold_reason** | `Awaiting Change`, `Awaiting Caller`, `Awaiting Problem` |</p><p>| **incident.resolution_code** | `fixed`, `workaround`, `not_reproducible`, `closed_by_caller` |</p><p>| **change_request.type** | `standard`, `normal`, `emergency` |</p><p>| **change_request.status** | `new`, `assess`, `authorize`, `scheduled`, `implement`, `review`, `closed`, `canceled` |</p><p>| **configuration_item.status** | `in_use`, `in_stock`, `maintenance`, `retired`, `disposed` |</p><p>| **kb_knowledge.state** | `draft`, `review`, `published`, `retired` |</p><p>| **incident_sla.stage** | `in_progress`, `paused`, `completed`, `cancelled`, `breached` |</p>",
+    "prompt": "Stephanie Todd just reported a total outage of the 'Payroll Service'. create a new incident with high impact, and urgency with the description 'Payroll Service Total Outage' and assign it to her. She also reported that she has completed her previous assigned ticket. Make sure that this also is updated into the system. Also send a notification to the regional manager saying that: 'Urgent: Payroll Service Outage reported by Stephanie' Also send notification to Stephanie that 'New outage ticket created and your previous ticket has been successfully resolved'",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user",
+      "get_user_using_name",
+      "find_service_offerings",
+      "list_users",
+      "get_incidents_assigned_to",
+      "create_incident",
+      "update_incident",
+      "send_notification",
+      "send_notification"
+    ],
+    "expected_tools": [
+      "get_user",
+      "get_user_using_name",
+      "find_service_offerings",
+      "list_users",
+      "get_incidents_assigned_to",
+      "create_incident",
+      "update_incident",
+      "send_notification",
+      "send_notification"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Payroll Outage Incident Created",
+      "description": "Verify a new high-impact, high-urgency Payroll Service outage incident is created and assigned to Stephanie Todd.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE caller_id = 'USER_006' AND description = 'Payroll Service Total Outage' AND service_offering = 'SVCOFF_002' AND impact = 'high' AND urgency = 'high' AND priority = 'critical' AND assigned_to = 'USER_006' AND status = 'new' AND category = 'software'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Previous Ticket Resolved",
+      "description": "Verify Stephanie's previously assigned incident INC_095 is marked resolved with a resolution note.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_095' AND status = 'resolved' AND COALESCE(resolution_notes, '') <> ''",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Regional Manager Notified",
+      "description": "Verify the regional manager received a notification about the Payroll Service outage.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE incident_id = (SELECT incident_id FROM incident WHERE description = 'Payroll Service Total Outage' LIMIT 1) AND email = 'robin.monroe83@servicenow.com' AND message = 'Urgent: Payroll Service Outage reported by Stephanie'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Stephanie Notified Of Actions",
+      "description": "Verify Stephanie Todd received confirmation of the new outage ticket and resolution of her previous ticket.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE incident_id = (SELECT incident_id FROM incident WHERE description = 'Payroll Service Total Outage' LIMIT 1) AND email = 'stephanie.todd@servicenow.com' AND message like '%New outage ticket crea%' AND message like '%ted and your previous ticket has been successfully resolved%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_039"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_039"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_039\",\n  \"user_name\": \"karen.watkins\",\n  \"first_name\": \"Karen\",\n  \"last_name\": \"Watkins\",\n  \"email\": \"karen.watkins@servicenow.com\",\n  \"phone\": \"+441613971941\",\n  \"role\": \"admin\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:45:46\",\n  \"updated_on\": \"2026-02-10T13:31:36\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 736,
+      "executed_at": "2025-12-22T15:36:19.296755"
+    }
+  },
+  {
+    "name": "get_user_using_name",
+    "arguments": {
+      "first_name": "Stephanie",
+      "last_name": "Todd"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user_using_name",
+      "parameters": {
+        "first_name": "Stephanie",
+        "last_name": "Todd"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_006\",\n  \"user_name\": \"stephanie.todd\",\n  \"first_name\": \"Stephanie\",\n  \"last_name\": \"Todd\",\n  \"email\": \"stephanie.todd@servicenow.com\",\n  \"phone\": \"+12068306386\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNiIsImlzcyI6Iml0c20ifQ.Lm0_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_789\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2025-08-27T15:37:13\",\n  \"updated_on\": \"2025-09-12T18:15:17\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 178,
+      "executed_at": "2025-12-22T15:36:52.470927"
+    }
+  },
+  {
+    "name": "find_service_offerings",
+    "arguments": {
+      "name": "Payroll"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_service_offerings",
+      "parameters": {
+        "name": "Payroll"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"service_offerings\": [\n    {\n      \"name\": \"Global Payroll - Standard\",\n      \"owned_by\": \"USER_004\",\n      \"used_for\": \"production\",\n      \"status\": \"operational\",\n      \"service_classification\": \"business\",\n      \"business_criticality\": \"critical\",\n      \"short_description\": \"Monthly processing\",\n      \"parent\": \"SVC_002\",\n      \"service_offering_id\": \"SVCOFF_002\",\n      \"created_on\": \"2023-01-01T00:00:00\",\n      \"updated_on\": \"2023-01-01T00:00:00\"\n    },\n    {\n      \"name\": \"Payroll QA - Calc Engine\",\n      \"owned_by\": \"USER_004\",\n      \"used_for\": \"QA\",\n      \"status\": \"ready\",\n      \"service_classification\": \"business\",\n      \"business_criticality\": \"not-critical\",\n      \"short_description\": \"Tax Calculation Test\",\n      \"parent\": \"SVC_003\",\n      \"service_offering_id\": \"SVCOFF_006\",\n      \"created_on\": \"2023-01-01T00:00:00\",\n      \"updated_on\": \"2023-01-01T00:00:00\"\n    },\n    {\n      \"name\": \"Payroll - Ad Hoc\",\n      \"owned_by\": \"USER_004\",\n      \"used_for\": \"production\",\n      \"status\": \"ready\",\n      \"service_classification\": \"business\",\n      \"business_criticality\": \"critical\",\n      \"short_description\": \"Off-cycle run\",\n      \"parent\": \"SVC_002\",\n      \"service_offering_id\": \"SVCOFF_019\",\n      \"created_on\": \"2023-01-01T00:00:00\",\n      \"updated_on\": \"2023-01-01T00:00:00\"\n    }\n  ],\n  \"total_count\": 3\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 182,
+      "executed_at": "2025-12-22T15:37:22.951793"
+    }
+  },
+  {
+    "name": "list_users",
+    "arguments": {
+      "role": "manager",
+      "location_id": "LOC_001"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_users",
+      "parameters": {
+        "role": "manager",
+        "location_id": "LOC_001"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"users\": [\n    {\n      \"user_id\": \"USER_072\",\n      \"user_name\": \"david.johnston\",\n      \"first_name\": \"David\",\n      \"last_name\": \"Johnston\",\n      \"email\": \"david.johnston82@servicenow.com\",\n      \"phone\": \"+13054211531\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA3MiIsImlzcyI6Iml0c20ifQ.Op2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_pqr\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_004\",\n      \"created_on\": \"2025-08-27T15:35:15\",\n      \"updated_on\": \"2026-02-19T09:55:27\"\n    },\n    {\n      \"user_id\": \"USER_004\",\n      \"user_name\": \"joanne.simpson\",\n      \"first_name\": \"Joanne\",\n      \"last_name\": \"Simpson\",\n      \"email\": \"joanne.simpson@servicenow.com\",\n      \"phone\": \"+916014562413\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_004\",\n      \"created_on\": \"2025-08-27T15:35:46\",\n      \"updated_on\": \"2026-02-01T00:17:24\"\n    },\n    {\n      \"user_id\": \"USER_037\",\n      \"user_name\": \"randy.martinez\",\n      \"first_name\": \"Randy\",\n      \"last_name\": \"Martinez\",\n      \"email\": \"randy.martinez94@servicenow.com\",\n      \"phone\": \"+916831462491\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzNyIsImlzcyI6Iml0c20ifQ.Wx2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_004\",\n      \"created_on\": \"2025-08-27T15:35:56\",\n      \"updated_on\": \"2026-04-02T16:58:39\"\n    },\n    {\n      \"user_id\": \"USER_096\",\n      \"user_name\": \"kurt.fritz\",\n      \"first_name\": \"Kurt\",\n      \"last_name\": \"Fritz\",\n      \"email\": \"kurt.fritz@servicenow.com\",\n      \"phone\": \"+441615027834\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA5NiIsImlzcyI6Iml0c20ifQ.Kl0_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_pqr\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_002\",\n      \"created_on\": \"2025-08-27T15:40:48\",\n      \"updated_on\": \"2026-04-14T04:16:29\"\n    },\n    {\n      \"user_id\": \"USER_075\",\n      \"user_name\": \"david.sanchez\",\n      \"first_name\": \"David\",\n      \"last_name\": \"Sanchez\",\n      \"email\": \"david.sanchez@servicenow.com\",\n      \"phone\": \"+918574215661\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA3NSIsImlzcyI6Iml0c20ifQ.Uv8_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_005\",\n      \"created_on\": \"2025-08-27T15:41:29\",\n      \"updated_on\": \"2026-01-22T20:30:48\"\n    },\n    {\n      \"user_id\": \"USER_049\",\n      \"user_name\": \"cheryl.osborne\",\n      \"first_name\": \"Cheryl\",\n      \"last_name\": \"Osborne\",\n      \"email\": \"cheryl.osborne@servicenow.com\",\n      \"phone\": \"+44207722647\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA0OSIsImlzcyI6Iml0c20ifQ.Uv6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_stu\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_003\",\n      \"created_on\": \"2025-08-27T15:42:22\",\n      \"updated_on\": \"2026-03-06T22:25:17\"\n    },\n    {\n      \"user_id\": \"USER_068\",\n      \"user_name\": \"leah.lewis\",\n      \"first_name\": \"Leah\",\n      \"last_name\": \"Lewis\",\n      \"email\": \"leah.lewis81@servicenow.com\",\n      \"phone\": \"+12026373575\",\n      \"role\": \"manager\",\n      \"active\": false,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA2OCIsImlzcyI6Iml0c20ifQ.Gh4_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_def\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_003\",\n      \"created_on\": \"2025-08-27T15:44:23\",\n      \"updated_on\": \"2025-11-17T06:03:33\"\n    },\n    {\n      \"user_id\": \"USER_059\",\n      \"user_name\": \"gregory.richards\",\n      \"first_name\": \"Gregory\",\n      \"last_name\": \"Richards\",\n      \"email\": \"gregory.richards36@servicenow.com\",\n      \"phone\": \"+12068332563\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzA1OSIsImlzcyI6Iml0c20ifQ.Op6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_mno\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_003\",\n      \"created_on\": \"2025-08-27T15:46:59\",\n      \"updated_on\": \"2026-05-25T11:15:37\"\n    },\n    {\n      \"user_id\": \"USER_031\",\n      \"user_name\": \"robin.monroe\",\n      \"first_name\": \"Robin\",\n      \"last_name\": \"Monroe\",\n      \"email\": \"robin.monroe83@servicenow.com\",\n      \"phone\": \"+441135284684\",\n      \"role\": \"manager\",\n      \"active\": true,\n      \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzMSIsImlzcyI6Iml0c20ifQ.Kl0_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_abc\",\n      \"org_id\": \"ORG_001\",\n      \"location_id\": \"LOC_001\",\n      \"created_on\": \"2025-08-27T15:49:26\",\n      \"updated_on\": \"2026-02-12T15:07:07\"\n    }\n  ],\n  \"total_count\": 9\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 219,
+      "executed_at": "2025-12-22T15:37:52.512375"
+    }
+  },
+  {
+    "name": "get_incidents_assigned_to",
+    "arguments": {
+      "assigned_to": "USER_006"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_incidents_assigned_to",
+      "parameters": {
+        "assigned_to": "USER_006"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"incident_id\": \"INC_095\",\n    \"number\": \"INC-000095\",\n    \"caller_id\": \"USER_020\",\n    \"service\": \"SVC_046\",\n    \"service_offering\": \"SVCOFF_055\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_006\",\n    \"assignment_group\": \"GROUP_002\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"chat\",\n    \"contact_type\": \"chat\",\n    \"status\": \"new\",\n    \"category\": \"software\",\n    \"short_description\": \"Teams Lag\",\n    \"description\": \"Lag.\",\n    \"worknotes\": null,\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T11:45:00\",\n    \"updated_at\": \"2025-12-03T11:45:00\",\n    \"org_id\": \"ORG_011\"\n  }\n]",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 221,
+      "executed_at": "2025-12-22T15:38:38.561610"
+    }
+  },
+  {
+    "name": "create_incident",
+    "arguments": {
+      "caller_id": "USER_006",
+      "short_description": "Payroll Service Total Outage",
+      "description": "Payroll Service Total Outage",
+      "service_offering": "SVCOFF_002",
+      "impact": "high",
+      "urgency": "high",
+      "priority": "critical",
+      "assigned_to": "USER_006",
+      "status": "new",
+      "category": "software"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "create_incident",
+      "parameters": {
+        "caller_id": "USER_006",
+        "short_description": "Payroll Service Total Outage",
+        "description": "Payroll Service Total Outage",
+        "service_offering": "SVCOFF_002",
+        "impact": "high",
+        "urgency": "high",
+        "priority": "critical",
+        "assigned_to": "USER_006",
+        "status": "new",
+        "category": "software"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_101\",\n  \"number\": \"INC-000101\",\n  \"service\": null,\n  \"service_offering\": \"SVCOFF_002\",\n  \"configuration_item\": null,\n  \"caller_id\": \"USER_006\",\n  \"channel\": null,\n  \"status\": \"new\",\n  \"category\": \"software\",\n  \"short_description\": \"Payroll Service Total Outage\",\n  \"description\": \"Payroll Service Total Outage\",\n  \"impact\": \"high\",\n  \"urgency\": \"high\",\n  \"priority\": \"critical\",\n  \"assigned_to\": \"USER_006\",\n  \"assignment_group\": null,\n  \"worknotes\": null,\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-22T15:39:37.761199\",\n  \"updated_at\": \"2025-12-22T15:39:37.761199\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 225,
+      "executed_at": "2025-12-22T15:39:37.825651"
+    }
+  },
+  {
+    "name": "update_incident",
+    "arguments": {
+      "incident_id": "INC_095",
+      "status": "resolved",
+      "resolution_notes": "Ticket completed as reported by user"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_incident",
+      "parameters": {
+        "incident_id": "INC_095",
+        "status": "resolved",
+        "resolution_notes": "Ticket completed as reported by user"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_095\",\n  \"number\": \"INC-000095\",\n  \"service\": \"SVC_046\",\n  \"service_offering\": \"SVCOFF_055\",\n  \"configuration_item\": null,\n  \"caller_id\": \"USER_020\",\n  \"channel\": \"chat\",\n  \"status\": \"resolved\",\n  \"category\": \"software\",\n  \"short_description\": \"Teams Lag\",\n  \"description\": \"Lag.\",\n  \"impact\": \"medium\",\n  \"urgency\": \"medium\",\n  \"priority\": \"moderate\",\n  \"assigned_to\": \"USER_006\",\n  \"assignment_group\": \"GROUP_002\",\n  \"worknotes\": null,\n  \"resolution_notes\": \"Ticket completed as reported by user\",\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": null,\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-03T11:45:00\",\n  \"updated_at\": \"2025-12-22T15:40:09.778263\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 256,
+      "executed_at": "2025-12-22T15:40:09.849030"
+    }
+  },
+  {
+    "name": "send_notification",
+    "arguments": {
+      "incident_id": "INC_101",
+      "email": "robin.monroe83@servicenow.com",
+      "type": "alert",
+      "subject": "Urgent: Payroll Service Outage",
+      "message": "Urgent: Payroll Service Outage reported by Stephanie",
+      "status": "sent"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "send_notification",
+      "parameters": {
+        "incident_id": "INC_101",
+        "email": "robin.monroe83@servicenow.com",
+        "type": "alert",
+        "subject": "Urgent: Payroll Service Outage",
+        "message": "Urgent: Payroll Service Outage reported by Stephanie",
+        "status": "sent"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_101\",\n  \"email\": \"robin.monroe83@servicenow.com\",\n  \"type\": \"alert\",\n  \"status\": \"sent\",\n  \"subject\": \"Urgent: Payroll Service Outage\",\n  \"message\": \"Urgent: Payroll Service Outage reported by Stephanie\",\n  \"notification_id\": \"NOTIF_031\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-22T15:41:11.629621\",\n  \"updated_on\": \"2025-12-22T15:41:11.629621\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 223,
+      "executed_at": "2025-12-22T15:41:11.698880"
+    }
+  },
+  {
+    "name": "send_notification",
+    "arguments": {
+      "incident_id": "INC_101",
+      "email": "stephanie.todd@servicenow.com",
+      "type": "update",
+      "subject": "Ticket Update",
+      "message": "New outage ticket created and your previous ticket has been successfully resolved",
+      "status": "sent"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "send_notification",
+      "parameters": {
+        "incident_id": "INC_101",
+        "email": "stephanie.todd@servicenow.com",
+        "type": "update",
+        "subject": "Ticket Update",
+        "message": "New outage ticket created and your previous ticket has been successfully resolved",
+        "status": "sent"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_101\",\n  \"email\": \"stephanie.todd@servicenow.com\",\n  \"type\": \"update\",\n  \"status\": \"sent\",\n  \"subject\": \"Ticket Update\",\n  \"message\": \"New outage ticket created and your previous ticket has been successfully resolved\",\n  \"notification_id\": \"NOTIF_032\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-22T15:41:28.332181\",\n  \"updated_on\": \"2025-12-22T15:41:28.332181\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 214,
+      "executed_at": "2025-12-22T15:41:28.385507"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1766127900603_ou80oi04d",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      }
+    }
+  ],
+  "priority": "high",
+  "estimated_hours": 1,
+  "task_descriptions": "Create a high-priority Payroll Service outage incident for Stephanie Todd, resolve her prior ticket, and notify the regional manager and Stephanie.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+  "L1":"Incident Management",
+  "L2":"Incidents (Creation + SLA)",
+  "L3":"Incident Intake & SLA Management"
+}

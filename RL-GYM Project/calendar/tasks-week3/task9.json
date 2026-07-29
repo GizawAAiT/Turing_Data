@@ -1,0 +1,153 @@
+{
+  "scenario_config": {
+    "scenario_name": "deep_dives_nov25",
+    "scenario_description": "Create November deep-dive sessions",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I'm planning a technical workshop series. Create a calendar named “Technical Deep Dives 2025 Nov” using the same timezone as my profile. Between November 7 and November 12, 2025 (inclusive), check my availability and, on each day with no other events, create a 2-hour session at 2:00 PM on this calendar in the calendar's timezone. Name each created session “Deep Dive, Technical Workshop Day #N”, where N starts at 1 and increases in chronological order for the days that receive an event.\nEach session should include a Google Meet link, be set to public visibility, and have an email notification to alex.johnson@acme.com 20 minutes before the start time.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user_by_email",
+      "create_calendar",
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event"
+    ],
+    "expected_tools": [
+      "get_user_by_email",
+      "create_calendar",
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "create_event",
+      "create_event",
+      "create_event",
+      "create_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Created",
+      "description": "Verify deep-dive calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov' AND time_zone = 'Australia/Sydney'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day1 Event",
+      "description": "Verify Nov 7 session",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #1' AND user_id = 'alex_johnson' AND start_datetime = '2025-11-07 14:00:00.000000' AND end_datetime = '2025-11-07 16:00:00.000000' AND start_timezone = 'Australia/Sydney' AND end_timezone = 'Australia/Sydney' AND visibility = 'public'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day2 Event",
+      "description": "Verify Nov 9 session",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #2' AND user_id = 'alex_johnson' AND start_datetime = '2025-11-09 14:00:00.000000' AND end_datetime = '2025-11-09 16:00:00.000000' AND start_timezone = 'Australia/Sydney' AND end_timezone = 'Australia/Sydney' AND visibility = 'public'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day3 Event",
+      "description": "Verify Nov 10 session",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #3' AND user_id = 'alex_johnson' AND start_datetime = '2025-11-10 14:00:00.000000' AND end_datetime = '2025-11-10 16:00:00.000000' AND start_timezone = 'Australia/Sydney' AND end_timezone = 'Australia/Sydney' AND visibility = 'public'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day4 Event",
+      "description": "Verify Nov 12 session",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #4' AND user_id = 'alex_johnson' AND start_datetime = '2025-11-12 14:00:00.000000' AND end_datetime = '2025-11-12 16:00:00.000000' AND start_timezone = 'Australia/Sydney' AND end_timezone = 'Australia/Sydney' AND visibility = 'public'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day1 Reminder",
+      "description": "Verify reminder day #1",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #1') AND method = 'email' AND minutes = 20",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day2 Reminder",
+      "description": "Verify reminder day #2",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #2') AND method = 'email' AND minutes = 20",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day3 Reminder",
+      "description": "Verify reminder day #3",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #3') AND method = 'email' AND minutes = 20",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Day4 Reminder",
+      "description": "Verify reminder day #4",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id IN (SELECT event_id FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Technical Deep Dives 2025 Nov') AND summary = 'Deep Dive, Technical Workshop Day #4') AND method = 'email' AND minutes = 20",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_4efe8fe8014572548b10ea7077205ebd6832a946e2ec9919"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create Technical Deep Dives calendar and schedule November workshop sessions with reminders.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

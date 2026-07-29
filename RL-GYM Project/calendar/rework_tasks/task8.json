@@ -1,0 +1,355 @@
+{
+  "scenario_config": {
+    "scenario_name": "personal_calendar_cleanup",
+    "scenario_description": "Move confirmed events to personal calendar",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I want to organize and clean up my schedule. First, remove all tentative events from my primary calendar. Then, move any confirmed events from my primary calendar to my personal calendar; if a personal calendar does not exist, create one specifically for this cleanup. Also, grant Bob (bob.smith@techcorp.com) reader access to it. Additionally, for each event moved to the personal calendar, add Bob as an attendee.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "create_calendar",
+      "move_event",
+      "clear_calendar",
+      "insert_acl_rule",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "create_calendar",
+      "move_event",
+      "clear_calendar",
+      "insert_acl_rule",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Personal Cal Created",
+      "description": "Verify personal calendar exists",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Confirmed Event Moved",
+      "description": "Verify confirmed event moved to personal",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'alexander_mitchell-evt-1104-2-default' AND user_id = 'alexander_mitchell' AND status = 'confirmed' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Tentative Cleared",
+      "description": "Verify tentative event removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'alexander_mitchell-evt-1127-1-workingLocation'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Primary Emptied",
+      "description": "Verify primary calendar cleared",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id = 'alexander_mitchell-primary'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "2",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob ACL Added",
+      "description": "Verify Bob reader ACL",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%') AND user_id = 'alexander_mitchell' AND role = 'reader' AND scope_id LIKE '%bob%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob Attendee Added",
+      "description": "Verify Bob as attendee on moved event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'alexander_mitchell-evt-1104-2-default' AND user_id = 'bob_developer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_calendar_list",
+    "arguments": {},
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "get_calendar_list",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1764493889049_iuydddoc0\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNS0xMi0wMlQxMDowMDowMS43Mjc5NTE=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alexander_mitchell-primary-2025-12-02T09:59:06\",\n      \"id\": \"alexander_mitchell-primary\",\n      \"summary\": \"Alexander Mitchell\",\n      \"description\": \"Primary calendar for Alexander Mitchell\",\n      \"location\": null,\n      \"timeZone\": \"America/Toronto\",\n      \"summaryOverride\": null,\n      \"colorId\": \"5\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alexander_mitchell-team-2025-12-02T09:59:06\",\n      \"id\": \"alexander_mitchell-team\",\n      \"summary\": \"Team Coordination\",\n      \"description\": \"Team meetings, 1-on-1s, and events\",\n      \"location\": null,\n      \"timeZone\": \"America/Toronto\",\n      \"summaryOverride\": null,\n      \"colorId\": \"6\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 206,
+      "executed_at": "2025-12-02T10:00:01.754834"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "alexander_mitchell-primary"
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "alexander_mitchell-primary"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-alexander_mitchell-primary\",\n  \"summary\": \"Alexander Mitchell\",\n  \"description\": \"Primary calendar for Alexander Mitchell\",\n  \"updated\": \"2025-12-02T10:00:38.288632+00:00\",\n  \"timeZone\": \"America/Toronto\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": [\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1764669546.0\\\"\",\n      \"id\": \"alexander_mitchell-evt-1104-2-default\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=alexander_mitchell-evt-1104-2-default\",\n      \"created\": \"2025-12-02T09:59:06\",\n      \"updated\": \"2025-12-02T09:59:06\",\n      \"summary\": \"[CS-0000036][High] Status Sync\",\n      \"description\": \"Related case CS-0000036 (priority: high). Customer-reported malfunction requires triage.\",\n      \"location\": \"Zoom\",\n      \"colorId\": \"2\",\n      \"creator\": {\n        \"id\": \"alexander_mitchell\",\n        \"email\": \"alexander.mitchell@servicenow.com\",\n        \"displayName\": \"Alexander Mitchell\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"alexander_mitchell\",\n        \"email\": \"alexander.mitchell@servicenow.com\",\n        \"displayName\": \"Alexander Mitchell\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2025-11-04T13:15:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2025-11-04T14:15:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [],\n      \"recurringEventId\": null,\n      \"originalStartTime\": null,\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": null,\n      \"sequence\": 1,\n      \"attendees\": [],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": false,\n      \"guestsCanModify\": true,\n      \"guestsCanSeeOtherGuests\": false,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://cases.example.com/CS-0000036\",\n        \"title\": \"CS-0000036 details\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    },\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1764669546.0\\\"\",\n      \"id\": \"alexander_mitchell-evt-1127-1-workingLocation\",\n      \"status\": \"tentative\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=alexander_mitchell-evt-1127-1-workingLocation\",\n      \"created\": \"2025-12-02T09:59:06\",\n      \"updated\": \"2025-12-02T09:59:06\",\n      \"summary\": \"[CS-0000002][Low] Office Day\",\n      \"description\": \"Related case CS-0000002 (priority: low). Intermittent performance degradation noticed.\",\n      \"location\": \"Office Desk - West Wing\",\n      \"colorId\": \"4\",\n      \"creator\": {\n        \"id\": \"alexander_mitchell\",\n        \"email\": \"alexander.mitchell@servicenow.com\",\n        \"displayName\": \"Alexander Mitchell\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"alexander_mitchell\",\n        \"email\": \"alexander.mitchell@servicenow.com\",\n        \"displayName\": \"Alexander Mitchell\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2025-11-27T13:15:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2025-11-27T14:15:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [],\n      \"recurringEventId\": null,\n      \"originalStartTime\": null,\n      \"transparency\": null,\n      \"visibility\": \"private\",\n      \"iCalUID\": null,\n      \"sequence\": 1,\n      \"attendees\": [],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": true,\n      \"guestsCanModify\": true,\n      \"guestsCanSeeOtherGuests\": false,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://cases.example.com/CS-0000002\",\n        \"title\": \"CS-0000002 details\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"workingLocation\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 552,
+      "executed_at": "2025-12-02T10:00:38.312688"
+    }
+  },
+  {
+    "name": "create_calendar",
+    "arguments": {
+      "summary": "Personal",
+      "description": "Personal calendar for confirmed events",
+      "timeZone": "America/Toronto"
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_calendar",
+      "parameters": {
+        "summary": "Personal",
+        "description": "Personal calendar for confirmed events",
+        "timeZone": "America/Toronto"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-3b34e334-952f-4f8f-ae1d-439b579e23f5-2025-12-02T10:01:10.248750\",\n  \"id\": \"3b34e334-952f-4f8f-ae1d-439b579e23f5\",\n  \"summary\": \"Personal\",\n  \"description\": \"Personal calendar for confirmed events\",\n  \"location\": null,\n  \"timeZone\": \"America/Toronto\",\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": null\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 269,
+      "executed_at": "2025-12-02T10:01:10.376756"
+    }
+  },
+  {
+    "name": "move_event",
+    "arguments": {
+      "calendarId": "alexander_mitchell-primary",
+      "eventId": "alexander_mitchell-evt-1104-2-default",
+      "destination": "3b34e334-952f-4f8f-ae1d-439b579e23f5"
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "move_event",
+      "parameters": {
+        "calendarId": "alexander_mitchell-primary",
+        "eventId": "alexander_mitchell-evt-1104-2-default",
+        "destination": "3b34e334-952f-4f8f-ae1d-439b579e23f5"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764669720.366728\\\"\",\n  \"id\": \"alexander_mitchell-evt-1104-2-default\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=alexander_mitchell-evt-1104-2-default\",\n  \"created\": \"2025-12-02T09:59:06\",\n  \"updated\": \"2025-12-02T10:02:00.366728\",\n  \"summary\": \"[CS-0000036][High] Status Sync\",\n  \"description\": \"Related case CS-0000036 (priority: high). Customer-reported malfunction requires triage.\",\n  \"location\": \"Zoom\",\n  \"colorId\": \"2\",\n  \"creator\": {\n    \"id\": \"alexander_mitchell\",\n    \"email\": \"alexander.mitchell@servicenow.com\",\n    \"displayName\": \"Alexander Mitchell\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"alexander_mitchell\",\n    \"email\": \"alexander.mitchell@servicenow.com\",\n    \"displayName\": \"Alexander Mitchell\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-11-04T13:15:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-11-04T14:15:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": null,\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": null,\n  \"sequence\": 1,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": null,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": true,\n  \"guestsCanSeeOtherGuests\": false,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://cases.example.com/CS-0000036\",\n    \"title\": \"CS-0000036 details\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 337,
+      "executed_at": "2025-12-02T10:02:00.465281"
+    }
+  },
+  {
+    "name": "clear_calendar",
+    "arguments": {
+      "calendarId": "alexander_mitchell-primary"
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "clear_calendar",
+      "parameters": {
+        "calendarId": "alexander_mitchell-primary"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "1"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 305,
+      "executed_at": "2025-12-02T10:02:27.672184"
+    }
+  },
+  {
+    "name": "insert_acl_rule",
+    "arguments": {
+      "calendarId": "3b34e334-952f-4f8f-ae1d-439b579e23f5",
+      "scope": {
+        "type": "user",
+        "value": "bob.smith@techcorp.com"
+      },
+      "role": "reader"
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "insert_acl_rule",
+      "parameters": {
+        "calendarId": "3b34e334-952f-4f8f-ae1d-439b579e23f5",
+        "scope": {
+          "type": "user",
+          "value": "bob.smith@techcorp.com"
+        },
+        "role": "reader"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#aclRule\",\n  \"etag\": \"\\\"fabbe900-76e0-4703-bdb6-2eeebf852cba\\\"\",\n  \"id\": \"9dbf55b1-6a75-4dde-8e29-156a8f30e548\",\n  \"scope\": {\n    \"type\": \"user\",\n    \"value\": \"bob.smith@techcorp.com\"\n  },\n  \"role\": \"reader\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 321,
+      "executed_at": "2025-12-02T10:03:02.600821"
+    }
+  },
+  {
+    "name": "patch_event",
+    "arguments": {
+      "calendarId": "3b34e334-952f-4f8f-ae1d-439b579e23f5",
+      "eventId": "alexander_mitchell-evt-1104-2-default",
+      "attendees": [
+        {
+          "email": "bob.smith@techcorp.com",
+          "displayName": "Bob Smith",
+          "responseStatus": "needsAction",
+          "optional": false
+        }
+      ]
+    },
+    "context": {
+      "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "patch_event",
+      "parameters": {
+        "calendarId": "3b34e334-952f-4f8f-ae1d-439b579e23f5",
+        "eventId": "alexander_mitchell-evt-1104-2-default",
+        "attendees": [
+          {
+            "email": "bob.smith@techcorp.com",
+            "displayName": "Bob Smith",
+            "responseStatus": "needsAction",
+            "optional": false
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764669826.517931\\\"\",\n  \"id\": \"alexander_mitchell-evt-1104-2-default\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=alexander_mitchell-evt-1104-2-default\",\n  \"created\": \"2025-12-02T09:59:06\",\n  \"updated\": \"2025-12-02T10:03:46.517931\",\n  \"summary\": \"[CS-0000036][High] Status Sync\",\n  \"description\": \"Related case CS-0000036 (priority: high). Customer-reported malfunction requires triage.\",\n  \"location\": \"Zoom\",\n  \"colorId\": \"2\",\n  \"creator\": {\n    \"id\": \"alexander_mitchell\",\n    \"email\": \"alexander.mitchell@servicenow.com\",\n    \"displayName\": \"Alexander Mitchell\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"alexander_mitchell\",\n    \"email\": \"alexander.mitchell@servicenow.com\",\n    \"displayName\": \"Alexander Mitchell\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-11-04T13:15:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-11-04T14:15:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": null,\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": null,\n  \"sequence\": 2,\n  \"attendees\": [\n    {\n      \"id\": \"77f694e2-5f92-4f3a-af1d-0bc0f358e308\",\n      \"email\": \"bob.smith@techcorp.com\",\n      \"displayName\": \"Bob Smith\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"needsAction\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": false,\n  \"guestsCanModify\": true,\n  \"guestsCanSeeOtherGuests\": false,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://cases.example.com/CS-0000036\",\n    \"title\": \"CS-0000036 details\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 364,
+      "executed_at": "2025-12-02T10:03:46.615507"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Clean primary calendar, move confirmed events to personal, and grant Bob access.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"Event Management",
+"L2":"Event Lifecycle",
+"L3":"Event Lifecycle"
+}

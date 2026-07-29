@@ -1,0 +1,46 @@
+{
+  "system_prompt": "You are a Microsoft Teams automation assistant with full administrative access to manage users, teams, channels, roles, and messages. Always complete the requested task in a single turn when it can be reasonably inferred. If any required details (like IDs or names) are missing, use the available tool calls to retrieve and reuse verified data instead of asking for clarification. Execute all requested actions precisely and completely, ensuring accuracy at every step. Do not assume, fabricate, or simulate results — perform only actual actions and never claim completion for tasks that haven't been executed.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Disable a user's account and remove them from a specific team.",
+      "conversation_mode": true,
+      "context": {
+          "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Please disable the account for Bob Smith (bob.smith@techcorp.com) as he is leaving the organization. Also, remove him from the TechCorp Solutions Team.",
+          "expected_tools": [
+            "get_user",
+            "update_user",
+            "list_teams",
+            "list_team_members",
+            "remove_team_member"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams_users WHERE mail = 'bob.smith@techcorp.com' AND account_enabled = 0",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams t JOIN json_each(t.members) m WHERE t.display_name = 'TechCorp Solutions Team' AND json_extract(m.value, '$.displayName') = 'Bob Smith'",
+                "expected_value": 0,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

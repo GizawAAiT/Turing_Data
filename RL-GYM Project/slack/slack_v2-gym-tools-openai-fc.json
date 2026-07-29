@@ -1,0 +1,1436 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_info",
+      "description": "Retrieve detailed information about a specific user in the Slack workspace including their profile, status, and workspace permissions. Essential for user lookup, profile management, and understanding individual user capabilities. Use this to get specific user details, check user status, or verify user permissions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "description": "User to get info on (required)"
+          },
+          "include_locale": {
+            "type": "boolean",
+            "description": "Set this to true to receive the locale for this user"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "set_user_profile",
+      "description": "Update a user's profile information including display name, status, title, and other profile fields. Essential for profile management and user customization. Use this to update user profile data, set status messages, or modify user information.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "description": "ID of user to change"
+          },
+          "profile": {
+            "type": "object",
+            "description": "Collection of key:value pairs presented as a URL-encoded JSON hash"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of a single key to set"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to set a single key to"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_channels_list",
+      "description": "Retrieve a comprehensive list of all channels in the Slack workspace using the modern conversations.list API. Includes public channels, private channels, and their metadata. Essential for channel management, workspace navigation, and understanding communication structure. Use this to get channel information, analyze channel usage, or manage channel memberships.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "description": "Cursor for pagination from previous response_metadata"
+          },
+          "exclude_archived": {
+            "type": "boolean",
+            "description": "Exclude archived channels from the list"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "The maximum number of items to return. Recommended ≤200, max 1000"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Team ID to list channels in (required for org-level tokens)"
+          },
+          "types": {
+            "type": "string",
+            "description": "Comma-separated list of channel types: public_channel, private_channel, mpim, im"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_post_message",
+      "description": "Post a message to a specific channel. Sends messages to public/private channels or DMs. Rate limits: 1 msg/sec per channel, several hundred/min per workspace. Required scopes: chat:write, chat:write.public (public channels), chat:write.customize (custom authorship). Either text, blocks, or attachments must be provided.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID (C...), DM ID (D...), Group ID (G...), or User ID (U...) for DMs. Cannot use usernames. Use channel IDs from conversations.list or users.list. (required)",
+            "pattern": "^[CDGU][A-Z0-9]{8,}$|^#[a-z0-9_-]+$",
+            "minLength": 1
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID who is posting the message (e.g., U1234567890) (required)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Main message body or fallback notification text. Supports plain text and mrkdwn formatting. Recommended for accessibility. 4,000 char recommended, 40,000 char hard limit (will be truncated). Either text, blocks, or attachments must be provided",
+            "maxLength": 40000
+          },
+          "blocks": {
+            "type": "array",
+            "description": "Structured blocks for rich message formatting (JSON array). Either text, blocks, or attachments must be provided",
+            "items": {
+              "type": "object"
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "description": "Structured message attachments (JSON array, deprecated in favor of blocks). Either text, blocks, or attachments must be provided",
+            "items": {
+              "type": "object"
+            }
+          },
+          "thread_ts": {
+            "type": "string",
+            "description": "Timestamp of another message's ts value to make this message a reply"
+          },
+          "reply_broadcast": {
+            "type": "boolean",
+            "description": "Used in conjunction with thread_ts to broadcast reply to entire channel"
+          },
+          "unfurl_links": {
+            "type": "boolean",
+            "description": "Pass true to enable unfurling of primarily text-based content"
+          },
+          "unfurl_media": {
+            "type": "boolean",
+            "description": "Pass false to disable unfurling of media content"
+          },
+          "username": {
+            "type": "string",
+            "description": "Set your bot's user name"
+          },
+          "icon_emoji": {
+            "type": "string",
+            "description": "Emoji to use as the icon for this message"
+          },
+          "icon_url": {
+            "type": "string",
+            "description": "URL to an image to use as the icon for this message"
+          },
+          "link_names": {
+            "type": "boolean",
+            "description": "Find and link channel names and usernames"
+          },
+          "parse": {
+            "type": "string",
+            "description": "Change how messages are treated"
+          },
+          "mrkdwn": {
+            "type": "boolean",
+            "description": "Disable Slack markup parsing by setting to false (default: true)"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "JSON object with event_type and event_payload fields for message metadata",
+            "properties": {
+              "event_type": {
+                "type": "string",
+                "description": "Type of event"
+              },
+              "event_payload": {
+                "type": "object",
+                "description": "Event payload data"
+              }
+            }
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "Pass true to post the message as the authed user (legacy, only for classic apps)"
+          }
+        },
+        "required": [
+          "channel",
+          "user_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_delete",
+      "description": "Delete a message from a conversation. Essential for message management, content moderation, and maintaining clean conversation history. Use this to remove inappropriate messages, fix mistakes, or clean up conversation threads. Only messages that the authenticated user can delete in Slack can be deleted.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel containing the message to be deleted (required)"
+          },
+          "ts": {
+            "type": "string",
+            "description": "Timestamp of the message to be deleted (required)"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID who is performing the delete operation (required)"
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "Pass true to delete the message as the authed user with chat:write:user scope"
+          }
+        },
+        "required": [
+          "channel",
+          "ts",
+          "user_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_delete_scheduled_message",
+      "description": "Delete a pending scheduled message from the queue before it is sent. Essential for managing scheduled content, preventing unwanted messages, and maintaining control over automated communications. Use this to cancel scheduled messages, update communication plans, or manage content scheduling.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The channel the scheduled_message is posting to (required)"
+          },
+          "scheduled_message_id": {
+            "type": "string",
+            "description": "scheduled_message_id returned from call to chat.scheduleMessage (required)"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User ID who is performing the delete operation (required)"
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "Pass true to delete the message as the authed user with chat:write:user scope"
+          }
+        },
+        "required": [
+          "channel",
+          "scheduled_message_id",
+          "user_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_get_permalink",
+      "description": "Retrieve a permalink URL for a specific extant message. Handles message threads and all conversation types. Rate limit: Hundreds of requests per minute allowed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The ID of the conversation or channel containing the message",
+            "pattern": "^[CGD][A-Z0-9]{8,}$",
+            "minLength": 1
+          },
+          "message_ts": {
+            "type": "string",
+            "description": "A message's ts value, uniquely identifying it within a channel",
+            "pattern": "^\\d+\\.\\d{6}$",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "channel",
+          "message_ts"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_me_message",
+      "description": "Sends a me message to a channel from the calling user. This creates a message that appears in italics, similar to typing /me in Slack. Required scopes: chat:write",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel to send message to. Can be a public channel, private group or IM channel. Can be an encoded ID, or a name (e.g., #general)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text of the message to send"
+          }
+        },
+        "required": [
+          "channel",
+          "text"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_post_ephemeral",
+      "description": "Send an ephemeral message to a user in a channel. Essential for private notifications, contextual help, and user-specific information delivery. Use this to send private messages visible only to specific users, provide contextual assistance, or deliver personalized notifications without disrupting the conversation flow.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel, private group, or IM channel to send message to (required)"
+          },
+          "user": {
+            "type": "string",
+            "description": "id of the user who will receive the ephemeral message (required)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text of the message to send"
+          },
+          "blocks": {
+            "type": "string",
+            "description": "A JSON-based array of structured blocks, presented as a URL-encoded string"
+          },
+          "attachments": {
+            "type": "string",
+            "description": "A JSON-based array of structured attachments, presented as a URL-encoded string"
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "(Legacy) Pass true to post the message as the authed user"
+          },
+          "icon_emoji": {
+            "type": "string",
+            "description": "Emoji to use as the icon for this message"
+          },
+          "icon_url": {
+            "type": "string",
+            "description": "URL to an image to use as the icon for this message"
+          },
+          "link_names": {
+            "type": "boolean",
+            "description": "Find and link channel names and usernames"
+          },
+          "parse": {
+            "type": "string",
+            "description": "Change how messages are treated. Defaults to none"
+          },
+          "thread_ts": {
+            "type": "string",
+            "description": "Provide another message's ts value to post this message in a thread"
+          },
+          "username": {
+            "type": "string",
+            "description": "Set your bot's user name"
+          }
+        },
+        "required": [
+          "channel",
+          "user"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_schedule_message",
+      "description": "Schedules a message to be sent to a channel. Requires chat:write scope. Can schedule up to 120 days in future. Max 30 messages per 5 minutes to same channel. WARNING: Messages with metadata parameter won't post (known bug). Returns scheduled_message_id for tracking.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel, private group, or DM channel to send message to. Can be an encoded ID, or a name"
+          },
+          "post_at": {
+            "type": "integer",
+            "description": "Unix timestamp representing the future time the message should post to Slack. Max 120 days in future"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text. When blocks/attachments are included, used as fallback text for notifications only"
+          },
+          "blocks": {
+            "type": "string",
+            "description": "A JSON-based array of structured blocks, presented as a URL-encoded string"
+          },
+          "attachments": {
+            "type": "string",
+            "description": "A JSON-based array of structured attachments, presented as a URL-encoded string"
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "Set to true to post the message as the authed user, instead of as a bot. Defaults to false"
+          },
+          "link_names": {
+            "type": "boolean",
+            "description": "Find and link user groups. No longer supports linking individual users"
+          },
+          "metadata": {
+            "type": "string",
+            "description": "JSON object with event_type and event_payload fields. WARNING: Bug - messages won't post if used"
+          },
+          "parse": {
+            "type": "string",
+            "enum": [
+              "none",
+              "full"
+            ],
+            "description": "Change how messages are treated. Defaults to 'none'"
+          },
+          "reply_broadcast": {
+            "type": "boolean",
+            "description": "Used with thread_ts. Whether reply should be visible to everyone in channel. Defaults to false"
+          },
+          "thread_ts": {
+            "type": "string",
+            "description": "Provide another message's ts value to make this message a reply. Avoid using a reply's ts; use its parent"
+          },
+          "unfurl_links": {
+            "type": "boolean",
+            "description": "Pass true to enable unfurling of primarily text-based content"
+          },
+          "unfurl_media": {
+            "type": "boolean",
+            "description": "Pass false to disable unfurling of media content"
+          }
+        },
+        "required": [
+          "channel",
+          "post_at"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_scheduled_messages_list",
+      "description": "Returns a list of pending scheduled messages. Essential for managing scheduled content, reviewing upcoming messages, and maintaining communication schedules. Use this to view pending scheduled messages, manage content calendars, or audit automated communications. All parameters are optional.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The channel of the scheduled messages"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "For pagination purposes, this is the cursor value returned from a previous call"
+          },
+          "latest": {
+            "type": "string",
+            "description": "A Unix timestamp of the latest value in the time range"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 100,
+            "description": "Maximum number of original entries to return (default 100)"
+          },
+          "oldest": {
+            "type": "string",
+            "description": "A Unix timestamp of the oldest value in the time range"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Encoded team id to list channels in, required if org token is used"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "chat_update",
+      "description": "Updates a message. Only messages posted by the authenticated user are able to be updated. Bot users must set as_user=true when updating their own messages. Ephemeral messages cannot be updated. OAuth scope required: chat:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel containing the message to be updated. For direct messages, ensure that this value is a DM ID (starts with D) instead of a User ID",
+            "pattern": "^[CDG][A-Z0-9]{8,}$"
+          },
+          "ts": {
+            "type": "string",
+            "description": "Timestamp of the message to be updated",
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "text": {
+            "type": "string",
+            "description": "New text for the message. Limited to 12,000 characters. Used as fallback text for notifications when blocks or attachments are provided",
+            "maxLength": 12000
+          },
+          "blocks": {
+            "type": "string",
+            "description": "A JSON-based array of structured blocks, presented as a URL-encoded string. If not provided, previous blocks retained only if text not provided"
+          },
+          "attachments": {
+            "type": "string",
+            "description": "A JSON-based array of structured attachments, presented as a URL-encoded string"
+          },
+          "as_user": {
+            "type": "boolean",
+            "description": "Pass true to update the message as the authed user. Bot users must set this to true when updating their own messages"
+          },
+          "file_ids": {
+            "type": "string",
+            "description": "Array of new file IDs that will be sent with this message, presented as a URL-encoded JSON array"
+          },
+          "link_names": {
+            "type": "boolean",
+            "description": "Find and link channel names and usernames. Defaults to none. If not specified, original value overwritten with default 'none'"
+          },
+          "markdown_text": {
+            "type": "string",
+            "description": "Markdown-formatted message text"
+          },
+          "metadata": {
+            "type": "string",
+            "description": "JSON object with event_type and event_payload fields, presented as a URL-encoded string. Include empty object to remove previous metadata"
+          },
+          "parse": {
+            "type": "string",
+            "description": "Change how messages are treated. Defaults to client. Accepts either none, full, or client",
+            "enum": [
+              "none",
+              "full",
+              "client"
+            ]
+          },
+          "reply_broadcast": {
+            "type": "boolean",
+            "description": "Broadcast an existing thread reply to make it visible to everyone in the channel or conversation"
+          }
+        },
+        "required": [
+          "channel",
+          "ts"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "reactions_add",
+      "description": "Adds a reaction (emoji) to a message. Essential for user engagement, feedback collection, and conversation interaction. Required scopes: reactions:write. Use this to add emoji reactions to messages, provide quick feedback, or mark messages with status indicators.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel where the message to add reaction to was posted (required). Example: C1234567890",
+            "pattern": "^[CGD][A-Z0-9]{8,}$",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the message to add reaction to (required). Example: 1234567890.123456",
+            "pattern": "^\\d{10}\\.\\d{6}$",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Reaction (emoji) name to add. For Unicode emoji with skin tone modifiers, use format like 'thumbsup::skin-tone-3' where skin tone is 2-6 (required). Example: thumbsup, white_check_mark, heart",
+            "pattern": "^[a-z0-9_+-]+(::skin-tone-[2-6])?$",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "channel",
+          "timestamp",
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "reactions_get",
+      "description": "Gets reactions for an item (message, file, or file comment). Returns a list of all reactions for a single item. Essential for retrieving reaction data, analyzing engagement, and understanding user feedback. Required scopes: reactions:read. Use this to get reactions on messages, files, or file comments.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel where the message to get reactions for was posted. Required when getting reactions for a message. Example: C1234567890",
+            "pattern": "^[CGD][A-Z0-9]{8,}$",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the message to get reactions for. Required when channel is provided. Example: 1234567890.123456",
+            "pattern": "^\\d{10}\\.\\d{6}$",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string",
+            "description": "File to get reactions for. Example: F1234567890",
+            "pattern": "^F[A-Z0-9]{8,}$",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "file_comment": {
+            "type": "string",
+            "description": "File comment to get reactions for. Example: Fc1234567890",
+            "pattern": "^Fc[A-Z0-9]{8,}$",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "full": {
+            "type": "boolean",
+            "description": "If true always return the complete reaction list. Default: false",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_accept_shared_invite",
+      "description": "Accept an invitation to a Slack Connect channel. Creates and names the Slack Connect channel inside your workspace if it doesn't exist. Essential for cross-workspace collaboration and shared channel management. Requires channel_name and either invite_id or channel_id to be provided.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel_name": {
+            "type": "string",
+            "description": "Name of the channel. If the channel does not exist already in your workspace, this name is the one that the channel will take (required)"
+          },
+          "invite_id": {
+            "type": "string",
+            "description": "ID of the invite to accept. Must provide either invite_id or channel_id"
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "ID of the channel to accept. Must provide either invite_id or channel_id"
+          },
+          "free_trial_accepted": {
+            "type": "boolean",
+            "description": "Whether to use your workspace's free trial for Slack Connect (for workspaces not on paid plan)"
+          },
+          "is_private": {
+            "type": "boolean",
+            "description": "Whether the channel is private"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Team ID (required when using org-level tokens)"
+          }
+        },
+        "required": [
+          "channel_name"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_approve_shared_invite",
+      "description": "Approve a shared channel invite. Essential for shared channel administration and cross-workspace collaboration management. Use this to approve shared channel invitations or manage external collaborations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "invite_id": {
+            "type": "string",
+            "description": "Invite ID (required)"
+          },
+          "target_team": {
+            "type": "string",
+            "description": "Target team"
+          }
+        },
+        "required": [
+          "invite_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_invite",
+      "description": "Invite users to a channel. Essential for channel management and team collaboration. Use this to invite users to channels, expand channel membership, or manage team access.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID (required)"
+          },
+          "users": {
+            "type": "string",
+            "description": "Comma-separated list of user IDs (required)"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Continue inviting valid users while disregarding invalid ones"
+          }
+        },
+        "required": [
+          "channel",
+          "users"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_create",
+      "description": "Create a public or private channel. Essential for workspace organization and team communication setup. Use this to create new channels, organize team discussions, or set up project-specific communication spaces.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Channel name (required)"
+          },
+          "is_private": {
+            "type": "boolean",
+            "description": "Whether the channel is private"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Team ID"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_close",
+      "description": "Close a direct message or multi-person direct message. Essential for conversation management and cleanup. Use this to close DM or MPIM conversations. Only works on direct messages and multi-person direct messages, not regular channels.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel, private group, or DM channel to close (required)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_info",
+      "description": "Retrieve information about a conversation including metadata, member count, and settings. Essential for conversation analysis and channel management. Use this to get detailed information about channels, understand channel settings, or analyze conversation structure.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to get info for (required)"
+          },
+          "include_locale": {
+            "type": "boolean",
+            "description": "Include locale information"
+          },
+          "include_num_members": {
+            "type": "boolean",
+            "description": "Include member count"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_leave",
+      "description": "Leave a conversation. Essential for channel management and user control. Use this to leave channels, manage personal channel memberships, or exit conversations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to leave (required)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_members",
+      "description": "Get members of a conversation. Essential for channel analysis and member management. Use this to get channel member lists, analyze channel participation, or manage channel membership.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to get members for (required)"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor for pagination"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Number of members to return (max 1000, recommended <= 200)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_join",
+      "description": "Join a conversation/channel. Essential for channel participation and team collaboration. Use this to join channels, participate in conversations, or access team discussions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to join (required)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_replies",
+      "description": "Get thread replies for a conversation. Essential for thread analysis and conversation tracking. Use this to get thread replies, analyze conversation threads, or track discussion history.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to fetch thread from (required)"
+          },
+          "ts": {
+            "type": "string",
+            "description": "Timestamp of the thread's parent message (required)"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor for pagination"
+          },
+          "include_all_metadata": {
+            "type": "boolean",
+            "description": "Include all metadata"
+          },
+          "inclusive": {
+            "type": "boolean",
+            "description": "Include messages with oldest/latest timestamps"
+          },
+          "latest": {
+            "type": "string",
+            "description": "Only messages before this timestamp"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 15,
+            "description": "Maximum number of items to return (max 15)"
+          },
+          "oldest": {
+            "type": "string",
+            "description": "Only messages after this timestamp"
+          }
+        },
+        "required": [
+          "channel",
+          "ts"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_rename",
+      "description": "Rename a conversation/channel. Essential for channel management and organization. Use this to rename channels, update channel names, or organize workspace structure. Archived channels cannot be renamed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Channel ID to rename (required)"
+          },
+          "name": {
+            "type": "string",
+            "description": "New name for the channel (required)"
+          }
+        },
+        "required": [
+          "channel",
+          "name"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_open",
+      "description": "Open or resume a direct message or multi-person direct message. Essential for direct communication and conversation management. Use this to open direct messages, start conversations, or resume existing chats.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Resume a conversation by supplying an im or mpim's ID. Or provide the users field instead."
+          },
+          "prevent_creation": {
+            "type": "boolean",
+            "description": "Do not create a direct message or multi-person direct message. This is used to see if there is an existing dm or mpdm."
+          },
+          "return_im": {
+            "type": "boolean",
+            "description": "Boolean, indicates you want the full IM channel definition in the response."
+          },
+          "users": {
+            "type": "string",
+            "description": "Comma separated lists of users. If only one user is included, this creates a 1:1 DM. The ordering of the users is preserved whenever a multi-person direct message is returned."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_list",
+      "description": "List all channels in a Slack team. Essential for workspace navigation and channel discovery. Use this to get all channels, analyze workspace structure, or discover available conversations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "description": "Cursor for pagination"
+          },
+          "exclude_archived": {
+            "type": "boolean",
+            "description": "Exclude archived channels"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of items to return"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Team ID to list channels in"
+          },
+          "types": {
+            "type": "string",
+            "description": "Comma-separated list of channel types"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_list_connect_invites",
+      "description": "List shared channel invites that have been generated or received but have not been approved by all parties. Essential for shared channel management and cross-workspace collaboration. Use this to manage shared channel invitations, track pending invites, or coordinate external collaborations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of invites to return (default: 100)"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Set to next_cursor returned by previous call to list items in subsequent page"
+          },
+          "team_id": {
+            "type": "string",
+            "description": "Encoded team id for the workspace to retrieve invites for, required if org token is used"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_request_shared_invite_approve",
+      "description": "Approve a request to add an external user to a channel and sends them a Slack Connect invite. Essential for shared channel administration and external collaboration management. Use this to approve external user requests, manage shared channel access, or coordinate cross-workspace collaborations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "invite_id": {
+            "type": "string",
+            "description": "ID of the requested shared channel invite to approve (required)"
+          },
+          "channel_id": {
+            "type": "string",
+            "description": "Optional channel_id to which external user will be invited to. Will override the value on the requested invite"
+          },
+          "is_external_limited": {
+            "type": "boolean",
+            "description": "Optional boolean on whether the invited team will have post-only permissions in the channel. Will override the value on the requested invite"
+          },
+          "message": {
+            "type": "string",
+            "description": "JSON string describing the text to send along with the invite"
+          }
+        },
+        "required": [
+          "invite_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_request_shared_invite_deny",
+      "description": "Deny a request to invite an external user to a channel. Essential for shared channel administration and request management. Use this to deny external user requests, manage shared channel access, or control cross-workspace collaborations.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "invite_id": {
+            "type": "string",
+            "description": "ID of the requested shared channel invite to deny (required)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Optional message explaining why the request to invite was denied"
+          }
+        },
+        "required": [
+          "invite_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_set_purpose",
+      "description": "Set the purpose of a conversation/channel. Essential for channel management, documentation, and organization. Use this to update channel descriptions, set clear channel objectives, or maintain channel documentation for better team communication and organization.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The ID of the channel to set purpose for (required)"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "The new purpose for the channel (required, max 250 characters)"
+          }
+        },
+        "required": [
+          "channel",
+          "purpose"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_set_topic",
+      "description": "Set the topic of a conversation/channel. Essential for channel management, organization, and quick identification. Use this to update channel topics, set clear channel subjects, or maintain concise channel descriptions for better team communication and navigation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The ID of the channel to set topic for (required)"
+          },
+          "topic": {
+            "type": "string",
+            "description": "The new topic for the channel (required, max 250 characters)"
+          }
+        },
+        "required": [
+          "channel",
+          "topic"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_archive",
+      "description": "Archive a conversation/channel. Essential for channel lifecycle management, workspace organization, and cleanup. Use this to archive inactive channels, remove channels from active lists, or maintain a clean workspace structure. Archived channels become read-only and are hidden from channel lists.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The ID of the channel to archive (required)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "conversations_unarchive",
+      "description": "Unarchive a conversation/channel. Essential for channel lifecycle management and workspace restoration. Use this to restore previously archived channels, reactivate inactive channels, or bring back channels that were accidentally archived. Unarchived channels become active again and reappear in channel lists.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "The ID of the channel to unarchive (required)"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "emoji_list",
+      "description": "Lists the custom emoji for a team. Returns a map of emoji names to their URLs. Uses 'alias:' pseudo-protocol for emoji aliases. By default returns only custom emojis. Set include_categories to true to also get Unicode emoji categories.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "include_categories": {
+            "type": "boolean",
+            "description": "Include a list of categories for Unicode emoji and the emoji in each category",
+            "default": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_add",
+      "description": "Create a Call. Essential for initiating voice or video calls within Slack, setting up conference bridges, and enabling real-time communication. Use this to start new calls, integrate with external calling services, or provide calling functionality in your app.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "external_unique_id": {
+            "type": "string",
+            "description": "Unique ID from 3rd-party Call provider (required)"
+          },
+          "join_url": {
+            "type": "string",
+            "description": "URL required for clients to join the Call (required)"
+          },
+          "created_by": {
+            "type": "string",
+            "description": "Slack user ID of the user who created this Call (optional)"
+          },
+          "date_start": {
+            "type": "integer",
+            "description": "Unix timestamp representing the start time of the call (optional)"
+          },
+          "desktop_app_join_url": {
+            "type": "string",
+            "description": "URL for direct app launch (optional)"
+          },
+          "external_display_id": {
+            "type": "string",
+            "description": "Human-readable ID from 3rd-party provider (optional)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Name of the Call (optional)"
+          },
+          "users": {
+            "type": "array",
+            "description": "List of participants in the Call (optional)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slack_id": {
+                  "type": "string",
+                  "description": "Slack user ID (e.g., 'U1234567890')"
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "External user ID from 3rd party provider"
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Display name for external users"
+                },
+                "avatar_url": {
+                  "type": "string",
+                  "description": "Avatar URL for external users"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "external_unique_id",
+          "join_url"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_end",
+      "description": "End a Call. Essential for terminating active calls, managing call lifecycle, and cleaning up call resources. Use this to properly close calls, handle call completion, or implement call timeout functionality.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the call to end (required)"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the call in seconds (optional)"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_info",
+      "description": "Retrieve information about a Call. Essential for getting call details, checking call status, and monitoring call activity. Use this to get call metadata, verify call existence, or track call participants and duration.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the call to get information about (required)"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_update",
+      "description": "Update a Call. Essential for modifying call properties, updating call details, and managing call configuration. Use this to change call titles, update join URLs, or modify call settings during active calls.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the call to update (required)"
+          },
+          "title": {
+            "type": "string",
+            "description": "New name of the Call (optional)"
+          },
+          "join_url": {
+            "type": "string",
+            "description": "New URL required for clients to join the Call (optional)"
+          },
+          "desktop_app_join_url": {
+            "type": "string",
+            "description": "New URL for direct app launch (optional)"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_participants_add",
+      "description": "Register new participants added to a Call. Essential for adding users to ongoing calls, managing call participation, and tracking call attendees. Use this to add participants dynamically, invite users to active calls, or manage call membership.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the call (required)"
+          },
+          "users": {
+            "type": "array",
+            "minItems": 1,
+            "description": "List of users to add as participants (required). Each user must include slack_id or external_id.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slack_id": {
+                  "type": "string",
+                  "description": "Slack user ID (e.g., 'U1234567890')"
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "External user ID from 3rd party provider"
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Display name for external users"
+                },
+                "avatar_url": {
+                  "type": "string",
+                  "description": "Avatar URL for external users"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "users"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "calls_participants_remove",
+      "description": "Register participants removed from a Call. Essential for removing users from ongoing calls, managing call participation, and tracking call attendees. Use this to remove participants dynamically, handle participant dropouts, or manage call membership.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the call (required)"
+          },
+          "users": {
+            "type": "array",
+            "minItems": 1,
+            "description": "List of users to remove as participants (required). Each user must include slack_id or external_id.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slack_id": {
+                  "type": "string",
+                  "description": "Slack user ID (e.g., 'U1234567890')"
+                },
+                "external_id": {
+                  "type": "string",
+                  "description": "External user ID from 3rd party provider"
+                },
+                "display_name": {
+                  "type": "string",
+                  "description": "Display name for external users"
+                },
+                "avatar_url": {
+                  "type": "string",
+                  "description": "Avatar URL for external users"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "users"
+        ]
+      }
+    }
+  }
+]

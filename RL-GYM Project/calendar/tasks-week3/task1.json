@@ -1,0 +1,158 @@
+{
+  "scenario_config": {
+    "scenario_name": "midwest_roadshow",
+    "scenario_description": "Midwest Roadshow Scheduling",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Between October 8 and October 20, 2025, check my sales calendar for the first three distinct days with no scheduled events (they don’t have to be consecutive; use the first three available days). For each free day, schedule a 4-hour event titled “Midwest Roadshow - Stop #X” (replace X with 1, 2, or 3) starting at 10:00 AM UTC, and add Carol White (carol.white@techcorp.com) as an optional attendee. After all events are created, set a daily event-change watch on that calendar with the token “MIDWEST_ROADSHOW,” using the webhook address https://crm.techcorp.com/hooks/midwest-roadshow, configured to run until October 25, 2025. Finally, add the private extended property { \"campaign\": \"Q4-Midwest\", \"leadOwner\": \"dave_sales\" } to each new event.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "query_freebusy",
+      "create_event",
+      "create_event",
+      "create_event",
+      "watch_events"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "query_freebusy",
+      "create_event",
+      "create_event",
+      "create_event",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Stop 1 Event Created",
+      "description": "Verify first roadshow event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Midwest Roadshow - Stop #1' AND user_id = 'dave_sales' AND calendar_id = 'dave-sales' AND start_datetime LIKE '%2025-10-08 10:00%' AND end_datetime LIKE '%2025-10-08 14:00%' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Stop 2 Event Created",
+      "description": "Verify second roadshow event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Midwest Roadshow - Stop #2' AND user_id = 'dave_sales' AND calendar_id = 'dave-sales' AND start_datetime LIKE '%2025-10-10 10:00%' AND end_datetime LIKE '%2025-10-10 14:00%' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Stop 3 Event Created",
+      "description": "Verify third roadshow event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary = 'Midwest Roadshow - Stop #3' AND user_id = 'dave_sales' AND calendar_id = 'dave-sales' AND start_datetime like '%2025-10-11 10:00%' AND end_datetime like '%2025-10-11 14:00%' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Watch Setup",
+      "description": "Verify watch channel created",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE webhook_address = 'https://crm.techcorp.com/hooks/midwest-roadshow' AND calendar_id = 'dave-sales' AND user_id = 'dave_sales' AND webhook_token = 'MIDWEST_ROADSHOW' AND expires_at IS NOT NULL",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+    "name": "Extended Props Event 1",
+    "description": "Check extended properties for Stop #1",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #1') AND json_extract(properties, '$.campaign') = 'Q4-Midwest' AND json_extract(properties, '$.leadOwner') = 'dave_sales'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "Extended Props Event 2",
+    "description": "Check extended properties for Stop #2",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #2') AND json_extract(properties, '$.campaign') = 'Q4-Midwest' AND json_extract(properties, '$.leadOwner') = 'dave_sales'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "Extended Props Event 3",
+    "description": "Check extended properties for Stop #3",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #3') AND json_extract(properties, '$.campaign') = 'Q4-Midwest' AND json_extract(properties, '$.leadOwner') = 'dave_sales'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "Carol Optional Attendee #1",
+    "description": "Verify Carol optional attendee for Stop #1",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #1') AND user_id = 'carol_designer' AND optional = 1",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "Carol Optional Attendee #2",
+    "description": "Verify Carol optional attendee for Stop #2",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #2') AND user_id = 'carol_designer' AND optional = 1",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  },
+  {
+    "name": "Carol Optional Attendee #3",
+    "description": "Verify Carol optional attendee for Stop #3",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Midwest Roadshow - Stop #3') AND user_id = 'carol_designer' AND optional = 1",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+  }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764349780808_xadnlda1l",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Schedule Midwest Roadshow events, invite attendees, and setup calendar watch notifications.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

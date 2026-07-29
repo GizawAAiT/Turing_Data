@@ -1,0 +1,6154 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user",
+      "description": "Get user information.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "The GID of the user to get information for"
+          }
+        },
+        "required": [
+          "user_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_multiple_webhooks",
+      "description": "Get multiple webhooks registered for the authenticated Asana user in a given workspace. Returns a compact list of webhook objects. Supports pagination and optional field expansion. Security: OAuth 2.0 (Bearer token required). Required scope: webhooks:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "The GID of the workspace to query for webhooks in. (Required)"
+          },
+          "resource": {
+            "type": "string",
+            "description": "Only return webhooks for the given resource GID."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page. Must be between 1 and 100."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token returned from a previous paginated request."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns prettified output for debugging (increased response size)."
+          }
+        },
+        "required": [
+          "workspace"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_webhook",
+      "description": "Retrieve a single Asana webhook by its unique GID. Returns the full webhook record, including its target URL, active status,",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "webhook_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the webhook to retrieve. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the response. For example: ['active', 'target', 'resource', 'workspace']."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns prettified JSON output for easier readability."
+          }
+        },
+        "required": [
+          "webhook_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "establish_webhook",
+      "description": "Establish a new webhook subscription in Asana. This endpoint creates a webhook that listens for events on a specific resource and delivers the events to the specified target URL. A confirmation handshake is required during the creation process to verify the webhook. Security: OAuth 2.0 (Bearer token required). Required scope: webhooks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string",
+            "description": "The GID of the resource to subscribe to for webhook events. (Required)"
+          },
+          "target": {
+            "type": "string",
+            "description": "The target URL where webhook events will be sent. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the response. For example: ['active', 'target', 'resource', 'workspace']."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns prettified JSON output for easier readability."
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "resource_type": {
+                  "type": "string",
+                  "description": "The type of the resource which created the event when modified (e.g. 'task')."
+                },
+                "resource_subtype": {
+                  "type": "string",
+                  "description": "The subtype of the resource for event filtering (e.g. 'milestone')."
+                },
+                "action": {
+                  "type": "string",
+                  "description": "The type of change on the resource to pass through the filter (e.g. 'changed')."
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "A whitelist of fields for events which will pass the filter when the resource is changed. This field is valid only when action is 'changed'."
+                }
+              },
+              "required": [
+                "resource_type",
+                "action"
+              ]
+            },
+            "description": "A list of filters to apply to the events for this webhook."
+          }
+        },
+        "required": [
+          "resource",
+          "target"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_webhook",
+      "description": "Update an existing webhook in Asana. Supports updating the webhook’s filters and optional field expansion. Security: OAuth2 Bearer token required. Required scope: webhooks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "webhook_gid": {
+            "type": "string",
+            "description": "The GID of the webhook to update. (Required)"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "resource_type": {
+                  "type": "string"
+                },
+                "resource_subtype": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "resource_type",
+                "action"
+              ]
+            },
+            "description": "Array of filter objects to overwrite the webhook’s filters."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns prettified output for debugging (increased response size)."
+          }
+        },
+        "required": [
+          "webhook_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_webhook",
+      "description": "Delete an existing webhook in Asana. This permanently removes the webhook and stops it from receiving events. Security: OAuth2 Bearer token required. Required scope: webhooks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "webhook_gid": {
+            "type": "string",
+            "description": "The GID of the webhook to delete. (Required)"
+          }
+        },
+        "required": [
+          "webhook_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_favourites",
+      "description": "Get user favourites data from Asana API. Returns the user favourites data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "The GID of the user to get favourites for"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "The GID of the workspace to get favourites for"
+          },
+          "resource_type": {
+            "type": "string",
+            "description": "The type of resource to get favourites for"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to get favourites for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to prettify the data"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "The number of favourites to get"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "The offset to get favourites from"
+          }
+        },
+        "required": [
+          "user_gid",
+          "workspace",
+          "resource_type"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_multiple_users",
+      "description": "Get multiple users data from Asana API. Returns the multiple users data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to get users for"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "The GID of the workspace to get users for"
+          },
+          "team": {
+            "type": "string",
+            "description": "The GID of the team to get users for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "The number of users to get"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "The offset to get users from"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_users_in_team",
+      "description": "Get users in team data from Asana API. Returns the users in team data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "The GID of the team to get users for"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to get users for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "The offset to get users from (without limit we cant determine the page limit. Currently its set to 2000 hardcoded)"
+          }
+        },
+        "required": [
+          "team_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_users_in_workspace",
+      "description": "Get users in workspace data from Asana API. Returns the users in workspace data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The GID of the workspace to get users for"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to get users for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "The offset to get users from (without limit we cant determine the page limit. Currently its set to 2000 hardcoded)"
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_project_brief",
+      "description": "Create a project brief from Asana API. Returns the project brief data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to create a project brief for"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to create a project brief for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the project brief"
+          },
+          "html_text": {
+            "type": "string",
+            "description": "The HTML text of the project brief"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the project brief"
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_project_brief",
+      "description": "Get a project brief from Asana API. Returns the project brief data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_brief_gid": {
+            "type": "string",
+            "description": "The GID of the project brief to get"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to get a project brief for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_brief_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_project_brief",
+      "description": "Update a project brief from Asana API. Returns the project brief data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_brief_gid": {
+            "type": "string",
+            "description": "The GID of the project brief to update"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to update a project brief for"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the project brief"
+          },
+          "html_text": {
+            "type": "string",
+            "description": "The HTML text of the project brief"
+          },
+          "text": {
+            "type": "string",
+            "description": "The text of the project brief"
+          }
+        },
+        "required": [
+          "project_brief_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_project_brief",
+      "description": "Delete a project brief from Asana API. Returns the project brief data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_brief_gid": {
+            "type": "string",
+            "description": "The GID of the project brief to delete"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_brief_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_custom_field_to_project",
+      "description": "Add a custom field to a project from Asana API. Returns the custom field setting data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to add a custom field to"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to add a custom field to"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The custom field setting data to add to the project",
+            "properties": {
+              "custom_field": {
+                "type": "string",
+                "description": "The GID of the custom field or the custom field data to add to the project"
+              },
+              "is_important": {
+                "type": "boolean",
+                "description": "Whether the custom field is important"
+              },
+              "insert_before": {
+                "type": "string",
+                "description": "The GID of the custom field to insert before"
+              },
+              "insert_after": {
+                "type": "string",
+                "description": "The GID of the custom field to insert after"
+              }
+            },
+            "required": [
+              "custom_field"
+            ]
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_followers_to_project",
+      "description": "Add a project follower from Asana API. Returns the project follower data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to add a follower to"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The fields to add a follower to"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to add a follower to",
+            "properties": {
+              "followers": {
+                "type": "array",
+                "description": "The GIDs of the users to add as followers",
+                "items": {
+                  "type": "string",
+                  "description": "The GID of the user to add as a follower"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_access_requests",
+      "description": "Get access requests for a target object, optionally filtered by user. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "Globally unique identifier for the target object (required)"
+          },
+          "user": {
+            "type": "string",
+            "description": "A user identifier: 'me', user gid, or email"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of optional fields to include in the response"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty-print the response"
+          }
+        },
+        "required": [
+          "target"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_access_request",
+      "description": "Create an access request for a project or portfolio. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "Payload matching Asana's access request schema",
+            "properties": {
+              "target": {
+                "type": "string",
+                "description": "The GID of the target project or portfolio (required)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Optional message to include with the access request"
+              }
+            },
+            "required": [
+              "target"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "approve_access_request",
+      "description": "Approve an existing access request for a project or portfolio. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_request_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the access request to approve"
+          }
+        },
+        "required": [
+          "access_request_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "reject_access_request",
+      "description": "Reject an access request for a target object. Requires access_request_gid as path param. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_request_gid": {
+            "type": "string",
+            "description": "Globally unique identifier of the access request to reject"
+          }
+        },
+        "required": [
+          "access_request_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_workspace_membership",
+      "description": "Retrieve details of a workspace membership using its GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_membership_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the workspace membership."
+          }
+        },
+        "required": [
+          "workspace_membership_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_workspace_memberships",
+      "description": "Retrieve compact workspace memberships for a user, with optional field expansion using opt_fields.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the user (can be 'me' or an email)."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of optional fields to include, e.g. ['is_admin', 'user.email']"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of results per page (1–100). Default is 50."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token for next page."
+          }
+        },
+        "required": [
+          "user_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_workspace_workspace_memberships",
+      "description": "Retrieve workspace memberships for a specific workspace, supporting opt_fields and pagination.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The GID of the workspace to fetch memberships for."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to expand (e.g., ['user.email', 'workspace.email_domains'])."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of results to return per page (1–100).",
+            "default": 50
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token."
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_team_membership",
+      "description": "Get the complete team membership record for a specific team_membership GID. Supports optional field expansion via opt_fields and pretty output for debugging.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_membership_gid": {
+            "type": "string",
+            "description": "Globally unique identifier of the team membership to retrieve."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list (or array) of optional fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, format the JSON response for easier reading."
+          }
+        },
+        "required": [
+          "team_membership_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_team_memberships",
+      "description": "List compact team membership records filtered by team or user/workspace. Supports pagination (limit/offset) and optional field expansion.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team": {
+            "type": "string",
+            "description": "Filter memberships by team gid."
+          },
+          "user": {
+            "type": "string",
+            "description": "Filter by user identifier (gid, email, or 'me'). Must be paired with workspace."
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Workspace gid, required when filtering by user."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list or array of optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Return prettified JSON (debug only)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Page size between 1 and 100."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Opaque offset token returned from a previous response."
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_memberships_for_team",
+      "description": "Retrieve compact team memberships for a specific team gid, supporting pagination and opt_fields.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "Team gid to fetch memberships for."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Return prettified output for debugging."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page between 1 and 100."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token returned by previous paginated response."
+          }
+        },
+        "required": [
+          "team_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_team_memberships_from_user",
+      "description": "Retrieve compact team memberships for a user within a workspace, with pagination support.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "User identifier (gid, email, or 'me')."
+          },
+          "workspace_gid": {
+            "type": "string",
+            "description": "Workspace gid required when filtering by user."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Prettify the JSON output (debug)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page between 1 and 100."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token for pagination."
+          }
+        },
+        "required": [
+          "user_gid",
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_users_to_project",
+      "description": "Add members to a project from Asana API. Returns the project members data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to add members to"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to add members to",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to add members to",
+            "properties": {
+              "members": {
+                "type": "array",
+                "description": "The GIDs of the users to add as members",
+                "items": {
+                  "type": "string",
+                  "description": "The GID of the user to add as a member"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_users_from_project",
+      "description": "Remove members from a project from Asana API. Returns the project members data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to remove members from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to remove members from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to remove members from",
+            "properties": {
+              "members": {
+                "type": "array",
+                "description": "The GIDs of the users to remove as members",
+                "items": {
+                  "type": "string",
+                  "description": "The GID of the user to remove as a member"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_followers_from_project",
+      "description": "Remove followers from a project from Asana API. Returns the project followers data. Security: OAuth 2.0 (Bearer token required). Supports user UUID or 'me' for current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to remove followers from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to remove followers from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to remove followers from",
+            "properties": {
+              "followers": {
+                "type": "array",
+                "description": "The GIDs of the users to remove as followers",
+                "items": {
+                  "type": "string",
+                  "description": "The GID of the user to remove as a follower"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_workspace",
+      "description": "Retrieve detailed information about a workspace from the Asana API. Returns the full workspace record including its name, email domains.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the workspace or organization."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to expand (e.g., ['user.email', 'workspace.email_domains'])."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_multiple_workspaces",
+      "description": "Retrieve a paginated list of all workspaces visible to the authorized Asana user. Supports optional fields expansion (opt_fields), pagination (limit, offset), and formatted JSON output (opt_pretty). Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to expand (e.g., ['user.email', 'workspace.email_domains'])."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns the response in a pretty-formatted JSON output."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of workspaces to return per page (1–100)."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token from previous response (if any)."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_workspace",
+      "description": "Update the details of a specific workspace in Asana. Currently, only the workspace name can be modified. Returns the full, updated workspace record upon success. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the workspace to update."
+          },
+          "name": {
+            "type": "string",
+            "description": "New name for the workspace."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to expand (e.g., ['user.email', 'workspace.email_domains'])."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns a pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_user_to_workspace",
+      "description": "Add a user to a workspace or organization in Asana. The user can be specified by their GID or email address. Returns the full user record for the invited user. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the workspace or organization."
+          },
+          "user": {
+            "type": "string",
+            "description": "User identifier. Can be 'me', email address, or user GID."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "workspace_gid",
+          "user"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_user_from_workspace",
+      "description": "Remove a user from a workspace or organization in Asana. Requires admin privileges in the workspace. Accepts a user GID, email, or 'me'. Returns an empty object on success. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the workspace or organization."
+          },
+          "user": {
+            "type": "string",
+            "description": "User identifier to remove (email, GID, or 'me')."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "workspace_gid",
+          "user"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_custom_field_from_project",
+      "description": "Remove a custom field from a project from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required). Supports custom field GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to remove the custom field from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to remove the custom field from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to remove the custom field from",
+            "properties": {
+              "custom_field": {
+                "type": "string",
+                "description": "The GID of the custom field to remove"
+              }
+            }
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_project_task_counts",
+      "description": "Get task counts for a project from Asana API. Returns the project task counts data. Security: OAuth 2.0 (Bearer token required). Supports project GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to get the task counts from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the task counts from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_tasks",
+      "description": "Retrieve compact tasks filtered by project, section, or assignee/workspace with pagination support.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "Project gid filter"
+          },
+          "section": {
+            "type": "string",
+            "description": "Section gid filter"
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Assignee gid or 'me'"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Workspace gid (required with assignee)"
+          },
+          "completed_since": {
+            "type": "string",
+            "description": "Return tasks completed since this time"
+          },
+          "modified_since": {
+            "type": "string",
+            "description": "Return tasks modified since this time"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page (1-100)"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output"
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task",
+      "description": "Retrieve a complete Asana task record by gid. Supports opt_fields for optional properties and opt_pretty for formatted output.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The GID of the task to retrieve"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to include"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Return prettified JSON output"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_from_project",
+      "description": "List compact tasks for a specific project, ordered by project priority.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "Project gid to fetch tasks for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "completed_since": {
+            "type": "string",
+            "description": "Return incomplete or tasks completed since this time."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_from_section",
+      "description": "List compact tasks within a specific section (board view).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "section_gid": {
+            "type": "string",
+            "description": "Section gid to fetch tasks for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "completed_since": {
+            "type": "string",
+            "description": "Return incomplete or tasks completed since this time."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "section_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_subtasks",
+      "description": "List compact subtasks for a specific parent task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "Parent task gid to fetch subtasks for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_dependencies",
+      "description": "List compact dependencies for a specific task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "Parent task gid to fetch dependencies for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_dependents",
+      "description": "List compact dependents for a specific task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "Task gid to fetch dependents for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_from_tag",
+      "description": "List compact tasks associated with a specific tag.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tag_gid": {
+            "type": "string",
+            "description": "Tag gid to fetch tasks for."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "tag_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_by_custom_id",
+      "description": "Retrieve a task by workspace gid and custom_id shortcode. Returns the full task record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Workspace gid that owns the task."
+          },
+          "custom_id": {
+            "type": "string",
+            "description": "Custom ID assigned to the task."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "workspace_gid",
+          "custom_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_task_list_tasks",
+      "description": "List compact tasks for a given user task list gid.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_task_list_gid": {
+            "type": "string",
+            "description": "User task list gid to fetch tasks for."
+          },
+          "completed_since": {
+            "type": "string",
+            "description": "Return incomplete or tasks completed since this time."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token from previous response."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "user_task_list_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_task_list",
+      "description": "Retrieve the full record for a specific user task list.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_task_list_gid": {
+            "type": "string",
+            "description": "User task list gid to retrieve."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "user_task_list_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_user_task_list_for_user",
+      "description": "Retrieve the user task list for a specific user within a workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "Identifier of the user (gid, email, or 'me')."
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Workspace gid used to scope the user task list."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "user_gid",
+          "workspace"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_projects",
+      "description": "Get projects for a task from Asana API. Returns the task projects data. Security: OAuth 2.0 (Bearer token required). Supports task GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The GID of the task to get the projects from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the projects from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_multiple_projects",
+      "description": "Get multiple projects from Asana API. Returns the projects data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of projects to return per page"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "The GID of the workspace to get the projects from"
+          },
+          "team": {
+            "type": "string",
+            "description": "The GID of the team to get the projects from"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether to get archived projects"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the projects from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_attachment",
+      "description": "Retrieve a full record for a single attachment in Asana. Supports optional field selection via `opt_fields` and pretty-print formatting via `opt_pretty`. The attachment may represent a file hosted on Asana, Dropbox, Google Drive, or another third-party service. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "attachment_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the attachment to retrieve."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to include in the response. Use this to expand fields such as `download_url`, `view_url`, or `connected_to_app`."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output for debugging."
+          }
+        },
+        "required": [
+          "attachment_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_attachment",
+      "description": "Delete a specific attachment in Asana by its GID. Removes the attachment and returns an empty data object on success. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "attachment_gid": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the attachment to delete."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "attachment_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_attachments_from_object",
+      "description": "Retrieve all attachments linked to a project, project brief, or task in Asana. Supports pagination, opt_fields, and pretty output formatting. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "string",
+            "description": "Globally unique identifier (GID) of the project, project_brief, or task to fetch attachments from."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100). Default is 50."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token returned by a previous request."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "If true, returns pretty-formatted JSON output."
+          }
+        },
+        "required": [
+          "parent"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "upload_attachment",
+      "description": "Upload an attachment to a task, project, or project_brief in Asana. Supports both file uploads and external URLs.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "string",
+            "description": "GID of parent task, project, or project_brief."
+          },
+          "file": {
+            "type": "string",
+            "description": "Local file path for upload (required for asana subtype)."
+          },
+          "resource_subtype": {
+            "type": "string",
+            "description": "Attachment type: asana, dropbox, gdrive, onedrive, box, vimeo, or external."
+          },
+          "url": {
+            "type": "string",
+            "description": "External resource URL (required if subtype is external)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the external resource (required for external subtype)."
+          },
+          "connect_to_app": {
+            "type": "boolean",
+            "description": "Whether to connect attachment to the app."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print the JSON output."
+          }
+        },
+        "required": [
+          "parent"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_workspace_projects",
+      "description": "Get projects for a workspace from Asana API. Returns the workspace projects data. Security: OAuth 2.0 (Bearer token required). Supports workspace GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The GID of the workspace to get the projects from"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of projects to return per page"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether to get archived projects"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the projects from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_team_projects",
+      "description": "Get projects for a team from Asana API. Returns the team projects data. Security: OAuth 2.0 (Bearer token required). Supports team GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "The GID of the team to get the projects from"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of projects to return per page"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether to get archived projects"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the projects from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "team_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_project",
+      "description": "Get a project from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required). Supports project GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to get from"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to get the project from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_project_membership",
+      "description": "Get a project membership from Asana API. Returns the project membership data including access level.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_membership_gid": {
+            "type": "string",
+            "description": "The GID of the project membership to retrieve"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "Optional fields to include (e.g., parent, member, user, project, access_level, write_access)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_membership_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_memberships_from_project",
+      "description": "List project memberships for a project. Returns compact membership records with pagination.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The project gid to fetch memberships for."
+          },
+          "user": {
+            "type": "string",
+            "description": "Filter memberships for a specific user ('me', email, or gid)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Results per page."
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Offset for pagination."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include (currently ignored)."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty output for debugging."
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_project",
+      "description": "Delete a project from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required). Supports project GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to delete"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_project_in_workspace",
+      "description": "Create a project in a workspace from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required). Supports workspace GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The GID of the workspace to create the project in"
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "The fields to create the project from",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty the data"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to create the project from"
+          }
+        },
+        "required": [
+          "workspace_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_allocation",
+      "description": "Creates a new allocation in the system with start/end dates, effort, assignee, and project reference.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print the response."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "start_date": {
+                "type": "string",
+                "description": "Allocation start date (YYYY-MM-DD)."
+              },
+              "end_date": {
+                "type": "string",
+                "description": "Allocation end date (YYYY-MM-DD)."
+              },
+              "effort": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "hours",
+                      "percent"
+                    ],
+                    "description": "Effort tracking unit."
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Effort value in hours or percent."
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ]
+              },
+              "assignee": {
+                "type": "string",
+                "description": "GID of the user or placeholder assigned to the allocation."
+              },
+              "parent": {
+                "type": "string",
+                "description": "GID of the project this allocation belongs to."
+              }
+            },
+            "required": [
+              "start_date",
+              "end_date",
+              "assignee",
+              "parent"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_allocations",
+      "description": "Fetches a list of allocations filtered by project, user, or workspace with pagination and optional fields.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "string",
+            "description": "Filter allocations by project GID."
+          },
+          "assignee": {
+            "type": "string",
+            "description": "Filter allocations by user/placeholder GID."
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Filter allocations by workspace GID."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of results per page (1–100)."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Format JSON output for readability."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_allocation",
+      "description": "Fetch a single allocation record by its GID with optional field and formatting filters.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "allocation_gid": {
+            "type": "string",
+            "description": "GID of the allocation to retrieve."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Format JSON output for readability."
+          }
+        },
+        "required": [
+          "allocation_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_allocation",
+      "description": "Deletes an existing allocation record identified by its GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "allocation_gid": {
+            "type": "string",
+            "description": "GID of the allocation to delete."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Format JSON output for readability."
+          }
+        },
+        "required": [
+          "allocation_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_allocation",
+      "description": "Updates an existing allocation by its GID. Only specified fields are changed; unspecified fields remain unchanged.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "allocation_gid": {
+            "type": "string",
+            "description": "GID of the allocation to update."
+          },
+          "data": {
+            "type": "object",
+            "description": "Fields to update in the allocation.",
+            "properties": {
+              "start_date": {
+                "type": "string",
+                "description": "Allocation start date (YYYY-MM-DD)."
+              },
+              "end_date": {
+                "type": "string",
+                "description": "Allocation end date (YYYY-MM-DD)."
+              },
+              "effort": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "hours",
+                      "percent"
+                    ],
+                    "description": "Effort unit."
+                  },
+                  "value": {
+                    "type": "number",
+                    "description": "Effort value."
+                  }
+                }
+              },
+              "assignee": {
+                "type": "string",
+                "description": "GID of the user or placeholder assigned."
+              },
+              "parent": {
+                "type": "string",
+                "description": "GID of the parent project."
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Format JSON output for readability."
+          }
+        },
+        "required": [
+          "allocation_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_audit_log_events",
+      "description": "Retrieves audit log events for a given workspace, allowing filtering by date range, actor, resource, and event type, with pagination and optional field selection.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The workspace or organization GID to fetch audit log events for."
+          },
+          "start_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter to events created after this timestamp (inclusive)."
+          },
+          "end_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Filter to events created before this timestamp (exclusive)."
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Filter to events of this specific type (e.g., task_deleted, user_added)."
+          },
+          "actor_type": {
+            "type": "string",
+            "description": "Filter to events triggered by a specific actor type (user, asana, asana_support, anonymous, external_administrator)."
+          },
+          "actor_gid": {
+            "type": "string",
+            "description": "Filter to events triggered by a specific actor ID."
+          },
+          "resource_gid": {
+            "type": "string",
+            "description": "Filter to events related to a specific resource (task, project, or user GID)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Number of results to return per page (default: 50)."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token for retrieving the next page of results."
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_events",
+      "description": "Retrieve recent events for a task, project, or goal since the last sync token.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string",
+            "description": "The GID of the task, project, or goal to fetch events for."
+          },
+          "sync": {
+            "type": "string",
+            "description": "Last sync token received from previous request."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "resource"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_project_in_team",
+      "description": "Create a project in a team from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required). Supports team GID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "The GID of the team to create the project in"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to create the project from."
+          }
+        },
+        "required": [
+          "team_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_project",
+      "description": "Create a project from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to create the project from."
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_project",
+      "description": "Update a project from Asana API. Returns the project data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to update"
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to update the project from."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "save_project_as_template",
+      "description": "Save a project as a template from Asana API. Returns the project template data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to save as a template"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to save the project as a template from."
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_reactions",
+      "description": "Fetch reactions on an object with a specific emoji base character.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "GID of object to fetch reactions from"
+          },
+          "emoji_base": {
+            "type": "string",
+            "description": "Filter reactions by emoji base"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Pagination limit (1-100)"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "target",
+          "emoji_base"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "trigger_rule",
+      "description": "Trigger an Asana rule using an incoming web request trigger. Send resource + dynamic action_data that the rule can use.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "rule_trigger_gid": {
+            "type": "string",
+            "description": "GID of the incoming web request rule trigger"
+          },
+          "data": {
+            "type": "object",
+            "description": "Variables passed to the rule (resource, action_data)",
+            "properties": {
+              "resource": {
+                "type": "string",
+                "description": "The task gid that exists in the project where the rule lives"
+              },
+              "action_data": {
+                "type": "object",
+                "description": "Dynamic key/value pairs made available to the rule actions"
+              }
+            },
+            "required": [
+              "resource",
+              "action_data"
+            ]
+          }
+        },
+        "required": [
+          "rule_trigger_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_section",
+      "description": "Retrieve a full Section object from Asana by section_gid.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "section_gid": {
+            "type": "string",
+            "description": "GID of the section to retrieve"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include in the response"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "section_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_sections_in_project",
+      "description": "Retrieve the compact (or optionally expanded) list of sections belonging to a project.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "GID of the project to fetch sections from"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Pagination limit (1–100)"
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include (e.g. created_at)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "project_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_section",
+      "description": "Delete a section by GID. Section must be empty and cannot be the last remaining one.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "section_gid": {
+            "type": "string",
+            "description": "GID of the section to delete"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "section_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_section",
+      "description": "Create a new section in a project and return its full section record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "GID of the project to add the new section."
+          },
+          "data": {
+            "type": "object",
+            "description": "Section creation payload.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the section. Cannot be an empty string."
+              },
+              "insert_before": {
+                "type": "string",
+                "description": "Insert this new section before the given section_gid. Cannot be used together with insert_after."
+              },
+              "insert_after": {
+                "type": "string",
+                "description": "Insert this new section after the given section_gid. Cannot be used together with insert_before."
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether the response should be pretty printed."
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_section",
+      "description": "Update an existing section. Supports updating name, insert_before, and insert_after.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "section_gid": {
+            "type": "string",
+            "description": "GID of the section to update."
+          },
+          "data": {
+            "type": "object",
+            "description": "Payload describing updates to the section.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "New name for the section. Cannot be an empty string."
+              },
+              "insert_before": {
+                "type": "string",
+                "description": "Insert this section before the given section_gid (cannot be used with insert_after)."
+              },
+              "insert_after": {
+                "type": "string",
+                "description": "Insert this section after the given section_gid (cannot be used with insert_before)."
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "opt_fields": {
+            "type": "array",
+            "description": "Optional list of fields to include in the response.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          }
+        },
+        "required": [
+          "section_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_task_to_section",
+      "description": "Add a task to a specific section in a project.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "section_gid": {
+            "type": "string",
+            "description": "GID of the section"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string",
+                "description": "Task to add"
+              },
+              "insert_before": {
+                "type": "string"
+              },
+              "insert_after": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "task"
+            ]
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "section_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "move_or_insert_section",
+      "description": "Move or reorder sections within a project. Mirrors Asana’s /sections/insert endpoint.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "Project GID where the sections belong."
+          },
+          "data": {
+            "type": "object",
+            "description": "Move parameters (section, before_section, after_section)",
+            "properties": {
+              "section": {
+                "type": "string"
+              },
+              "before_section": {
+                "type": "string"
+              },
+              "after_section": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "section"
+            ]
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print response"
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "duplicate_project",
+      "description": "Duplicate a project from Asana API. Returns the duplicated project data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "project_gid": {
+            "type": "string",
+            "description": "The GID of the project to duplicate"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to duplicate the project from."
+          }
+        },
+        "required": [
+          "project_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_custom_field_to_portfolio",
+      "description": "Add a custom field to a portfolio from Asana API. Returns the portfolio data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "The GID of the portfolio to add the custom field to"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to add the custom field to the portfolio from."
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_item_to_portfolio",
+      "description": "Add an item to a portfolio from Asana API. Returns the portfolio data. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "The GID of the portfolio to add the item to"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Whether to pretty print the response."
+          },
+          "data": {
+            "type": "object",
+            "description": "The data to add the item to the portfolio from. The item can be a project or a portfolio."
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_workspace_events",
+      "description": "Return workspace events since last sync. Requires workspace_gid.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string"
+          },
+          "sync": {
+            "type": "string",
+            "description": "Previous sync token"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_status_update",
+      "description": "Fetch a single status update by gid. Returns the full Asana-style status update object.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "status_update_gid": {
+            "type": "string",
+            "description": "The status update gid to fetch"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of fields to expand"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print the response"
+          }
+        },
+        "required": [
+          "status_update_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_status_updates_from_object",
+      "description": "Fetch compact status updates for a project/portfolio/goal.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "string"
+          },
+          "created_since": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "parent"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_status_update",
+      "description": "Delete a specific status update by gid.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "status_update_gid": {
+            "type": "string"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status_update_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_status_update",
+      "description": "Create a new status update on a project, portfolio, or goal. Returns the full record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "html_text": {
+                "type": "string"
+              },
+              "status_type": {
+                "type": "string",
+                "enum": [
+                  "on_track",
+                  "at_risk",
+                  "off_track",
+                  "on_hold",
+                  "complete",
+                  "achieved",
+                  "partial",
+                  "missed",
+                  "dropped"
+                ]
+              },
+              "parent": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "status_type",
+              "parent"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_story",
+      "description": "Retrieve a full Story object by gid (Asana-style). Supports opt_fields and opt_pretty.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "story_gid": {
+            "type": "string"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON response"
+          }
+        },
+        "required": [
+          "story_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_stories_from_task",
+      "description": "Retrieve story list (compact or opt_fields filtered) from a task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_story",
+      "description": "Create a new story (comment) on a task. Returns the full story record. The comment will be authored by the authenticated user and timestamped when the server receives the request.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task to add the story to"
+          },
+          "text": {
+            "type": "string",
+            "description": "The plain text of the comment to add"
+          },
+          "html_text": {
+            "type": "string",
+            "description": "HTML formatted text for a comment"
+          },
+          "is_pinned": {
+            "type": "boolean",
+            "description": "Whether the story should be pinned"
+          },
+          "sticker_name": {
+            "type": "string",
+            "description": "The name of the sticker in this story"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_story",
+      "description": "Delete a story. A user can only delete stories they have created. Returns an empty data object on success.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "story_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the story to delete"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "story_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_story",
+      "description": "Update a story. Only comment stories can have their text updated. Only comment stories and attachment stories can be pinned. Only one of text and html_text can be specified. Returns the full story record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "story_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the story to update"
+          },
+          "text": {
+            "type": "string",
+            "description": "The plain text of the comment to update. Cannot be used with html_text."
+          },
+          "html_text": {
+            "type": "string",
+            "description": "HTML formatted text for a comment"
+          },
+          "is_pinned": {
+            "type": "boolean",
+            "description": "Whether the story should be pinned"
+          },
+          "sticker_name": {
+            "type": "string",
+            "description": "The name of the sticker in this story"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "story_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_goal",
+      "description": "Get a single goal by GID. Returns the full goal record. Required scope: goals:read. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_goals",
+      "description": "Get goals with filtering and pagination. Returns compact goal records. Required scope: goals:read. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "Workspace GID"
+          },
+          "team": {
+            "type": "string",
+            "description": "Team GID"
+          },
+          "portfolio": {
+            "type": "string",
+            "description": "Portfolio GID"
+          },
+          "project": {
+            "type": "string",
+            "description": "Project GID"
+          },
+          "task": {
+            "type": "string",
+            "description": "Task GID"
+          },
+          "is_workspace_level": {
+            "type": "boolean",
+            "description": "Filter workspace-level goals (requires workspace)"
+          },
+          "time_periods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Time period GIDs"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_goal",
+      "description": "Delete a goal by GID. Returns an empty data object. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_goal",
+      "description": "Update a goal by GID. Only provided fields are updated; unspecified fields remain unchanged. Returns the complete updated goal record. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal"
+          },
+          "data": {
+            "type": "object",
+            "description": "Fields to update",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the goal"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Free-form textual information"
+              },
+              "html_notes": {
+                "type": "string",
+                "description": "Notes with HTML formatting"
+              },
+              "due_on": {
+                "type": "string",
+                "description": "Due date (YYYY-MM-DD)"
+              },
+              "start_on": {
+                "type": "string",
+                "description": "Start date (YYYY-MM-DD)"
+              },
+              "status": {
+                "type": "string",
+                "description": "Status (green/yellow/red/missed/achieved/partial/dropped)"
+              },
+              "owner_gid": {
+                "type": "string",
+                "description": "Owner user GID"
+              },
+              "team_gid": {
+                "type": "string",
+                "description": "Team GID"
+              },
+              "workspace_gid": {
+                "type": "string",
+                "description": "Workspace GID"
+              },
+              "time_period_gid": {
+                "type": "string",
+                "description": "Time period GID"
+              },
+              "is_workspace_level": {
+                "type": "boolean",
+                "description": "Whether goal is workspace-level"
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_goal",
+      "description": "Create a new goal in a workspace or team. Returns the full record of the newly created goal. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "Goal data",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the goal (required)"
+              },
+              "workspace": {
+                "type": "string",
+                "description": "Workspace GID (required)"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Free-form textual information"
+              },
+              "html_notes": {
+                "type": "string",
+                "description": "Notes with HTML formatting"
+              },
+              "due_on": {
+                "type": "string",
+                "description": "Due date (YYYY-MM-DD)"
+              },
+              "start_on": {
+                "type": "string",
+                "description": "Start date (YYYY-MM-DD)"
+              },
+              "is_workspace_level": {
+                "type": "boolean",
+                "description": "Whether goal is workspace-level"
+              },
+              "team": {
+                "type": "string",
+                "description": "Team GID"
+              },
+              "time_period": {
+                "type": "string",
+                "description": "Time period GID"
+              },
+              "owner": {
+                "type": "string",
+                "description": "Owner user GID"
+              },
+              "status": {
+                "type": "string",
+                "description": "Status (green/yellow/red/missed/achieved/partial/dropped)"
+              },
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of user GIDs to follow this goal"
+              }
+            },
+            "required": [
+              "name",
+              "workspace"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "set_goal_metric",
+      "description": "Create or replace a goal metric. Creates and adds a goal metric to a specified goal. Note that this replaces an existing goal metric if one already exists. Returns the complete goal record with the new metric. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal (required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "Goal metric data",
+            "properties": {
+              "precision": {
+                "type": "integer",
+                "description": "Number of decimal places (0-6). Only relevant for number metrics.",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "currency",
+                  "percentage"
+                ],
+                "description": "Unit of measure for the metric"
+              },
+              "currency_code": {
+                "type": "string",
+                "description": "ISO 4217 currency code (required if unit is 'currency')"
+              },
+              "initial_number_value": {
+                "type": "number",
+                "description": "Start value of the metric"
+              },
+              "target_number_value": {
+                "type": "number",
+                "description": "End value of the metric (cannot equal initial_number_value)"
+              },
+              "current_number_value": {
+                "type": "number",
+                "description": "Current value of the metric"
+              },
+              "current_display_value": {
+                "type": "string",
+                "description": "Current value as a display string"
+              },
+              "progress_source": {
+                "type": "string",
+                "enum": [
+                  "manual",
+                  "subgoal_progress",
+                  "project_task_completion",
+                  "project_milestone_completion",
+                  "task_completion",
+                  "external"
+                ],
+                "description": "How progress is calculated"
+              },
+              "is_custom_weight": {
+                "type": "boolean",
+                "description": "Whether to use custom weights for progress calculation"
+              },
+              "can_manage": {
+                "type": "boolean",
+                "description": "Whether requester can update the metric value"
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_goal_metric_current_value",
+      "description": "Update a goal metric's current value. Updates a goal's existing metric's current_number_value if one exists, otherwise responds with a 400 status code. Returns the complete updated goal metric record. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal (required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "Updated fields for the goal metric",
+            "properties": {
+              "current_number_value": {
+                "type": "number",
+                "description": "The current value of the goal metric (required)"
+              },
+              "current_display_value": {
+                "type": "string",
+                "description": "Current value as a display string (optional)"
+              }
+            },
+            "required": [
+              "current_number_value"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_followers_to_goal",
+      "description": "Add followers to a goal. Adds followers to a goal and returns the goal the followers were added to. Each goal can be associated with zero or more followers in the system. Returns the complete updated goal record. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal (required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "The followers to be added as collaborators",
+            "properties": {
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of user identifiers (can be 'me', email, or user GID) (required)"
+              }
+            },
+            "required": [
+              "followers"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_followers_from_goal",
+      "description": "Remove followers from a goal. Removes followers from a goal and returns the goal the followers were removed from. Each goal can be associated with zero or more followers in the system. Returns the complete updated goal record. Required scope: goals:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal (required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "The followers to be removed as collaborators",
+            "properties": {
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of user identifiers (can be 'me', email, or user GID) (required)"
+              }
+            },
+            "required": [
+              "followers"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_parent_goals",
+      "description": "Get parent goals from a goal. Returns a compact representation of all of the parent goals of a goal. Required scope: goals:read. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal (required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_members_to_portfolio",
+      "description": "Add members to a portfolio. Returns the updated portfolio record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to add members to the portfolio",
+            "properties": {
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of user GIDs to add as members"
+              }
+            },
+            "required": [
+              "members"
+            ]
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_portfolio",
+      "description": "Create a new portfolio. Returns the full record of the newly created portfolio.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to create the portfolio",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the portfolio"
+              },
+              "archived": {
+                "type": "boolean",
+                "description": "Whether the portfolio is archived"
+              },
+              "color": {
+                "type": "string",
+                "description": "Color of the portfolio"
+              },
+              "start_on": {
+                "type": "string",
+                "description": "Start date (YYYY-MM-DD)"
+              },
+              "due_on": {
+                "type": "string",
+                "description": "Due date (YYYY-MM-DD)"
+              },
+              "default_access_level": {
+                "type": "string",
+                "description": "Default access level for the portfolio"
+              },
+              "workspace": {
+                "type": "string",
+                "description": "Workspace GID"
+              },
+              "public": {
+                "type": "boolean",
+                "description": "Whether the portfolio is public"
+              }
+            },
+            "required": [
+              "name",
+              "workspace"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_portfolio",
+      "description": "Delete a portfolio. Returns an empty data object.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "portfolio_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_portfolio",
+      "description": "Get a portfolio by GID. Returns the full record of the portfolio.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "portfolio_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_portfolios",
+      "description": "Get portfolios with filtering and pagination. Returns compact portfolio records.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "Workspace GID"
+          },
+          "owner": {
+            "type": "string",
+            "description": "Owner GID"
+          }
+        },
+        "required": [
+          "workspace"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_portfolio_items",
+      "description": "Get portfolio items with filtering and pagination. Returns compact portfolio item records.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio (required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          }
+        },
+        "required": [
+          "portfolio_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_custom_field_from_portfolio",
+      "description": "Remove a custom field from a portfolio. Returns an empty data object.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to remove the custom field from the portfolio",
+            "properties": {
+              "custom_field": {
+                "type": "string",
+                "description": "Globally unique identifier for the custom field"
+              }
+            },
+            "required": [
+              "custom_field"
+            ]
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_item_from_portfolio",
+      "description": "Remove an item from a portfolio. Returns the updated portfolio record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to remove the item from the portfolio",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "Globally unique identifier for the item to remove from the portfolio"
+              }
+            },
+            "required": [
+              "item"
+            ]
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_members_from_portfolio",
+      "description": "Remove members from a portfolio. Returns the updated portfolio record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to remove the members from the portfolio",
+            "properties": {
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of user GIDs to remove as members"
+              }
+            },
+            "required": [
+              "members"
+            ]
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_portfolio",
+      "description": "Update a portfolio. Returns the updated portfolio record.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data to update the portfolio",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the portfolio"
+              },
+              "archived": {
+                "type": "boolean",
+                "description": "Whether the portfolio is archived"
+              },
+              "color": {
+                "type": "string",
+                "description": "Color of the portfolio"
+              },
+              "start_on": {
+                "type": "string",
+                "description": "Start date (YYYY-MM-DD)"
+              },
+              "due_on": {
+                "type": "string",
+                "description": "Due date (YYYY-MM-DD)"
+              },
+              "default_access_level": {
+                "type": "string",
+                "description": "Default access level for the portfolio"
+              },
+              "custom_field_settings": {
+                "type": "object",
+                "description": "Custom field settings for the portfolio"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "required": [
+          "portfolio_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_portfolio_membership",
+      "description": "Get a portfolio membership by GID. Returns the full record of the portfolio membership.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_membership_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio membership"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "portfolio_membership_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_goal_relationship",
+      "description": "Get a single goal relationship by GID. Required scope: goals:read. OAuth 2.0 Bearer token required.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_relationship_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the goal relationship"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "goal_relationship_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_goal_relationships",
+      "description": "List goal relationships filtered by supported_goal. Supports pagination.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "supported_goal": {
+            "type": "string",
+            "description": "The parent/supported goal GID."
+          },
+          "resource_subtype": {
+            "type": "string",
+            "description": "Filter by resource_subtype: subgoal | supporting_work"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "supported_goal"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_supporting_goal_relationship",
+      "description": "Create a supporting relationship for a goal. Required scope: goals:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "supporting_resource": {
+                "type": "string"
+              },
+              "insert_before": {
+                "type": "string"
+              },
+              "insert_after": {
+                "type": "string"
+              },
+              "contribution_weight": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "supporting_resource"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_goal_relationship",
+      "description": "Update an existing goal relationship. Required scope: goals:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_relationship_gid": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "contribution_weight": {
+                "type": "number"
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "goal_relationship_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_supporting_goal_relationship",
+      "description": "Remove a supporting relationship from a goal. Required scope: goals:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goal_gid": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "supporting_resource": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "supporting_resource"
+            ]
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "goal_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_tag",
+      "description": "Get a tag by GID. Returns the complete tag record for a single tag. Required scope: tags:read. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tag_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the tag"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of field names to include in the response (e.g., ['color', 'notes', 'created_at', 'followers', 'workspace', 'permalink_url'])"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "tag_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_multiple_tags",
+      "description": "Get multiple tags. Returns compact tag records for some filtered set of tags. Required scope: tags:read. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace": {
+            "type": "string",
+            "description": "The workspace to filter tags on."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100). Default 20.",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Offset token for pagination."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of field names to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_tag",
+      "description": "Create a tag. Creates a new tag in a workspace or organization. Returns the full record of the newly created tag. Required scope: tags:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "The tag to create.",
+            "properties": {
+              "workspace": {
+                "type": "string",
+                "description": "Gid of an object. (Required)"
+              },
+              "name": {
+                "type": "string",
+                "description": "Name of the tag."
+              },
+              "color": {
+                "type": "string",
+                "description": "Color of the tag.",
+                "enum": [
+                  "dark-pink",
+                  "dark-green",
+                  "dark-blue",
+                  "dark-red",
+                  "dark-teal",
+                  "dark-brown",
+                  "dark-orange",
+                  "dark-purple",
+                  "dark-warm-gray",
+                  "light-pink",
+                  "light-green",
+                  "light-blue",
+                  "light-red",
+                  "light-teal",
+                  "light-brown",
+                  "light-orange",
+                  "light-purple",
+                  "light-warm-gray"
+                ]
+              },
+              "notes": {
+                "type": "string",
+                "description": "Free-form textual information associated with the tag."
+              },
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "An array of strings identifying users. These can either be the string 'me', an email, or the gid of a user."
+              }
+            },
+            "required": [
+              "workspace"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of field names to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_tag",
+      "description": "Update a tag. Only provided fields will be changed; unspecified fields remain unchanged. Returns the complete updated tag record. Required scope: tags:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tag_gid": {
+            "type": "string",
+            "description": "Globally unique identifier of the tag to update. (Required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "The fields to update on the tag.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the tag."
+              },
+              "color": {
+                "type": "string",
+                "description": "Color of the tag.",
+                "enum": [
+                  "dark-pink",
+                  "dark-green",
+                  "dark-blue",
+                  "dark-red",
+                  "dark-teal",
+                  "dark-brown",
+                  "dark-orange",
+                  "dark-purple",
+                  "dark-warm-gray",
+                  "light-pink",
+                  "light-green",
+                  "light-blue",
+                  "light-red",
+                  "light-teal",
+                  "light-brown",
+                  "light-orange",
+                  "light-purple",
+                  "light-warm-gray",
+                  "null"
+                ]
+              },
+              "notes": {
+                "type": "string",
+                "description": "Free-form textual information associated with the tag."
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of field names to include in the response."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          }
+        },
+        "required": [
+          "tag_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_tag",
+      "description": "Delete a tag. Returns an empty data object on success. Required scope: tags:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tag_gid": {
+            "type": "string",
+            "description": "Globally unique identifier of the tag to delete. (Required)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          }
+        },
+        "required": [
+          "tag_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_tag_in_workspace",
+      "description": "Create a tag inside a workspace. Returns the full record of the newly created tag. Required scope: tags:write. Security: OAuth 2.0 (Bearer token required).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Workspace or organization GID. (Required)"
+          },
+          "data": {
+            "type": "object",
+            "description": "The tag to create.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the tag."
+              },
+              "color": {
+                "type": "string",
+                "description": "Color of the tag.",
+                "enum": [
+                  "dark-pink",
+                  "dark-green",
+                  "dark-blue",
+                  "dark-red",
+                  "dark-teal",
+                  "dark-brown",
+                  "dark-orange",
+                  "dark-purple",
+                  "dark-warm-gray",
+                  "light-pink",
+                  "light-green",
+                  "light-blue",
+                  "light-red",
+                  "light-teal",
+                  "light-brown",
+                  "light-orange",
+                  "light-purple",
+                  "light-warm-gray",
+                  "null"
+                ]
+              },
+              "notes": {
+                "type": "string",
+                "description": "Description of the tag."
+              },
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Users following the tag. Accepts 'me', emails, or user gids."
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of additional fields to include."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          }
+        },
+        "required": [
+          "workspace_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_task_tags",
+      "description": "Get all tags on a task. Returns compact tag objects. Supports pagination via limit and offset. Required scope: tags:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in expanded output."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print JSON output."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of results per page (1–100)."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset returned from previous request."
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_tags_in_workspace",
+      "description": "Retrieve all tags in a workspace. Returns compact tag objects with optional pagination and field expansion. Required scope: tags:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "The workspace gid. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in expanded output."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print JSON output."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of results per page (1–100)."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset returned from previous request."
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_portfolio_memberships",
+      "description": "Get portfolio memberships with filtering and pagination. Returns compact portfolio membership records.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "portfolio_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the portfolio"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "user": {
+            "type": "string",
+            "description": "A string identifying a user. This can either be the string 'me', an email, or the gid of a user."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          }
+        },
+        "required": [
+          "portfolio_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_all_portfolio_memberships",
+      "description": "Get all portfolio memberships with filtering and pagination. Returns compact portfolio membership records.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "portfolio": {
+            "type": "string",
+            "description": "The portfolio to filter results on"
+          },
+          "workspace": {
+            "type": "string",
+            "description": "The workspace to filter results on"
+          },
+          "user": {
+            "type": "string",
+            "description": "A string identifying a user. This can either be the string 'me', an email, or the gid of a user."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page (1-100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination offset token"
+          }
+        },
+        "required": [
+          "portfolio"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_project_to_task",
+      "description": "Add a project to a task. Returns the full record of the newly added project. Required scope: projects:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "project": {
+                "type": "string",
+                "description": "The project gid. (Required)"
+              },
+              "insert_after": {
+                "type": "string",
+                "description": "The task gid to insert the project after. (Required)"
+              },
+              "insert_before": {
+                "type": "string",
+                "description": "The task gid to insert the project before. (Required)"
+              },
+              "section": {
+                "type": "string",
+                "description": "The section gid to insert the project into. (Required)"
+              }
+            },
+            "required": [
+              "project"
+            ]
+          }
+        },
+        "required": [
+          "task_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_tag_to_task",
+      "description": "Add a tag to a task. Returns the full record of the newly added tag. Required scope: tags:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "tag": {
+                "type": "string",
+                "description": "The tag gid. (Required)"
+              }
+            },
+            "required": [
+              "tag"
+            ]
+          }
+        },
+        "required": [
+          "task_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_followers_to_task",
+      "description": "Add followers to a task. Returns the full record of the newly added followers. Required scope: tasks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in expanded output."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print JSON output."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The followers to add to the task."
+              }
+            },
+            "required": [
+              "followers"
+            ]
+          }
+        },
+        "required": [
+          "task_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_subtask",
+      "description": "Create a subtask. Returns the full record of the newly created subtask. Required scope: tasks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the subtask. (Required)"
+              },
+              "resource_subtype": {
+                "type": "string",
+                "description": "The resource subtype of the subtask."
+              },
+              "approval_status": {
+                "type": "string",
+                "description": "The approval status of the subtask."
+              },
+              "assignee_status": {
+                "type": "string",
+                "description": "The assignee status of the subtask."
+              },
+              "completed": {
+                "type": "boolean",
+                "description": "The completed status of the subtask."
+              },
+              "due_at": {
+                "type": "string",
+                "description": "The due at date of the subtask."
+              },
+              "due_on": {
+                "type": "string",
+                "description": "The due on date of the subtask."
+              },
+              "external": {
+                "type": "object",
+                "properties": {
+                  "gid": {
+                    "type": "string",
+                    "description": "The external gid of the subtask."
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "The external data of the subtask."
+                  }
+                }
+              },
+              "html_notes": {
+                "type": "string",
+                "description": "The html notes of the subtask."
+              },
+              "liked": {
+                "type": "boolean",
+                "description": "The liked status of the subtask."
+              },
+              "notes": {
+                "type": "string",
+                "description": "The notes of the subtask."
+              },
+              "start_at": {
+                "type": "string",
+                "description": "The start at date of the subtask."
+              },
+              "start_on": {
+                "type": "string",
+                "description": "The start on date of the subtask."
+              },
+              "assignee": {
+                "type": "string",
+                "description": "The assignee gid of the subtask."
+              },
+              "assignee_section": {
+                "type": "string",
+                "description": "The assignee section gid of the subtask."
+              },
+              "custom_fields": {
+                "type": "object",
+                "description": "The custom fields of the subtask."
+              },
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The followers of the subtask."
+              },
+              "parent": {
+                "type": "string",
+                "description": "The parent gid of the subtask."
+              },
+              "projects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The projects of the subtask."
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The tags of the subtask."
+              },
+              "workspace": {
+                "type": "string",
+                "description": "The workspace gid of the subtask."
+              },
+              "custom_type": {
+                "type": "string",
+                "description": "The custom type of the subtask."
+              },
+              "custom_type_status_option": {
+                "type": "string",
+                "description": "The custom type status option of the subtask."
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "required": [
+          "task_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_task",
+      "description": "Create a task. Returns the full record of the newly created task. Required scope: tasks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in expanded output."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print JSON output."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the subtask. (Required)"
+              },
+              "resource_subtype": {
+                "type": "string",
+                "description": "The resource subtype of the subtask."
+              },
+              "approval_status": {
+                "type": "string",
+                "description": "The approval status of the subtask."
+              },
+              "assignee_status": {
+                "type": "string",
+                "description": "The assignee status of the subtask."
+              },
+              "completed": {
+                "type": "boolean",
+                "description": "The completed status of the subtask."
+              },
+              "due_at": {
+                "type": "string",
+                "description": "The due at date of the subtask."
+              },
+              "due_on": {
+                "type": "string",
+                "description": "The due on date of the subtask."
+              },
+              "external": {
+                "type": "object",
+                "properties": {
+                  "gid": {
+                    "type": "string",
+                    "description": "The external gid of the subtask."
+                  },
+                  "data": {
+                    "type": "string",
+                    "description": "The external data of the subtask."
+                  }
+                }
+              },
+              "html_notes": {
+                "type": "string",
+                "description": "The html notes of the subtask."
+              },
+              "liked": {
+                "type": "boolean",
+                "description": "The liked status of the subtask."
+              },
+              "notes": {
+                "type": "string",
+                "description": "The notes of the subtask."
+              },
+              "start_at": {
+                "type": "string",
+                "description": "The start at date of the subtask."
+              },
+              "start_on": {
+                "type": "string",
+                "description": "The start on date of the subtask."
+              },
+              "assignee": {
+                "type": "string",
+                "description": "The assignee gid of the subtask."
+              },
+              "assignee_section": {
+                "type": "string",
+                "description": "The assignee section gid of the subtask."
+              },
+              "custom_fields": {
+                "type": "object",
+                "description": "The custom fields of the subtask."
+              },
+              "followers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The followers of the subtask."
+              },
+              "parent": {
+                "type": "string",
+                "description": "The parent gid of the subtask."
+              },
+              "projects": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The projects of the subtask."
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The tags of the subtask."
+              },
+              "workspace": {
+                "type": "string",
+                "description": "The workspace gid of the subtask."
+              },
+              "custom_type": {
+                "type": "string",
+                "description": "The custom type of the subtask."
+              },
+              "custom_type_status_option": {
+                "type": "string",
+                "description": "The custom type status option of the subtask."
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_task",
+      "description": "Update an existing task. Returns the full record of the updated task. Required scope: tasks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid to update. (Required)"
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fields to include in expanded output."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty print JSON output."
+          },
+          "data": {
+            "type": "object",
+            "description": "Subset of task fields to update.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "resource_subtype": {
+                "type": "string"
+              },
+              "approval_status": {
+                "type": "string"
+              },
+              "assignee_status": {
+                "type": "string"
+              },
+              "completed": {
+                "type": "boolean"
+              },
+              "due_at": {
+                "type": "string"
+              },
+              "due_on": {
+                "type": "string"
+              },
+              "html_notes": {
+                "type": "string"
+              },
+              "liked": {
+                "type": "boolean"
+              },
+              "notes": {
+                "type": "string"
+              },
+              "start_at": {
+                "type": "string"
+              },
+              "start_on": {
+                "type": "string"
+              },
+              "assignee": {
+                "type": "string"
+              },
+              "assignee_section": {
+                "type": "string"
+              },
+              "custom_fields": {
+                "type": "object"
+              },
+              "parent": {
+                "type": "string"
+              },
+              "custom_type": {
+                "type": "string"
+              },
+              "custom_type_status_option": {
+                "type": "string"
+              }
+            },
+            "minProperties": 1
+          }
+        },
+        "required": [
+          "task_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "delete_task",
+      "description": "Delete a task. Returns the full record of the deleted task. Required scope: tasks:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_gid": {
+            "type": "string",
+            "description": "The task gid. (Required)"
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          }
+        },
+        "required": [
+          "task_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "create_team",
+      "description": "Create a team inside an organization/workspace. Required scope: teams:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "The team configuration.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "html_description": {
+                "type": "string"
+              },
+              "organization": {
+                "type": "string",
+                "description": "Workspace/organization gid."
+              },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "secret",
+                  "request_to_join",
+                  "public"
+                ]
+              },
+              "edit_team_name_or_description_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "edit_team_visibility_or_trash_team_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "member_invite_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "guest_invite_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "join_request_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "team_member_removal_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "team_content_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "no_restriction",
+                  "only_team_admins"
+                ]
+              },
+              "endorsed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "organization"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_team",
+      "description": "Retrieve a single team. Required scope: teams:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "Globally unique identifier of the team."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Extra fields: custom_field_settings, organization, etc."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Pretty-print JSON output."
+          }
+        },
+        "required": [
+          "team_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_teams_for_user",
+      "description": "Get all teams a user is assigned to. Required scope: teams:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_gid": {
+            "type": "string",
+            "description": "User identifier: 'me', email, or gid."
+          },
+          "organization": {
+            "type": "string",
+            "description": "Workspace or organization to filter teams on."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_gid",
+          "organization"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_teams_in_workspace",
+      "description": "Get all teams in a workspace visible to the authorized user. Required scope: teams:read.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workspace_gid": {
+            "type": "string",
+            "description": "Workspace/organization GID."
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_team",
+      "description": "Update a team inside an organization/workspace. Required scope: teams:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the team."
+          },
+          "data": {
+            "type": "object",
+            "description": "Fields to update on the team.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "html_description": {
+                "type": "string"
+              },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "secret",
+                  "request_to_join",
+                  "public"
+                ]
+              },
+              "edit_team_name_or_description_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "edit_team_visibility_or_trash_team_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "member_invite_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "guest_invite_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "join_request_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "team_member_removal_access_level": {
+                "type": "string",
+                "enum": [
+                  "all_team_members",
+                  "only_team_admins"
+                ]
+              },
+              "team_content_management_access_level": {
+                "type": "string",
+                "enum": [
+                  "no_restriction",
+                  "only_team_admins"
+                ]
+              },
+              "endorsed": {
+                "type": "boolean"
+              }
+            }
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of fields to include (extends compact representation)"
+          },
+          "opt_pretty": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "team_gid"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "remove_user_from_team",
+      "description": "Remove a user from a team. The user making this call must be a member of the team. Required scope: teams:write.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the team."
+          },
+          "data": {
+            "type": "object",
+            "description": "Data for the request.",
+            "properties": {
+              "user": {
+                "type": "string",
+                "description": "An identifier for the user. Can be one of an email address, the globally unique identifier for the user, or the keyword 'me' to indicate the current user making the request."
+              }
+            },
+            "required": [
+              "user"
+            ]
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Provides 'pretty' output."
+          }
+        },
+        "required": [
+          "team_gid",
+          "data"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "add_user_to_team",
+      "description": "Add a user to a team. The user making this call must be a member of the team, and the user being added must exist in the same organization as the team.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "team_gid": {
+            "type": "string",
+            "description": "Globally unique identifier for the team."
+          },
+          "data": {
+            "type": "object",
+            "description": "Data for the request.",
+            "properties": {
+              "user": {
+                "type": "string",
+                "description": "An identifier for the user. Can be one of an email address, the globally unique identifier for the user, or the keyword 'me' to indicate the current user making the request."
+              }
+            },
+            "required": [
+              "user"
+            ]
+          },
+          "opt_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Comma-separated list of properties to include in the response. These are optional fields."
+          },
+          "opt_pretty": {
+            "type": "boolean",
+            "description": "Provides 'pretty' output. Provides the response in a 'pretty' format, which includes proper line breaking and indentation. Use for debugging."
+          }
+        },
+        "required": [
+          "team_gid",
+          "data"
+        ]
+      }
+    }
+  }
+]

@@ -1,0 +1,481 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_email_access_kb_aggregation",
+    "scenario_description": "Aggregate resolution notes from all email access incidents into a draft internal knowledge article, link it back to incidents, and notify Level 1 Support members.",
+    "system_prompt": "You are a helpful IT Service Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow. **Core Operations: Incident Management** * **Incident Registration** * **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record. **Impact x Urgency**. You must not allow manual priority setting unless the user has the Manager or Admin role. * **Default State:** All new Incidents are set to `state = new`. ** channel:**(channel, if not provided → default = chat) * **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of ***** Matrix: Impact / Urgency → Priority : High/High → Critical; High/Medium → High ; High/Low → Moderate; Medium/High → High ; Medium/Medium → Moderate ; Medium/Low → Low ; Low/High → Moderate ; Low/Medium → Low ; Low/Low → Low",
+    "prompt": "Aggregate the resolution notes from all incidents related to the email access issue into a single internal draft knowledge article intended for internal agents. Link the draft article back to all original incidents so future agents can trace its origin. Once the draft is created and linked, notify all members of the Level 1 Support Team individually through email that a new internal draft knowledge article is available for reference during email access issues by linking the first resolved 'email access' issue in the notification.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "list_incidents",
+      "create_knowledge_article",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "find_group_by_name",
+      "list_group_members",
+      "get_user",
+      "get_user",
+      "send_notification",
+      "send_notification"
+    ],
+    "expected_tools": [
+      "list_incidents",
+      "create_knowledge_article",
+      "link_knowledge_to_incident",
+      "link_knowledge_to_incident",
+      "find_group_by_name",
+      "list_group_members",
+      "get_user",
+      "get_user",
+      "send_notification",
+      "send_notification"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Draft Internal Knowledge Article Created",
+      "description": "Verify that an internal draft knowledge article owned by USER_001 is created for email access issues.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM knowledge WHERE owner_id = 'USER_001' AND visibility = 'internal' AND state = 'draft' AND body LIKE '%email%' AND body LIKE '%access%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Knowledge Linked To First Email Access Incident",
+      "description": "Verify that the draft internal knowledge article is linked to the first resolved email access incident INC_001.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_001' AND knowledge_id = (SELECT knowledge_id FROM knowledge WHERE owner_id = 'USER_001' AND visibility = 'internal' AND state = 'draft' AND body LIKE '%email%' AND body LIKE '%access%' LIMIT 1)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Knowledge Linked To Second Email Access Incident",
+      "description": "Verify that the draft internal knowledge article is linked to the additional email access incident INC_013.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident_knowledge WHERE incident_id = 'INC_013' AND knowledge_id = (SELECT knowledge_id FROM knowledge WHERE owner_id = 'USER_001' AND visibility = 'internal' AND state = 'draft' AND body LIKE '%email%' AND body LIKE '%access%' LIMIT 1)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Notification Sent To First Level 1 Support Member",
+      "description": "Verify that Carlos Rodriguez was notified about the new draft article using the first resolved email access incident as reference.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE email = 'carlos.rodriguez@techcorp.com' AND incident_id = 'INC_001' AND message LIKE '%email%' AND message LIKE '%access%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Notification Sent To Second Level 1 Support Member",
+      "description": "Verify that Aisha Williams was notified about the new draft article using the first resolved email access incident as reference.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM notification WHERE email = 'aisha.williams@techcorp.com' AND incident_id = 'INC_001' AND message LIKE '%email%' AND message LIKE '%access%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+        {
+            "name": "list_incidents",
+            "arguments": {
+            "short_description": "email"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "list_incidents",
+            "parameters": {
+                "short_description": "email"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "[\n  {\n    \"incident_id\": \"INC_022\",\n    \"number\": \"INC0000009\",\n    \"caller_id\": \"USER_010\",\n    \"service\": \"SVC_003\",\n    \"service_offering\": \"SVCOFF_003\",\n    \"configuration_item\": \"CI_003\",\n    \"assigned_to\": \"USER_009\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_009\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"software\",\n    \"short_description\": \"Email sync issues on mobile device\",\n    \"description\": \"Email not syncing properly on iPhone\",\n    \"worknotes\": \"Mobile device configuration updated\",\n    \"resolution_notes\": \"Email sync working correctly after reconfiguration\",\n    \"close_notes\": \"Issue resolved\",\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2024-02-26T15:20:00\",\n    \"created_at\": \"2024-02-26T14:00:00\",\n    \"updated_at\": \"2024-02-26T15:20:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_019\",\n    \"number\": \"INC0000006\",\n    \"caller_id\": \"USER_010\",\n    \"service\": \"SVC_003\",\n    \"service_offering\": \"SVCOFF_003\",\n    \"configuration_item\": \"CI_003\",\n    \"assigned_to\": \"USER_009\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"new\",\n    \"category\": \"software\",\n    \"short_description\": \"Email attachment size limit issue\",\n    \"description\": \"Unable to send email attachments larger than 10MB\",\n    \"worknotes\": \"Checking email server configuration and limits\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"low\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2024-02-23T13:00:00\",\n    \"updated_at\": \"2024-02-23T13:00:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_013\",\n    \"number\": \"INC0000001\",\n    \"caller_id\": \"USER_010\",\n    \"service\": \"SVC_003\",\n    \"service_offering\": \"SVCOFF_003\",\n    \"configuration_item\": \"CI_003\",\n    \"assigned_to\": \"USER_009\",\n    \"assignment_group\": \"GROUP_003\",\n    \"resolved_by\": \"USER_009\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_003\",\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"closed\",\n    \"category\": \"software\",\n    \"short_description\": \"Unable to access email\",\n    \"description\": \"User cannot access corporate email\",\n    \"worknotes\": \"Email access restored after account reset\",\n    \"resolution_notes\": \"Account reset completed successfully\",\n    \"close_notes\": \"Issue resolved\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"low\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2024-02-18T16:00:00\",\n    \"created_at\": \"2024-02-18T10:30:00\",\n    \"updated_at\": \"2024-02-18T16:00:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_001\",\n    \"number\": \"INC0000001\",\n    \"caller_id\": \"USER_005\",\n    \"service\": \"SVC_001\",\n    \"service_offering\": \"SVCOFF_001\",\n    \"configuration_item\": \"CI_001\",\n    \"assigned_to\": \"USER_003\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": \"USER_003\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_001\",\n    \"parent_incident\": null,\n    \"channel\": \"email\",\n    \"contact_type\": \"email\",\n    \"status\": \"resolved\",\n    \"category\": \"password-reset\",\n    \"short_description\": \"Cannot access email account\",\n    \"description\": \"User reports unable to log into Outlook email client\",\n    \"worknotes\": \"Password reset initiated via AD\",\n    \"resolution_notes\": \"Password successfully reset and user can access email\",\n    \"close_notes\": \"Issue resolved - user confirmed access restored\",\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2024-02-15T14:30:00\",\n    \"created_at\": \"2024-02-10T09:15:00\",\n    \"updated_at\": \"2024-02-15T14:30:00\",\n    \"org_id\": \"ORG_001\"\n  }\n]",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 233,
+            "executed_at": "2025-12-16T09:46:22.093874"
+            }
+        },
+        {
+            "name": "create_knowledge_article",
+            "arguments": {
+            "title": "Email Access Issues - Troubleshooting Guide (Internal Draft)",
+            "owner_id": "USER_001",
+            "body": "## Email Access Issues - Internal Resolution Guide\n\nThis knowledge article aggregates resolution information from multiple email access incidents to provide agents with a comprehensive troubleshooting guide.\n\n### Overview\nEmail access issues typically involve users being unable to log into their corporate email accounts, either through Outlook client or other email applications.\n\n### Common Resolution Approaches\n\n#### Incident INC_001 (INC0000001 - ORG_001): Cannot access email account\n**Issue Description:** User reports unable to log into Outlook email client\n**Impact:** Medium | **Urgency:** Medium | **Priority:** Moderate\n**Resolution Notes:** Password successfully reset and user can access email\n**Work Notes:** Password reset initiated via AD\n**Close Notes:** Issue resolved - user confirmed access restored\n**Resolution Code:** Solution Provided\n**Resolved Date:** 2024-02-15T14:30:00\n\n#### Incident INC_013 (INC0000001 - ORG_002): Unable to access email\n**Issue Description:** User cannot access corporate email\n**Impact:** Low | **Urgency:** Low | **Priority:** Low\n**Resolution Notes:** Account reset completed successfully\n**Work Notes:** Email access restored after account reset\n**Close Notes:** Issue resolved\n**Resolution Code:** Solution Provided\n**Resolved Date:** 2024-02-18T16:00:00\n\n### Recommended Troubleshooting Steps\n1. **Verify account status** - Check if the account is locked or disabled in Active Directory\n2. **Password reset** - Initiate password reset via AD if authentication issues are suspected\n3. **Account reset** - Complete account reset if password reset doesn't resolve the issue\n4. **Confirm resolution** - Have user confirm they can successfully access email after remediation\n\n### Key Takeaways\n- Account and password resets are effective solutions for email access issues\n- Both incidents were resolved with Solution Provided resolution code\n- Resolution time varies from same-day to multi-day depending on complexity\n- Always confirm with user that access is restored before closing\n\n**Source Incidents:** INC_001, INC_013",
+            "state": "draft",
+            "visibility": "internal"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "create_knowledge_article",
+            "parameters": {
+                "title": "Email Access Issues - Troubleshooting Guide (Internal Draft)",
+                "owner_id": "USER_001",
+                "body": "## Email Access Issues - Internal Resolution Guide\n\nThis knowledge article aggregates resolution information from multiple email access incidents to provide agents with a comprehensive troubleshooting guide.\n\n### Overview\nEmail access issues typically involve users being unable to log into their corporate email accounts, either through Outlook client or other email applications.\n\n### Common Resolution Approaches\n\n#### Incident INC_001 (INC0000001 - ORG_001): Cannot access email account\n**Issue Description:** User reports unable to log into Outlook email client\n**Impact:** Medium | **Urgency:** Medium | **Priority:** Moderate\n**Resolution Notes:** Password successfully reset and user can access email\n**Work Notes:** Password reset initiated via AD\n**Close Notes:** Issue resolved - user confirmed access restored\n**Resolution Code:** Solution Provided\n**Resolved Date:** 2024-02-15T14:30:00\n\n#### Incident INC_013 (INC0000001 - ORG_002): Unable to access email\n**Issue Description:** User cannot access corporate email\n**Impact:** Low | **Urgency:** Low | **Priority:** Low\n**Resolution Notes:** Account reset completed successfully\n**Work Notes:** Email access restored after account reset\n**Close Notes:** Issue resolved\n**Resolution Code:** Solution Provided\n**Resolved Date:** 2024-02-18T16:00:00\n\n### Recommended Troubleshooting Steps\n1. **Verify account status** - Check if the account is locked or disabled in Active Directory\n2. **Password reset** - Initiate password reset via AD if authentication issues are suspected\n3. **Account reset** - Complete account reset if password reset doesn't resolve the issue\n4. **Confirm resolution** - Have user confirm they can successfully access email after remediation\n\n### Key Takeaways\n- Account and password resets are effective solutions for email access issues\n- Both incidents were resolved with Solution Provided resolution code\n- Resolution time varies from same-day to multi-day depending on complexity\n- Always confirm with user that access is restored before closing\n\n**Source Incidents:** INC_001, INC_013",
+                "state": "draft",
+                "visibility": "internal"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"knowledge_id\": \"KB_006\",\n  \"kb_number\": \"KB0000004\",\n  \"title\": \"Email Access Issues - Troubleshooting Guide (Internal Draft)\",\n  \"body\": \"## Email Access Issues - Internal Resolution Guide\\n\\nThis knowledge article aggregates resolution information from multiple email access incidents to provide agents with a comprehensive troubleshooting guide.\\n\\n### Overview\\nEmail access issues typically involve users being unable to log into their corporate email accounts, either through Outlook client or other email applications.\\n\\n### Common Resolution Approaches\\n\\n#### Incident INC_001 (INC0000001 - ORG_001): Cannot access email account\\n**Issue Description:** User reports unable to log into Outlook email client\\n**Impact:** Medium | **Urgency:** Medium | **Priority:** Moderate\\n**Resolution Notes:** Password successfully reset and user can access email\\n**Work Notes:** Password reset initiated via AD\\n**Close Notes:** Issue resolved - user confirmed access restored\\n**Resolution Code:** Solution Provided\\n**Resolved Date:** 2024-02-15T14:30:00\\n\\n#### Incident INC_013 (INC0000001 - ORG_002): Unable to access email\\n**Issue Description:** User cannot access corporate email\\n**Impact:** Low | **Urgency:** Low | **Priority:** Low\\n**Resolution Notes:** Account reset completed successfully\\n**Work Notes:** Email access restored after account reset\\n**Close Notes:** Issue resolved\\n**Resolution Code:** Solution Provided\\n**Resolved Date:** 2024-02-18T16:00:00\\n\\n### Recommended Troubleshooting Steps\\n1. **Verify account status** - Check if the account is locked or disabled in Active Directory\\n2. **Password reset** - Initiate password reset via AD if authentication issues are suspected\\n3. **Account reset** - Complete account reset if password reset doesn't resolve the issue\\n4. **Confirm resolution** - Have user confirm they can successfully access email after remediation\\n\\n### Key Takeaways\\n- Account and password resets are effective solutions for email access issues\\n- Both incidents were resolved with Solution Provided resolution code\\n- Resolution time varies from same-day to multi-day depending on complexity\\n- Always confirm with user that access is restored before closing\\n\\n**Source Incidents:** INC_001, INC_013\",\n  \"state\": \"draft\",\n  \"visibility\": \"internal\",\n  \"owner_id\": \"USER_001\",\n  \"created_on\": \"2025-12-16T09:47:10.345065\",\n  \"updated_on\": \"2025-12-16T09:47:10.345065\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 352,
+            "executed_at": "2025-12-16T09:47:10.463617"
+            }
+        },
+        {
+            "name": "link_knowledge_to_incident",
+            "arguments": {
+            "incident_id": "INC_001",
+            "knowledge_id": "KB_006",
+            "used_as": "resolution"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "link_knowledge_to_incident",
+            "parameters": {
+                "incident_id": "INC_001",
+                "knowledge_id": "KB_006",
+                "used_as": "resolution"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"incident_kb_id\": \"IKB_006\",\n  \"incident_id\": \"INC_001\",\n  \"knowledge_id\": \"KB_006\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-16T09:47:57.333699\",\n  \"updated_on\": \"2025-12-16T09:47:57.333699\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 293,
+            "executed_at": "2025-12-16T09:47:57.402446"
+            }
+        },
+        {
+            "name": "link_knowledge_to_incident",
+            "arguments": {
+            "incident_id": "INC_013",
+            "knowledge_id": "KB_006",
+            "used_as": "resolution"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "link_knowledge_to_incident",
+            "parameters": {
+                "incident_id": "INC_013",
+                "knowledge_id": "KB_006",
+                "used_as": "resolution"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"incident_kb_id\": \"IKB_007\",\n  \"incident_id\": \"INC_013\",\n  \"knowledge_id\": \"KB_006\",\n  \"used_as\": \"resolution\",\n  \"created_on\": \"2025-12-16T09:48:49.909389\",\n  \"updated_on\": \"2025-12-16T09:48:49.909389\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 250,
+            "executed_at": "2025-12-16T09:48:49.972625"
+            }
+        },
+        {
+            "name": "find_group_by_name",
+            "arguments": {
+            "name": "Level 1 Support Team"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "find_group_by_name",
+            "parameters": {
+                "name": "Level 1 Support Team"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"group_id\": \"GROUP_001\",\n  \"name\": \"Level 1 Support Team\",\n  \"type\": \"IT Support\",\n  \"active\": true,\n  \"email\": \"support-l1@techcorp.com\",\n  \"description\": \"First level support team handling initial user requests\",\n  \"manager_id\": \"USER_002\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2024-01-10T08:00:00\",\n  \"updated_on\": \"2024-01-10T08:00:00\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 228,
+            "executed_at": "2025-12-16T09:49:27.879157"
+            }
+        },
+        {
+            "name": "list_group_members",
+            "arguments": {
+            "group_id": "GROUP_001"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "list_group_members",
+            "parameters": {
+                "group_id": "GROUP_001"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"group_members\": [\n    {\n      \"member_id\": \"MEMBER_002\",\n      \"group_id\": \"GROUP_001\",\n      \"user_id\": \"USER_004\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2024-01-15T10:30:00\",\n      \"updated_on\": \"2024-01-15T10:30:00\"\n    },\n    {\n      \"member_id\": \"MEMBER_001\",\n      \"group_id\": \"GROUP_001\",\n      \"user_id\": \"USER_003\",\n      \"org_id\": \"ORG_001\",\n      \"created_on\": \"2024-01-15T10:00:00\",\n      \"updated_on\": \"2024-01-15T10:00:00\"\n    }\n  ],\n  \"total_count\": 2\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 215,
+            "executed_at": "2025-12-16T09:50:20.917497"
+            }
+        },
+        {
+            "name": "get_user",
+            "arguments": {
+            "user_id": "USER_003"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "get_user",
+            "parameters": {
+                "user_id": "USER_003"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"user_id\": \"USER_003\",\n  \"user_name\": \"carlos.rodriguez\",\n  \"first_name\": \"Carlos\",\n  \"last_name\": \"Rodriguez\",\n  \"email\": \"carlos.rodriguez@techcorp.com\",\n  \"phone\": \"+1-415-555-0103\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"agent_token_carlos_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2024-01-17T11:00:00\",\n  \"updated_on\": \"2024-01-17T11:00:00\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 254,
+            "executed_at": "2025-12-16T09:50:59.276649"
+            }
+        },
+        {
+            "name": "get_user",
+            "arguments": {
+            "user_id": "USER_004"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "get_user",
+            "parameters": {
+                "user_id": "USER_004"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"user_id\": \"USER_004\",\n  \"user_name\": \"aisha.williams\",\n  \"first_name\": \"Aisha\",\n  \"last_name\": \"Williams\",\n  \"email\": \"aisha.williams@techcorp.com\",\n  \"phone\": \"+1-415-555-0104\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"agent_token_aisha_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2024-01-18T12:00:00\",\n  \"updated_on\": \"2024-01-18T12:00:00\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 268,
+            "executed_at": "2025-12-16T09:51:40.459979"
+            }
+        },
+        {
+            "name": "send_notification",
+            "arguments": {
+            "incident_id": "INC_001",
+            "email": "carlos.rodriguez@techcorp.com",
+            "type": "update",
+            "status": "sent",
+            "subject": "New Internal Draft Knowledge Article Available - Email Access Issues",
+            "message": "Hello Carlos,\n\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\n\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\n\n**Key Information:**\n- The article covers common email access troubleshooting steps\n- Includes resolution approaches from incidents INC_001 and INC_013\n- Contains recommended troubleshooting workflow for account and password reset scenarios\n- Available in internal knowledge base for Level 1 Support Team reference\n\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\n\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\n\nBest regards,\nIT Service Management System"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "send_notification",
+            "parameters": {
+                "incident_id": "INC_001",
+                "email": "carlos.rodriguez@techcorp.com",
+                "type": "update",
+                "status": "sent",
+                "subject": "New Internal Draft Knowledge Article Available - Email Access Issues",
+                "message": "Hello Carlos,\n\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\n\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\n\n**Key Information:**\n- The article covers common email access troubleshooting steps\n- Includes resolution approaches from incidents INC_001 and INC_013\n- Contains recommended troubleshooting workflow for account and password reset scenarios\n- Available in internal knowledge base for Level 1 Support Team reference\n\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\n\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\n\nBest regards,\nIT Service Management System"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"incident_id\": \"INC_001\",\n  \"email\": \"carlos.rodriguez@techcorp.com\",\n  \"type\": \"update\",\n  \"status\": \"sent\",\n  \"subject\": \"New Internal Draft Knowledge Article Available - Email Access Issues\",\n  \"message\": \"Hello Carlos,\\n\\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\\n\\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\\n\\n**Key Information:**\\n- The article covers common email access troubleshooting steps\\n- Includes resolution approaches from incidents INC_001 and INC_013\\n- Contains recommended troubleshooting workflow for account and password reset scenarios\\n- Available in internal knowledge base for Level 1 Support Team reference\\n\\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\\n\\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\\n\\nBest regards,\\nIT Service Management System\",\n  \"notification_id\": \"NOTIF_008\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-16T09:52:29.439640\",\n  \"updated_on\": \"2025-12-16T09:52:29.439640\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 408,
+            "executed_at": "2025-12-16T09:52:29.514994"
+            }
+        },
+        {
+            "name": "send_notification",
+            "arguments": {
+            "incident_id": "INC_001",
+            "email": "aisha.williams@techcorp.com",
+            "type": "update",
+            "status": "sent",
+            "subject": "New Internal Draft Knowledge Article Available - Email Access Issues",
+            "message": "Hello Aisha,\n\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\n\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\n\n**Key Information:**\n- The article covers common email access troubleshooting steps\n- Includes resolution approaches from incidents INC_001 and INC_013\n- Contains recommended troubleshooting workflow for account and password reset scenarios\n- Available in internal knowledge base for Level 1 Support Team reference\n\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\n\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\n\nBest regards,\nIT Service Management System"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "send_notification",
+            "parameters": {
+                "incident_id": "INC_001",
+                "email": "aisha.williams@techcorp.com",
+                "type": "update",
+                "status": "sent",
+                "subject": "New Internal Draft Knowledge Article Available - Email Access Issues",
+                "message": "Hello Aisha,\n\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\n\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\n\n**Key Information:**\n- The article covers common email access troubleshooting steps\n- Includes resolution approaches from incidents INC_001 and INC_013\n- Contains recommended troubleshooting workflow for account and password reset scenarios\n- Available in internal knowledge base for Level 1 Support Team reference\n\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\n\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\n\nBest regards,\nIT Service Management System"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"incident_id\": \"INC_001\",\n  \"email\": \"aisha.williams@techcorp.com\",\n  \"type\": \"update\",\n  \"status\": \"sent\",\n  \"subject\": \"New Internal Draft Knowledge Article Available - Email Access Issues\",\n  \"message\": \"Hello Aisha,\\n\\nA new internal draft knowledge article (KB_006 - KB0000004) is now available for reference during email access issues. This article aggregates resolution notes from multiple email access incidents to help you troubleshoot similar cases more efficiently.\\n\\n**Article Title:** Email Access Issues - Troubleshooting Guide (Internal Draft)\\n\\n**Key Information:**\\n- The article covers common email access troubleshooting steps\\n- Includes resolution approaches from incidents INC_001 and INC_013\\n- Contains recommended troubleshooting workflow for account and password reset scenarios\\n- Available in internal knowledge base for Level 1 Support Team reference\\n\\n**Linked to Incident:** INC_001 (INC0000001) - Cannot access email account\\n\\nPlease review this draft article when handling similar email access issues. Your feedback on the article content would be valuable for finalizing it for broader team use.\\n\\nBest regards,\\nIT Service Management System\",\n  \"notification_id\": \"NOTIF_009\",\n  \"org_id\": \"ORG_001\",\n  \"created_on\": \"2025-12-16T09:53:07.211353\",\n  \"updated_on\": \"2025-12-16T09:53:07.211353\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 234,
+            "executed_at": "2025-12-16T09:53:07.275710"
+            }
+        }
+    ],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1765339104189_2ky55eu9v",
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Aggregate email access incident resolution notes into an internal draft knowledge article, link it to related incidents, and notify Level 1 Support members referencing the first resolved email access incident.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+  "L1": "Knowledge",
+  "L2": "Incident ↔ KB Links",
+  "L3": "Knowledge Application Engine"
+}

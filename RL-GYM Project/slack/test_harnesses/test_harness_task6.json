@@ -1,0 +1,33 @@
+{
+  "system_prompt": "You are a helpful assistant for Slack workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Create a public channel, add the member, and message if needed.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "I am Sophia (UUSGHV97FSJV). Create a public channel #web-team and add Benjamin (US7JQP7EFSHQ) because I need him to be part of the web team. Make sure his profile reflects his role as a “web developer”. If not, please dm him on behave of me, saying “Hi Benjamin, I just added you to the channel #web-team for our new web project. Please update your profile so that it reflects your new role as a web developer”.",
+          "expected_tools": [
+            "conversations_create",
+            "conversations_invite",
+            "get_user_info",
+            "conversations_open",
+            "chat_post_message"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_channels WHERE name = 'web-team' AND is_private = 0 AND members LIKE '%US7JQP7EFSHQ%'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

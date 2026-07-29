@@ -1,0 +1,118 @@
+{
+  "scenario_config": {
+    "scenario_name": "std_timezones",
+    "scenario_description": "Standardize timezones and notifications",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I’d like to standardize time handling across my account. Update all of my calendars and all of my events so that their timezone matches the timezone configured in my profile. When updating events, do not shift or recalculate the scheduled times; only update their timezone metadata so that the existing start and end clock times remain exactly as they are, now interpreted in my profile’s timezone.\nOn my existing demo event, add the following attachment: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit. Also, configure an email reminder to be sent to my address, dave.brown@techcorp.com, 15 minutes before the event starts.\nFinally, set up a unified notification webhook for all of my calendars so that any changes send a notification to https://api.acme.com/calendar/notifications.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user_by_email",
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "watch_events",
+      "watch_events"
+    ],
+    "expected_tools": [
+      "get_user_by_email",
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "watch_events",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "TimeZone Calendars",
+      "description": "Calendars use profile TimeZone",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars c JOIN users u ON c.user_id = u.user_id WHERE c.user_id = 'dave_sales' AND c.time_zone <> u.timezone",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Birthday TimeZone",
+      "description": "Birthday event TimeZone set",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-005' AND user_id = 'dave_sales' AND start_datetime like '%2025-11-05%' AND start_datetime like '%09:00%' AND end_datetime like '%2025-11-05%' AND end_datetime like '%10:00%' AND start_timezone = 'America/Chicago' AND end_timezone = 'America/Chicago'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Demo TimeZone",
+      "description": "Demo event TZ set",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-006' AND calendar_id = 'dave-sales' AND user_id = 'dave_sales' AND start_datetime like '%2025-10-09%' AND start_datetime like '%11:00%' AND end_datetime like '%2025-10-09%' AND end_datetime like '%13:00%' AND start_timezone = 'America/Chicago' AND end_timezone = 'America/Chicago'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Demo Attachments",
+      "description": "Demo attachments kept+new",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attachments WHERE event_id = 'event-corrected-006' AND file_url IN ('https://drive.google.com/file/d/enterprise-demo-deck-2024/view','https://drive.google.com/file/d/pricing-sheet-enterprise-2024/view','https://docs.google.com/document/d/technical-specs-enterprise/edit','https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit')",
+      "expected_value": "4",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Demo Reminder",
+      "description": "Demo email reminder",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM reminders WHERE event_id = 'event-corrected-006' AND method = 'email' AND minutes = 15",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhooks for both cals",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE user_id = 'dave_sales' AND webhook_address = 'https://api.acme.com/calendar/notifications' AND webhook_type = 'web_hook' AND calendar_id IN ('dave-primary','dave-sales')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Standardize timezones, update demo event, and configure webhooks.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}
