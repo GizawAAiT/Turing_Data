@@ -1,0 +1,56 @@
+{
+  "system_prompt": "You are a helpful assistant for Microsoft Teams workspace tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Clone a team (members only), notify all members, and post in General.",
+      "conversation_mode": true,
+      "context": {
+          "x-teams-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm Alice Johnson (the project manager in the team \"TechCorp Solutions Team\", with team_id: team_techcorp_001). Please replicate the \"TechCorp Solutions Team\" as \"TechCorp Solutions Team v2\", keeping only its members. Also, let's send a short activity notification to all its members saying: \"Welcome to TechCorp Solutions Team v2! Let's get started\". Finally, post a message in the General channel of \"TechCorp Solutions Team\" saying \"Hi @here, we're creating a new version of this team\"",
+          "expected_tools": [
+            "get_team",
+            "clone_team",
+            "send_activity_notification_to_user_in_team",
+            "list_channels",
+            "send_channel_message",
+            "update_channel",
+            "send_channel_message"  
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM ( SELECT t1.display_name AS original_team, t2.display_name AS cloned_team FROM teams t1 INNER JOIN teams t2 ON t1.visibility = t2.visibility WHERE t1.display_name = 'TechCorp Solutions Team' AND t2.display_name = 'TechCorp Solutions Team v2' AND t1.team_id <> t2.team_id ) result",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM activity_notifications WHERE preview_text_content LIKE 'Welcome to TechCorp Solutions Team v2! Let%' AND preview_text_content LIKE '%get started'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM channel_messages WHERE team_id = 'team_techcorp_001' AND json_extract(body_json, '$.content') LIKE 'Hi @here, we%' AND json_extract(body_json, '$.content') LIKE '%new version of this team'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "hard"
+      }
+    }
+  ]
+}

@@ -1,0 +1,745 @@
+{
+  "scenario_config": {
+    "scenario_name": "Organize Mailbox for Travel and Team Coordination",
+    "scenario_description": "The user wants their mailbox reorganized to better manage upcoming travel plans and team-related communication. They need new labels for travel arrangements, team attention, and low-priority automated updates. Travel-related emails should be highlighted and kept in the inbox, team communications should be surfaced for review, and automated summaries should be moved out of the inbox and marked as read.",
+    "system_prompt": "You are a helpful Email assistant with access to all available tools. Operate in a safe and fully authorized environment—you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes—rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I need to reorganize my mailbox so that I can manage travel plans and team coordination more efficiently. Please introduce two new labels: one for all my upcoming travel arrangements and another for team communication that needs my attention. Any new message that includes travel-related terms in the subject, like booking confirmations, flight schedules, itinerary updates, hotel reservations, or trip changes, should be grouped under the travel label while still staying in my inbox. Messages from my team or with subjects mentioning standups, project updates, approvals, or discussions should go under the team attention label without removing them from the inbox.\n\nMove low-value routine updates, such as automated platform summaries or digest emails, out of my inbox and store them under a low-priority updates label, marking them as read. If there are any old filters that send important team messages to the wrong place or archive travel information, fix those so everything lines up with this structure.\n\nAlso, activate a safe auto-reply for when I’m traveling. It should only respond to direct human senders, not automated systems or mailing lists. Keep my IMAP settings as they are, but restrict POP access so nothing can drain the mailbox while I'm away.",
+    "restricted_tools": [],
+    "expected_tools": [
+      "create_label",
+      "create_label",
+      "create_label",
+      "list_filters",
+      "get_label",
+      "get_label",
+      "create_filter",
+      "create_filter",
+      "create_filter",
+      "list_messages",
+      "get_pop_settings",
+      "update_pop_settings",
+      "get_imap_settings",
+      "update_vacation_settings"
+    ],
+    "selected_tools": [
+      "create_label",
+      "create_label",
+      "create_label",
+      "list_filters",
+      "get_label",
+      "get_label",
+      "create_filter",
+      "create_filter",
+      "create_filter",
+      "list_messages",
+      "get_pop_settings",
+      "update_pop_settings",
+      "get_imap_settings",
+      "update_vacation_settings"
+    ],
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "label_travel_created",
+      "description": "Ensures a label for travel-related messages exists.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM labels\nWHERE LOWER(name) LIKE '%travel%'\n  AND (LOWER(name) LIKE '%arrange%' OR LOWER(name) LIKE '%plan%' OR LOWER(name) LIKE '%trip%');\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "label_team_attention_created",
+      "description": "Checks the team-communication label exists.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM labels\nWHERE LOWER(name) LIKE '%team%'\n  AND (LOWER(name) LIKE '%attention%' OR LOWER(name) LIKE '%action%' OR LOWER(name) LIKE '%review%');\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "label_low_priority_updates_created",
+      "description": "Confirms a label for low-priority automated summaries exists.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM labels\nWHERE LOWER(name) LIKE '%low%'\n  AND LOWER(name) LIKE '%update%';\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "filter_travel_created",
+      "description": "Ensures there is at least one travel-related filter.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM filters\nWHERE criteria_json LIKE '%booking%'\n   OR criteria_json LIKE '%flight%'\n   OR criteria_json LIKE '%itinerary%'\n   OR criteria_json LIKE '%hotel%'\n   OR criteria_json LIKE '%reservation%'\n   OR criteria_json LIKE '%trip%';\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "filter_team_created",
+      "description": "Validates the existence of a filter for team-attention messages.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM filters\nWHERE criteria_json LIKE '%standup%'\n   OR criteria_json LIKE '%approval%'\n   OR criteria_json LIKE '%discussion%'\n   OR criteria_json LIKE '%project%'\n   OR criteria_json LIKE '%team%';\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "filter_low_priority_created",
+      "description": "Checks that a filter exists for low-priority automated updates.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM filters\nWHERE criteria_json LIKE '%digest%'\n   OR criteria_json LIKE '%summary%'\n   OR criteria_json LIKE '%automated%'\n   OR criteria_json LIKE '%noreply%'\n   OR criteria_json LIKE '%no-reply%';\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "no_travel_skip_conflict",
+      "description": "Ensures travel messages are not mistakenly archived/removed from inbox.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM filters\nWHERE (criteria_json LIKE '%booking%' OR criteria_json LIKE '%flight%' OR criteria_json LIKE '%trip%')\n  AND action_json LIKE '%skipInbox%';\n",
+      "expected_value": 0,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "no_team_skip_conflict",
+      "description": "Ensures team messages are not mistakenly hidden or archived.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM filters\nWHERE (criteria_json LIKE '%team%' OR criteria_json LIKE '%standup%' OR criteria_json LIKE '%approval%' OR criteria_json LIKE '%discussion%')\n  AND action_json LIKE '%skipInbox%';\n",
+      "expected_value": 0,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "vacation_responder_safe_mode_enabled",
+      "description": "Confirms auto-reply only goes to humans (not bots or mailing lists).",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM vacation_settings\nWHERE restrict_to_contacts = 1\n   OR restrict_to_domain = 1;\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "pop_restricted",
+      "description": "Verifies POP cannot drain or expose full mailbox during travel.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS cnt\nFROM pop_settings\nWHERE LOWER(access_window) IN ('disabled', 'recent');\n",
+      "expected_value": 0,
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+"tools": [
+  {
+    "name": "create_label",
+    "arguments": {
+      "name": "Travel Arrangements",
+      "userId": "me",
+      "labelListVisibility": "labelShow",
+      "messageListVisibility": "show"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_label",
+      "parameters": {
+        "name": "Travel Arrangements",
+        "userId": "me",
+        "labelListVisibility": "labelShow",
+        "messageListVisibility": "show"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"c9610ba9-523c-4ddb-8735-c199f78ad9ec\",\n  \"name\": \"Travel Arrangements\",\n  \"messageListVisibility\": \"show\",\n  \"labelListVisibility\": \"labelShow\",\n  \"type\": \"user\",\n  \"messagesTotal\": 0,\n  \"messagesUnread\": 0,\n  \"threadsTotal\": 0,\n  \"threadsUnread\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 368,
+      "executed_at": "2026-01-10T04:44:33.005444"
+    }
+  },
+  {
+    "name": "create_label",
+    "arguments": {
+      "userId": "me",
+      "name": "Team Attention",
+      "labelListVisibility": "labelShow",
+      "messageListVisibility": "show"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_label",
+      "parameters": {
+        "userId": "me",
+        "name": "Team Attention",
+        "labelListVisibility": "labelShow",
+        "messageListVisibility": "show"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"9f21198e-0379-4b74-acfd-435567391829\",\n  \"name\": \"Team Attention\",\n  \"messageListVisibility\": \"show\",\n  \"labelListVisibility\": \"labelShow\",\n  \"type\": \"user\",\n  \"messagesTotal\": 0,\n  \"messagesUnread\": 0,\n  \"threadsTotal\": 0,\n  \"threadsUnread\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 277,
+      "executed_at": "2026-01-10T04:44:37.346918"
+    }
+  },
+  {
+    "name": "create_label",
+    "arguments": {
+      "userId": "me",
+      "name": "Low-Priority Updates",
+      "labelListVisibility": "labelShow",
+      "messageListVisibility": "hide"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_label",
+      "parameters": {
+        "userId": "me",
+        "name": "Low-Priority Updates",
+        "labelListVisibility": "labelShow",
+        "messageListVisibility": "hide"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"dc726ee3-da52-416b-9b56-f67e506b855d\",\n  \"name\": \"Low-Priority Updates\",\n  \"messageListVisibility\": \"hide\",\n  \"labelListVisibility\": \"labelShow\",\n  \"type\": \"user\",\n  \"messagesTotal\": 0,\n  \"messagesUnread\": 0,\n  \"threadsTotal\": 0,\n  \"threadsUnread\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 279,
+      "executed_at": "2026-01-10T04:44:41.872213"
+    }
+  },
+  {
+    "name": "list_filters",
+    "arguments": {
+      "userId": "me"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "list_filters",
+      "parameters": {
+        "userId": "me"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"id\": \"filter_63cdab17-3314-46aa-b106-9500935b63a4\",\n    \"criteria\": {\n      \"from\": \"support@company.com\",\n      \"to\": \"\",\n      \"subject\": \"urgent\",\n      \"query\": \"\",\n      \"negatedQuery\": \"\",\n      \"hasAttachment\": true,\n      \"excludeChats\": true,\n      \"size\": 0,\n      \"sizeComparison\": \"unspecified\"\n    },\n    \"action\": {\n      \"addLabelIds\": [\n        \"0d3f3961-4af7-4557-a3a2-6e2e77a1e82e\"\n      ]\n    }\n  },\n  {\n    \"id\": \"filter_c18c413b-8f44-45e6-86e7-15b09087ea2e\",\n    \"criteria\": {\n      \"from\": \"newsletter@techupdate.com\",\n      \"to\": \"user@system.com\",\n      \"subject\": \"\",\n      \"query\": \"is:unread\",\n      \"negatedQuery\": \"\",\n      \"hasAttachment\": false,\n      \"excludeChats\": false,\n      \"size\": 0,\n      \"sizeComparison\": \"unspecified\"\n    },\n    \"action\": {\n      \"addLabelIds\": [\n        \"a4d4f61f-8cb8-4d08-81c6-a8bb614938ea\"\n      ]\n    }\n  }\n]"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 227,
+      "executed_at": "2026-01-10T04:44:45.951094"
+    }
+  },
+  {
+    "name": "get_label",
+    "arguments": {
+      "userId": "me",
+      "id": "0d3f3961-4af7-4557-a3a2-6e2e77a1e82e"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "get_label",
+      "parameters": {
+        "userId": "me",
+        "id": "0d3f3961-4af7-4557-a3a2-6e2e77a1e82e"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"0d3f3961-4af7-4557-a3a2-6e2e77a1e82e\",\n  \"name\": \"CATEGORY_SOCIAL\",\n  \"messageListVisibility\": \"hide\",\n  \"labelListVisibility\": \"labelShow\",\n  \"type\": \"system\",\n  \"messagesTotal\": 0,\n  \"messagesUnread\": 0,\n  \"threadsTotal\": 0,\n  \"threadsUnread\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 149,
+      "executed_at": "2026-01-10T04:44:48.858645"
+    }
+  },
+  {
+    "name": "get_label",
+    "arguments": {
+      "userId": "me",
+      "id": "a4d4f61f-8cb8-4d08-81c6-a8bb614938ea"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "get_label",
+      "parameters": {
+        "userId": "me",
+        "id": "a4d4f61f-8cb8-4d08-81c6-a8bb614938ea"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"a4d4f61f-8cb8-4d08-81c6-a8bb614938ea\",\n  \"name\": \"SENT\",\n  \"messageListVisibility\": \"show\",\n  \"labelListVisibility\": \"labelShow\",\n  \"type\": \"system\",\n  \"messagesTotal\": 1,\n  \"messagesUnread\": 0,\n  \"threadsTotal\": 0,\n  \"threadsUnread\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 141,
+      "executed_at": "2026-01-10T04:44:51.842759"
+    }
+  },
+  {
+    "name": "create_filter",
+    "arguments": {
+      "userId": "me",
+      "criteria": {
+        "from": "*",
+        "to": "*",
+        "subject": "*",
+        "query": "subject:(booking OR flight OR itinerary OR hotel OR reservation OR trip)",
+        "negatedQuery": "label:spam",
+        "hasAttachment": false,
+        "excludeChats": true,
+        "size": 0,
+        "sizeComparison": "unspecified"
+      },
+      "action": {
+        "addLabelIds": [
+          "c9610ba9-523c-4ddb-8735-c199f78ad9ec"
+        ]
+      }
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_filter",
+      "parameters": {
+        "userId": "me",
+        "criteria": {
+          "from": "*",
+          "to": "*",
+          "subject": "*",
+          "query": "subject:(booking OR flight OR itinerary OR hotel OR reservation OR trip)",
+          "negatedQuery": "label:spam",
+          "hasAttachment": false,
+          "excludeChats": true,
+          "size": 0,
+          "sizeComparison": "unspecified"
+        },
+        "action": {
+          "addLabelIds": [
+            "c9610ba9-523c-4ddb-8735-c199f78ad9ec"
+          ]
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"85619988-6549-49bb-a2a2-7f5d567a3f03\",\n  \"criteria\": {\n    \"from\": \"*\",\n    \"to\": \"*\",\n    \"subject\": \"*\",\n    \"query\": \"subject:(booking OR flight OR itinerary OR hotel OR reservation OR trip)\",\n    \"negatedQuery\": \"label:spam\",\n    \"hasAttachment\": false,\n    \"excludeChats\": true,\n    \"size\": 0,\n    \"sizeComparison\": \"unspecified\"\n  },\n  \"action\": {\n    \"addLabelIds\": [\n      \"c9610ba9-523c-4ddb-8735-c199f78ad9ec\"\n    ]\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 210,
+      "executed_at": "2026-01-10T04:45:27.985199"
+    }
+  },
+  {
+    "name": "create_filter",
+    "arguments": {
+      "userId": "me",
+      "criteria": {
+        "from": "*",
+        "to": "*",
+        "subject": "*",
+        "query": "subject:(standup OR standups OR \"project update\" OR \"project updates\" OR approval OR approvals OR discussion OR discussions OR \"team meeting\")",
+        "negatedQuery": "label:spam",
+        "hasAttachment": false,
+        "excludeChats": true,
+        "size": 0,
+        "sizeComparison": "unspecified"
+      },
+      "action": {
+        "addLabelIds": [
+          "9f21198e-0379-4b74-acfd-435567391829"
+        ]
+      }
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_filter",
+      "parameters": {
+        "userId": "me",
+        "criteria": {
+          "from": "*",
+          "to": "*",
+          "subject": "*",
+          "query": "subject:(standup OR standups OR \"project update\" OR \"project updates\" OR approval OR approvals OR discussion OR discussions OR \"team meeting\")",
+          "negatedQuery": "label:spam",
+          "hasAttachment": false,
+          "excludeChats": true,
+          "size": 0,
+          "sizeComparison": "unspecified"
+        },
+        "action": {
+          "addLabelIds": [
+            "9f21198e-0379-4b74-acfd-435567391829"
+          ]
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"d0b41b91-be22-43c7-95c7-e2cc501c2b8a\",\n  \"criteria\": {\n    \"from\": \"*\",\n    \"to\": \"*\",\n    \"subject\": \"*\",\n    \"query\": \"subject:(standup OR standups OR \\\"project update\\\" OR \\\"project updates\\\" OR approval OR approvals OR discussion OR discussions OR \\\"team meeting\\\")\",\n    \"negatedQuery\": \"label:spam\",\n    \"hasAttachment\": false,\n    \"excludeChats\": true,\n    \"size\": 0,\n    \"sizeComparison\": \"unspecified\"\n  },\n  \"action\": {\n    \"addLabelIds\": [\n      \"9f21198e-0379-4b74-acfd-435567391829\"\n    ]\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 302,
+      "executed_at": "2026-01-10T04:46:07.484637"
+    }
+  },
+  {
+    "name": "create_filter",
+    "arguments": {
+      "userId": "me",
+      "criteria": {
+        "from": "*",
+        "to": "*",
+        "subject": "*",
+        "query": "subject:(digest OR summary OR \"automated summary\" OR \"weekly digest\" OR \"daily digest\" OR \"platform update\" OR automated) -is:important",
+        "negatedQuery": "label:spam",
+        "hasAttachment": false,
+        "excludeChats": true,
+        "size": 0,
+        "sizeComparison": "unspecified"
+      },
+      "action": {
+        "addLabelIds": [
+          "dc726ee3-da52-416b-9b56-f67e506b855d"
+        ],
+        "removeLabelIds": [
+          "INBOX",
+          "UNREAD"
+        ]
+      }
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "create_filter",
+      "parameters": {
+        "userId": "me",
+        "criteria": {
+          "from": "*",
+          "to": "*",
+          "subject": "*",
+          "query": "subject:(digest OR summary OR \"automated summary\" OR \"weekly digest\" OR \"daily digest\" OR \"platform update\" OR automated) -is:important",
+          "negatedQuery": "label:spam",
+          "hasAttachment": false,
+          "excludeChats": true,
+          "size": 0,
+          "sizeComparison": "unspecified"
+        },
+        "action": {
+          "addLabelIds": [
+            "dc726ee3-da52-416b-9b56-f67e506b855d"
+          ],
+          "removeLabelIds": [
+            "INBOX",
+            "UNREAD"
+          ]
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"id\": \"7c746da8-d4da-484b-abd0-794ef57dafab\",\n  \"criteria\": {\n    \"from\": \"*\",\n    \"to\": \"*\",\n    \"subject\": \"*\",\n    \"query\": \"subject:(digest OR summary OR \\\"automated summary\\\" OR \\\"weekly digest\\\" OR \\\"daily digest\\\" OR \\\"platform update\\\" OR automated) -is:important\",\n    \"negatedQuery\": \"label:spam\",\n    \"hasAttachment\": false,\n    \"excludeChats\": true,\n    \"size\": 0,\n    \"sizeComparison\": \"unspecified\"\n  },\n  \"action\": {\n    \"addLabelIds\": [\n      \"dc726ee3-da52-416b-9b56-f67e506b855d\"\n    ],\n    \"removeLabelIds\": [\n      \"INBOX\",\n      \"UNREAD\"\n    ]\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 279,
+      "executed_at": "2026-01-10T04:47:24.131236"
+    }
+  },
+  {
+    "name": "get_pop_settings",
+    "arguments": {
+      "userId": "me"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "get_pop_settings",
+      "parameters": {
+        "userId": "me"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"accessWindow\": \"disabled\",\n  \"disposition\": \"markRead\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 142,
+      "executed_at": "2026-01-10T04:48:02.506991"
+    }
+  },
+  {
+    "name": "update_pop_settings",
+    "arguments": {
+      "userId": "me",
+      "accessWindow": "disabled",
+      "disposition": "leaveInInbox"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "update_pop_settings",
+      "parameters": {
+        "userId": "me",
+        "accessWindow": "disabled",
+        "disposition": "leaveInInbox"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"accessWindow\": \"disabled\",\n  \"disposition\": \"leaveInInbox\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 311,
+      "executed_at": "2026-01-10T04:48:18.514363"
+    }
+  },
+  {
+    "name": "get_imap_settings",
+    "arguments": {
+      "userId": "me"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "get_imap_settings",
+      "parameters": {
+        "userId": "me"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"enabled\": false,\n  \"autoExpunge\": true,\n  \"expungeBehavior\": \"archive\",\n  \"maxFolderSize\": 0\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 141,
+      "executed_at": "2026-01-10T04:48:28.844012"
+    }
+  },
+  {
+    "name": "update_vacation_settings",
+    "arguments": {
+      "userId": "me",
+      "enableAutoReply": true,
+      "responseSubject": "Away - Traveling",
+      "responseBodyPlainText": "Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.\n\nFor urgent matters, please contact my team directly.\n\nBest regards",
+      "responseBodyHtml": "<p>Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.</p>\n\n<p>For urgent matters, please contact my team directly.</p>\n\n<p>Best regards</p>",
+      "restrictToContacts": true,
+      "restrictToDomain": false,
+      "startTime": "1735689600000",
+      "endTime": "1736985600000"
+    },
+    "context": {
+      "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+      "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+      "primary_email": "jessicabrown83@gmail.com"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "email_v4",
+      "tool_name": "update_vacation_settings",
+      "parameters": {
+        "userId": "me",
+        "enableAutoReply": true,
+        "responseSubject": "Away - Traveling",
+        "responseBodyPlainText": "Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.\n\nFor urgent matters, please contact my team directly.\n\nBest regards",
+        "responseBodyHtml": "<p>Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.</p>\n\n<p>For urgent matters, please contact my team directly.</p>\n\n<p>Best regards</p>",
+        "restrictToContacts": true,
+        "restrictToDomain": false,
+        "startTime": "1735689600000",
+        "endTime": "1736985600000"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"enableAutoReply\": true,\n  \"responseSubject\": \"Away - Traveling\",\n  \"responseBodyPlainText\": \"Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.\\n\\nFor urgent matters, please contact my team directly.\\n\\nBest regards\",\n  \"responseBodyHtml\": \"<p>Thank you for your email. I'm currently traveling and will have limited access to email. I'll respond to your message when I return.</p>\\n\\n<p>For urgent matters, please contact my team directly.</p>\\n\\n<p>Best regards</p>\",\n  \"restrictToContacts\": true,\n  \"restrictToDomain\": false,\n  \"startTime\": \"1735689600000\",\n  \"endTime\": \"1736985600000\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 227,
+      "executed_at": "2026-01-10T04:59:06.572372"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1764696098233_cvtva4yqg",
+      "context": {
+        "x-email-user-token": "Kx5XwZK6imPxgyAE88USnS4lF3np3br81Tf9FZr4Vno",
+        "user_id": "104daf4b-2023-49f1-8def-39b4e9dcda5e",
+        "primary_email": "jessicabrown83@gmail.com"
+      },
+      "gym_server_id": "email_v4"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true
+  },
+  "L1": "Label Management",
+  "L2": "Label Lifecycle",
+  "L3": "Label Creation & Updates"
+}

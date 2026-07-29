@@ -1,0 +1,396 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_hq_wifi_instability_problem_linkage",
+    "scenario_description": "Identify recent HQ wireless incidents, link them to an active Wi-Fi instability problem if it exists, otherwise create one and set appropriate priority for widespread impact.",
+    "system_prompt": "You are a helpful Customer Service Drive Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "We've been getting multiple Wi-Fi complaints from the HQ office over the past week, repeated disconnects and instability. This looks like a pattern rather than isolated issues. I need to find all recent HQ incidents related to wireless problems and check if there's already an active problem tracking this. If one exists, make sure all the incidents are linked to it and the priority reflects the widespread impact. If not, create a new problem for recurring Wi-Fi instability at HQ, link the incidents to it, and set it up for root cause analysis.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user",
+      "find_location_by_given_name",
+      "list_incidents",
+      "list_problems",
+      "create_problem",
+      "update_incident",
+      "update_incident",
+      "update_incident"
+    ],
+    "expected_tools": [
+      "get_user",
+      "find_location_by_given_name",
+      "list_incidents",
+      "list_problems",
+      "create_problem",
+      "update_incident",
+      "update_incident",
+      "update_incident"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Problem Created With Correct Service, CI, And Priority",
+      "description": "Verify a recurring HQ Wi-Fi instability problem exists with correct ownership, service, CI, and critical priority settings.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM problem WHERE short_description LIKE '%recurring%' AND short_description LIKE '%Wi-Fi%' AND opened_by = 'USER_022' AND service = 'SVC_043' AND configuration_item = 'CI_004' AND category = 'network' AND impact = 'high' AND urgency = 'high' AND priority = 'critical'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "INC_012 Linked To HQ Wi-Fi Problem",
+      "description": "Verify incident INC_012 is linked to the recurring HQ Wi-Fi instability problem created/opened by USER_022.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_012' AND problem = (SELECT problem_id FROM problem WHERE short_description LIKE '%recurring%' AND short_description LIKE '%Wi-Fi%' AND opened_by = 'USER_022' LIMIT 1)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "INC_051 Linked To HQ Wi-Fi Problem",
+      "description": "Verify incident INC_051 is linked to the recurring HQ Wi-Fi instability problem created/opened by USER_022.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_051' AND problem = (SELECT problem_id FROM problem WHERE short_description LIKE '%recurring%' AND short_description LIKE '%Wi-Fi%' AND opened_by = 'USER_022' LIMIT 1)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "INC_055 Linked To HQ Wi-Fi Problem",
+      "description": "Verify incident INC_055 is linked to the recurring HQ Wi-Fi instability problem created/opened by USER_022.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM incident WHERE incident_id = 'INC_055' AND problem = (SELECT problem_id FROM problem WHERE short_description LIKE '%recurring%' AND short_description LIKE '%Wi-Fi%' AND opened_by = 'USER_022' LIMIT 1)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "USER_022"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "get_user",
+      "parameters": {
+        "user_id": "USER_022"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"user_id\": \"USER_022\",\n  \"user_name\": \"david.jones\",\n  \"first_name\": \"David\",\n  \"last_name\": \"Jones\",\n  \"email\": \"david.jones95@servicenow.com\",\n  \"phone\": \"+12062814376\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_005\",\n  \"created_on\": \"2025-08-27T15:34:17\",\n  \"updated_on\": \"2026-06-15T07:28:15\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 163,
+      "executed_at": "2025-12-19T16:58:36.128624"
+    }
+  },
+  {
+    "name": "find_location_by_given_name",
+    "arguments": {
+      "name": "HQ"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "find_location_by_given_name",
+      "parameters": {
+        "name": "HQ"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"detail\": {\n    \"error\": true,\n    \"error_code\": \"NOT_FOUND\",\n    \"message\": \"Location not found with identifier 'HQ'\",\n    \"details\": [\n      {\n        \"code\": \"RESOURCE_NOT_FOUND\",\n        \"message\": \"Location not found with identifier 'HQ'\",\n        \"field\": null,\n        \"context\": {\n          \"resource\": \"Location\",\n          \"identifier\": \"HQ\",\n          \"path\": \"/locations/name/HQ\"\n        }\n      }\n    ],\n    \"timestamp\": \"2025-12-19T16:58:39.115670Z\",\n    \"request_id\": null,\n    \"path\": \"/locations/name/HQ\"\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": true
+      },
+      "error": null,
+      "execution_time_ms": 179,
+      "executed_at": "2025-12-19T16:58:39.140865"
+    }
+  },
+  {
+    "name": "list_incidents",
+    "arguments": {
+      "category": "network"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_incidents",
+      "parameters": {
+        "category": "network"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "[\n  {\n    \"incident_id\": \"INC_086\",\n    \"number\": \"INC-000086\",\n    \"caller_id\": \"USER_061\",\n    \"service\": \"SVC_045\",\n    \"service_offering\": \"SVCOFF_054\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_045\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"new\",\n    \"category\": \"network\",\n    \"short_description\": \"Internet Down\",\n    \"description\": \"Down.\",\n    \"worknotes\": null,\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"high\",\n    \"urgency\": \"high\",\n    \"priority\": \"critical\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T12:00:00\",\n    \"updated_at\": \"2025-12-03T12:00:00\",\n    \"org_id\": \"ORG_011\"\n  },\n  {\n    \"incident_id\": \"INC_008\",\n    \"number\": \"INC-000008\",\n    \"caller_id\": \"USER_018\",\n    \"service\": \"SVC_045\",\n    \"service_offering\": \"SVCOFF_054\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_045\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_008\",\n    \"parent_incident\": null,\n    \"channel\": \"chat\",\n    \"contact_type\": \"chat\",\n    \"status\": \"new\",\n    \"category\": \"network\",\n    \"short_description\": \"Cannot Connect to WiFi\",\n    \"description\": \"SSID not visible.\",\n    \"worknotes\": null,\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T11:30:00\",\n    \"updated_at\": \"2025-12-03T11:30:00\",\n    \"org_id\": \"ORG_009\"\n  },\n  {\n    \"incident_id\": \"INC_093\",\n    \"number\": \"INC-000093\",\n    \"caller_id\": \"USER_002\",\n    \"service\": \"SVC_033\",\n    \"service_offering\": \"SVCOFF_041\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_011\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"in_progress\",\n    \"category\": \"network\",\n    \"short_description\": \"VPN 691\",\n    \"description\": \"Auth.\",\n    \"worknotes\": \"Reset.\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T10:30:00\",\n    \"updated_at\": \"2025-12-03T10:45:00\",\n    \"org_id\": \"ORG_002\"\n  },\n  {\n    \"incident_id\": \"INC_065\",\n    \"number\": \"INC-000065\",\n    \"caller_id\": \"USER_048\",\n    \"service\": \"SVC_046\",\n    \"service_offering\": \"SVCOFF_055\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_043\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"chat\",\n    \"contact_type\": \"chat\",\n    \"status\": \"in_progress\",\n    \"category\": \"network\",\n    \"short_description\": \"Teams Choppy\",\n    \"description\": \"Packet loss.\",\n    \"worknotes\": \"Tracing.\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T10:30:00\",\n    \"updated_at\": \"2025-12-03T10:45:00\",\n    \"org_id\": \"ORG_004\"\n  },\n  {\n    \"incident_id\": \"INC_035\",\n    \"number\": \"INC-000035\",\n    \"caller_id\": \"USER_020\",\n    \"service\": \"SVC_043\",\n    \"service_offering\": \"SVCOFF_052\",\n    \"configuration_item\": \"CI_056\",\n    \"assigned_to\": \"USER_046\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"new\",\n    \"category\": \"network\",\n    \"short_description\": \"Network Lag\",\n    \"description\": \"Latency.\",\n    \"worknotes\": null,\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"high\",\n    \"urgency\": \"high\",\n    \"priority\": \"critical\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T08:45:00\",\n    \"updated_at\": \"2025-12-03T08:45:00\",\n    \"org_id\": \"ORG_011\"\n  },\n  {\n    \"incident_id\": \"INC_002\",\n    \"number\": \"INC-000002\",\n    \"caller_id\": \"USER_007\",\n    \"service\": \"SVC_033\",\n    \"service_offering\": \"SVCOFF_041\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_011\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": \"TMPL_002\",\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"in_progress\",\n    \"category\": \"network\",\n    \"short_description\": \"VPN Connection Failure\",\n    \"description\": \"Error 412.\",\n    \"worknotes\": \"Investigating logs.\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-03T08:00:00\",\n    \"updated_at\": \"2025-12-03T08:30:00\",\n    \"org_id\": \"ORG_003\"\n  },\n  {\n    \"incident_id\": \"INC_012\",\n    \"number\": \"INC-000012\",\n    \"caller_id\": \"USER_039\",\n    \"service\": \"SVC_043\",\n    \"service_offering\": \"SVCOFF_052\",\n    \"configuration_item\": \"CI_004\",\n    \"assigned_to\": \"USER_059\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"web\",\n    \"contact_type\": \"api\",\n    \"status\": \"new\",\n    \"category\": \"network\",\n    \"short_description\": \"Core-Switch-HQ Port Flapping\",\n    \"description\": \"Interface GE1/0/24 flapping.\",\n    \"worknotes\": null,\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"high\",\n    \"urgency\": \"medium\",\n    \"priority\": \"high\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-02T14:00:00\",\n    \"updated_at\": \"2025-12-02T14:00:00\",\n    \"org_id\": \"ORG_001\"\n  },\n  {\n    \"incident_id\": \"INC_051\",\n    \"number\": \"INC-000051\",\n    \"caller_id\": \"USER_001\",\n    \"service\": \"SVC_043\",\n    \"service_offering\": \"SVCOFF_059\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_045\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"web\",\n    \"contact_type\": \"api\",\n    \"status\": \"in_progress\",\n    \"category\": \"network\",\n    \"short_description\": \"Port Dead\",\n    \"description\": \"No link.\",\n    \"worknotes\": \"Testing.\",\n    \"resolution_notes\": null,\n    \"close_notes\": null,\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": null,\n    \"on_hold_reason\": null,\n    \"resolved\": null,\n    \"created_at\": \"2025-12-02T10:00:00\",\n    \"updated_at\": \"2025-12-02T11:00:00\",\n    \"org_id\": \"ORG_001\"\n  },\n  {\n    \"incident_id\": \"INC_062\",\n    \"number\": \"INC-000062\",\n    \"caller_id\": \"USER_034\",\n    \"service\": \"SVC_033\",\n    \"service_offering\": \"SVCOFF_041\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_011\",\n    \"assignment_group\": \"GROUP_001\",\n    \"resolved_by\": \"USER_011\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"resolved\",\n    \"category\": \"network\",\n    \"short_description\": \"VPN Slow\",\n    \"description\": \"Lag.\",\n    \"worknotes\": \"ISP.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"low\",\n    \"resolution_code\": \"No resolution provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-28T10:30:00\",\n    \"created_at\": \"2025-11-28T10:00:00\",\n    \"updated_at\": \"2025-11-28T10:30:00\",\n    \"org_id\": \"ORG_016\"\n  },\n  {\n    \"incident_id\": \"INC_039\",\n    \"number\": \"INC-000039\",\n    \"caller_id\": \"USER_047\",\n    \"service\": \"SVC_045\",\n    \"service_offering\": \"SVCOFF_054\",\n    \"configuration_item\": \"CI_065\",\n    \"assigned_to\": \"USER_042\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"self-service\",\n    \"contact_type\": \"portal\",\n    \"status\": \"resolved\",\n    \"category\": \"network\",\n    \"short_description\": \"Tablet WiFi\",\n    \"description\": \"No connect.\",\n    \"worknotes\": \"Reset.\",\n    \"resolution_notes\": \"Ok.\",\n    \"close_notes\": \"Done.\",\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"low\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-28T11:00:00\",\n    \"created_at\": \"2025-11-28T10:00:00\",\n    \"updated_at\": \"2025-11-28T11:00:00\",\n    \"org_id\": \"ORG_003\"\n  },\n  {\n    \"incident_id\": \"INC_055\",\n    \"number\": \"INC-000055\",\n    \"caller_id\": \"USER_031\",\n    \"service\": \"SVC_045\",\n    \"service_offering\": \"SVCOFF_054\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_046\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": \"USER_046\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"phone\",\n    \"contact_type\": \"phone\",\n    \"status\": \"resolved\",\n    \"category\": \"network\",\n    \"short_description\": \"Guest WiFi\",\n    \"description\": \"No signal.\",\n    \"worknotes\": \"Reboot.\",\n    \"resolution_notes\": \"Up.\",\n    \"close_notes\": \"Fixed.\",\n    \"impact\": \"medium\",\n    \"urgency\": \"medium\",\n    \"priority\": \"moderate\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-25T10:30:00\",\n    \"created_at\": \"2025-11-25T10:00:00\",\n    \"updated_at\": \"2025-11-25T10:30:00\",\n    \"org_id\": \"ORG_001\"\n  },\n  {\n    \"incident_id\": \"INC_042\",\n    \"number\": \"INC-000042\",\n    \"caller_id\": \"USER_079\",\n    \"service\": \"SVC_045\",\n    \"service_offering\": \"SVCOFF_054\",\n    \"configuration_item\": null,\n    \"assigned_to\": \"USER_042\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": \"USER_042\",\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"chat\",\n    \"contact_type\": \"chat\",\n    \"status\": \"resolved\",\n    \"category\": \"network\",\n    \"short_description\": \"Internet Slow\",\n    \"description\": \"Buffering.\",\n    \"worknotes\": \"Checked.\",\n    \"resolution_notes\": \"ISP lag.\",\n    \"close_notes\": \"Waited.\",\n    \"impact\": \"low\",\n    \"urgency\": \"medium\",\n    \"priority\": \"low\",\n    \"resolution_code\": \"No resolution provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-20T16:00:00\",\n    \"created_at\": \"2025-11-20T15:00:00\",\n    \"updated_at\": \"2025-11-20T16:00:00\",\n    \"org_id\": \"ORG_004\"\n  },\n  {\n    \"incident_id\": \"INC_028\",\n    \"number\": \"INC-000028\",\n    \"caller_id\": \"USER_039\",\n    \"service\": \"SVC_036\",\n    \"service_offering\": \"SVCOFF_045\",\n    \"configuration_item\": \"CI_045\",\n    \"assigned_to\": \"USER_045\",\n    \"assignment_group\": \"GROUP_007\",\n    \"resolved_by\": null,\n    \"problem\": null,\n    \"change_request\": null,\n    \"caused_by_change\": null,\n    \"incident_template\": null,\n    \"parent_incident\": null,\n    \"channel\": \"web\",\n    \"contact_type\": \"api\",\n    \"status\": \"closed\",\n    \"category\": \"network\",\n    \"short_description\": \"Switch Dead\",\n    \"description\": \"No power.\",\n    \"worknotes\": \"Swapped.\",\n    \"resolution_notes\": \"Up.\",\n    \"close_notes\": \"Closed.\",\n    \"impact\": \"low\",\n    \"urgency\": \"low\",\n    \"priority\": \"planning\",\n    \"resolution_code\": \"Solution Provided\",\n    \"on_hold_reason\": null,\n    \"resolved\": \"2025-11-01T10:00:00\",\n    \"created_at\": \"2025-11-01T09:00:00\",\n    \"updated_at\": \"2025-11-01T10:00:00\",\n    \"org_id\": \"ORG_001\"\n  }\n]",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 184,
+      "executed_at": "2025-12-19T16:58:42.208935"
+    }
+  },
+  {
+    "name": "list_problems",
+    "arguments": {
+      "category": "network"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "list_problems",
+      "parameters": {
+        "category": "network"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"problems\": [\n    {\n      \"problem_id\": \"PRB_002\",\n      \"number\": \"PRB0000002\",\n      \"short_description\": \"Core Switch Hardware Failure\",\n      \"problem_statement\": \"Core Switch Port 24 Flapping impacting HQ\",\n      \"opened_by\": \"USER_039\",\n      \"service\": \"SVC_043\",\n      \"service_offering\": \"SVCOFF_052\",\n      \"configuration_item\": \"CI_004\",\n      \"assigned_to\": \"USER_045\",\n      \"assignment_group\": \"GROUP_007\",\n      \"original_task\": \"INC_003\",\n      \"status\": \"resolved\",\n      \"category\": \"network\",\n      \"worknotes\": \"Diagnostics failed on ASIC.\",\n      \"workaround\": \"Move uplink to Port 48.\",\n      \"fix_notes\": \"RMA processed. Line card replaced.\",\n      \"impact\": \"high\",\n      \"urgency\": \"medium\",\n      \"priority\": \"high\",\n      \"created_on\": \"2025-12-02T16:00:00\",\n      \"updated_on\": \"2025-12-03T08:00:00\",\n      \"org_id\": \"ORG_001\"\n    },\n    {\n      \"problem_id\": \"PRB_006\",\n      \"number\": \"PRB0000006\",\n      \"short_description\": \"VPN Stability\",\n      \"problem_statement\": \"Intermittent VPN Drops for East Coast\",\n      \"opened_by\": \"USER_011\",\n      \"service\": \"SVC_033\",\n      \"service_offering\": \"SVCOFF_041\",\n      \"configuration_item\": \"CI_005\",\n      \"assigned_to\": \"USER_043\",\n      \"assignment_group\": \"GROUP_007\",\n      \"original_task\": \"INC_026\",\n      \"status\": \"assess\",\n      \"category\": \"network\",\n      \"worknotes\": \"Packet loss detected at ISP hop.\",\n      \"workaround\": null,\n      \"fix_notes\": null,\n      \"impact\": \"low\",\n      \"urgency\": \"medium\",\n      \"priority\": \"low\",\n      \"created_on\": \"2025-11-28T16:00:00\",\n      \"updated_on\": \"2025-11-28T16:00:00\",\n      \"org_id\": \"ORG_017\"\n    }\n  ],\n  \"total_count\": 2\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 160,
+      "executed_at": "2025-12-19T16:58:45.245916"
+    }
+  },
+  {
+    "name": "create_problem",
+    "arguments": {
+      "problem_statement": "Multiple users at HQ experiencing recurring Wi-Fi disconnects and instability over the past week. Pattern includes port flapping on Core-Switch-HQ (CI_004), dead ports, and guest WiFi outages. Requires root cause analysis to identify underlying infrastructure issue causing repeated network disruptions.",
+      "short_description": "Recurring HQ Wi-Fi Instability - Multiple Disconnects",
+      "status": "assess",
+      "impact": "high",
+      "urgency": "high",
+      "priority": "critical",
+      "category": "network",
+      "configuration_item": "CI_004",
+      "service": "SVC_043",
+      "service_offering": "SVCOFF_052",
+      "assigned_to": "USER_045",
+      "assignment_group": "GROUP_007"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "create_problem",
+      "parameters": {
+        "problem_statement": "Multiple users at HQ experiencing recurring Wi-Fi disconnects and instability over the past week. Pattern includes port flapping on Core-Switch-HQ (CI_004), dead ports, and guest WiFi outages. Requires root cause analysis to identify underlying infrastructure issue causing repeated network disruptions.",
+        "short_description": "Recurring HQ Wi-Fi Instability - Multiple Disconnects",
+        "status": "assess",
+        "impact": "high",
+        "urgency": "high",
+        "priority": "critical",
+        "category": "network",
+        "configuration_item": "CI_004",
+        "service": "SVC_043",
+        "service_offering": "SVCOFF_052",
+        "assigned_to": "USER_045",
+        "assignment_group": "GROUP_007"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"problem_id\": \"PRB_011\",\n  \"number\": \"PRB0000011\",\n  \"problem_statement\": \"Multiple users at HQ experiencing recurring Wi-Fi disconnects and instability over the past week. Pattern includes port flapping on Core-Switch-HQ (CI_004), dead ports, and guest WiFi outages. Requires root cause analysis to identify underlying infrastructure issue causing repeated network disruptions.\",\n  \"short_description\": \"Recurring HQ Wi-Fi Instability - Multiple Disconnects\",\n  \"opened_by\": \"USER_022\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"assigned_to\": \"USER_045\",\n  \"assignment_group\": \"GROUP_007\",\n  \"original_task\": null,\n  \"status\": \"assess\",\n  \"category\": \"network\",\n  \"worknotes\": null,\n  \"workaround\": null,\n  \"fix_notes\": null,\n  \"impact\": \"high\",\n  \"urgency\": \"high\",\n  \"priority\": \"critical\",\n  \"created_on\": \"2025-12-19T16:58:48.252737\",\n  \"updated_on\": \"2025-12-19T16:58:48.252737\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 229,
+      "executed_at": "2025-12-19T16:58:48.306329"
+    }
+  },
+  {
+    "name": "update_incident",
+    "arguments": {
+      "incident_id": "INC_012",
+      "problem": "PRB_011",
+      "priority": "high"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_incident",
+      "parameters": {
+        "incident_id": "INC_012",
+        "problem": "PRB_011",
+        "priority": "high"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_012\",\n  \"number\": \"INC-000012\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_052\",\n  \"configuration_item\": \"CI_004\",\n  \"caller_id\": \"USER_039\",\n  \"channel\": \"web\",\n  \"status\": \"new\",\n  \"category\": \"network\",\n  \"short_description\": \"Core-Switch-HQ Port Flapping\",\n  \"description\": \"Interface GE1/0/24 flapping.\",\n  \"impact\": \"high\",\n  \"urgency\": \"medium\",\n  \"priority\": \"high\",\n  \"assigned_to\": \"USER_059\",\n  \"assignment_group\": \"GROUP_007\",\n  \"worknotes\": null,\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": \"PRB_011\",\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-02T14:00:00\",\n  \"updated_at\": \"2025-12-19T16:58:51.794992\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 200,
+      "executed_at": "2025-12-19T16:58:51.852495"
+    }
+  },
+  {
+    "name": "update_incident",
+    "arguments": {
+      "incident_id": "INC_051",
+      "problem": "PRB_011",
+      "priority": "high"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_incident",
+      "parameters": {
+        "incident_id": "INC_051",
+        "problem": "PRB_011",
+        "priority": "high"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_051\",\n  \"number\": \"INC-000051\",\n  \"service\": \"SVC_043\",\n  \"service_offering\": \"SVCOFF_059\",\n  \"configuration_item\": null,\n  \"caller_id\": \"USER_001\",\n  \"channel\": \"web\",\n  \"status\": \"in_progress\",\n  \"category\": \"network\",\n  \"short_description\": \"Port Dead\",\n  \"description\": \"No link.\",\n  \"impact\": \"medium\",\n  \"urgency\": \"medium\",\n  \"priority\": \"high\",\n  \"assigned_to\": \"USER_045\",\n  \"assignment_group\": \"GROUP_007\",\n  \"worknotes\": \"Testing.\",\n  \"resolution_notes\": null,\n  \"close_notes\": null,\n  \"resolution_code\": null,\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": \"PRB_011\",\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": null,\n  \"incident_template\": null,\n  \"resolved\": null,\n  \"created_at\": \"2025-12-02T10:00:00\",\n  \"updated_at\": \"2025-12-19T17:02:04.336732\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 217,
+      "executed_at": "2025-12-19T17:02:04.389085"
+    }
+  },
+  {
+    "name": "update_incident",
+    "arguments": {
+      "incident_id": "INC_055",
+      "problem": "PRB_011"
+    },
+    "context": {
+      "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-itsm-internal",
+      "tool_name": "update_incident",
+      "parameters": {
+        "incident_id": "INC_055",
+        "problem": "PRB_011"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"incident_id\": \"INC_055\",\n  \"number\": \"INC-000055\",\n  \"service\": \"SVC_045\",\n  \"service_offering\": \"SVCOFF_054\",\n  \"configuration_item\": null,\n  \"caller_id\": \"USER_031\",\n  \"channel\": \"phone\",\n  \"status\": \"resolved\",\n  \"category\": \"network\",\n  \"short_description\": \"Guest WiFi\",\n  \"description\": \"No signal.\",\n  \"impact\": \"medium\",\n  \"urgency\": \"medium\",\n  \"priority\": \"moderate\",\n  \"assigned_to\": \"USER_046\",\n  \"assignment_group\": \"GROUP_007\",\n  \"worknotes\": \"Reboot.\",\n  \"resolution_notes\": \"Up.\",\n  \"close_notes\": \"Fixed.\",\n  \"resolution_code\": \"Solution Provided\",\n  \"on_hold_reason\": null,\n  \"parent_incident\": null,\n  \"problem\": \"PRB_011\",\n  \"change_request\": null,\n  \"caused_by_change\": null,\n  \"resolved_by\": \"USER_046\",\n  \"incident_template\": null,\n  \"resolved\": \"2025-11-25T10:30:00\",\n  \"created_at\": \"2025-11-25T10:00:00\",\n  \"updated_at\": \"2025-12-19T17:02:24.724213\"\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 238,
+      "executed_at": "2025-12-19T17:02:24.786377"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1766041959910_acgazljcp",
+      "context": {
+        "x-itsm-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAyMiIsImlzcyI6Iml0c20ifQ.St2_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_jkl"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Identify and link recent HQ Wi-Fi incidents to an active instability problem or create one with critical priority and correct associations.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"Problem Management",
+"L2":"Problems",
+"L3":"Problem Analysis & Lifecycle"
+}

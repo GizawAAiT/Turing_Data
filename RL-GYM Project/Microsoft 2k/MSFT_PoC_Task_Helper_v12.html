@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Human Trace Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    header {
+      background-color: #324960;
+      color: #fff;
+      padding: 1rem 2rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    main {
+      padding: 2rem;
+    }
+    .section {
+      background: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .button-row {
+      margin-top: 0.75rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      background-color: #324960;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2a3d50;
+    }
+    .nested {
+      margin-left: 1rem;
+      border-left: 2px solid #ddd;
+      padding-left: 1rem;
+    }
+    .remove-btn {
+      background-color: #c0392b;
+    }
+    .remove-btn:hover {
+      background-color: #a93226;
+    }
+    .flex-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .flex-item {
+      flex: 1 1 200px;
+    }
+
+    /* Highlight JSON input: invalid -> red background, valid -> green-ish background */
+    .json-invalid {
+      border: 2px solid #e74c3c !important;
+      background: #fdecea;
+    }
+    .json-valid {
+      border: 2px solid #2ecc71 !important;
+      background: #e8f8f5;
+    }
+    .json-error-message {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    /* Highlight tool input red when value is not in list */
+    .invalid-tool {
+      border-color: #e74c3c;
+    }
+    .tool-error {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Info icon styling for field tooltips */
+    .info-icon {
+      margin-left: 4px;
+      color: #2980b9;
+      cursor: help;
+    }
+    /* Modal popup for validation warnings */
+    .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.45);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    }
+
+    .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 500px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    }
+
+    #validationOutput {
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Human Trace Trajectory Builder</h1>
+  </header>
+  <main>
+    <div class="section" id="top-level">
+      <h2>Trajectory Metadata</h2>
+      <label for="trajectory_id">Trajectory ID <span class="info-icon" title="Unique identifier combining domain prefix + short task descriptor + sequence number. Use snake_case and be descriptive.">ℹ️</span></label>
+      <input type="text" id="trajectory_id" placeholder="e.g., gh_talent_networking_0001">
+      <div class="flex-row">
+        <div class="flex-item">
+          <label for="domain">Domain <span class="info-icon" title="Primary API or platform being used (e.g. github, slack). Helps filter training data by domain.">ℹ️</span></label>
+          <!-- Domain is free-form; user can specify the primary platform/tool -->
+          <input type="text" id="domain" placeholder="e.g., github, slack">
+        </div>
+        <div class="flex-item">
+          <label for="task_type">Task Type <span class="info-icon" title="Classify the task: info_seek (read-only queries), state_change (mutations), mixed (search then update), or planning (complex multi-resource coordination).">ℹ️</span></label>
+          <select id="task_type">
+            <option value="info_seek">info_seek</option>
+            <option value="state_change">state_change</option>
+            <option value="mixed">mixed</option>
+            <option value="planning">planning</option>
+          </select>
+        </div>
+        <div class="flex-item">
+          <label for="difficulty">Difficulty <span class="info-icon" title="Estimate complexity: easy (1–2 tool calls), medium (3–5 calls), hard (5+ calls, complex dependencies).">ℹ️</span></label>
+          <select id="difficulty">
+            <option value="easy">easy</option>
+            <option value="medium" selected>medium</option>
+            <option value="hard">hard</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="section" id="turns-section">
+      <h2>Turns</h2>
+      <div id="turns-container"></div>
+      <button id="add-turn-btn">Add Turn</button>
+    </div>
+    <div class="section">
+      <button id="export-btn">Export as JSON</button>
+      <a id="download-link" style="display:none;" download="human_trace.json">Download JSON</a>
+      <!-- Checklist and tools section -->
+      <button id="checklist-btn" style="margin-left:0.5rem;">Run Checklist</button>
+      <button id="tools-btn" style="margin-left:0.5rem;">Download Tools Used</button>
+      <!-- Import JSON button and file input -->
+      <button id="import-btn" style="margin-left:0.5rem;">Import JSON</button>
+      <input type="file" id="import-input" accept=".json" style="display:none;">
+    </div>
+  </main>
+  <script>
+    // Flag to track if there are unsaved changes in the form
+    let hasUnsavedChanges = false;
+
+    // Mark the form as dirty whenever an input/select/textarea value changes
+    document.addEventListener('input', () => {
+      hasUnsavedChanges = true;
+    });
+
+    // Warn user before closing the tab or refreshing the page if there are unsaved changes
+    window.addEventListener('beforeunload', function (e) {
+      if (hasUnsavedChanges) {
+        const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+      }
+    });
+
+    // Define available tool names for the searchable dropdown. Add or remove names as needed.
+    // List of available tools. Extend this array with additional tool names as needed.
+    const availableTools = [
+      // Slack tools
+      'get_users_list',
+      'get_user_info',
+      'get_user_profile',
+      'set_user_profile',
+      'admin_users_assign',
+      'admin_users_invite',
+      'admin_users_remove',
+      'admin_apps_approve',
+      'admin_apps_clear_resolution',
+      'admin_apps_restrict',
+      'admin_apps_uninstall',
+      'admin_apps_approved_list',
+      'admin_apps_config_lookup',
+      'admin_apps_config_set',
+      'admin_apps_requests_cancel',
+      'admin_apps_requests_list',
+      'admin_apps_restricted_list',
+      'admin_audit_anomaly_allow_get_item',
+      'admin_audit_anomaly_allow_update_item',
+      'admin_auth_policy_assign_entities',
+      'admin_auth_policy_get_entities',
+      'admin_auth_policy_remove_entities',
+      'admin_barriers_create',
+      'admin_barriers_list',
+      'admin_barriers_update',
+      'admin_barriers_delete',
+      'admin_conversations_archive',
+      'admin_conversations_unarchive',
+      'admin_conversations_bulk_archive',
+      'admin_conversations_bulk_delete',
+      'admin_conversations_bulk_move',
+      'admin_conversations_convert_to_private',
+      'admin_conversations_convert_to_public',
+      'admin_conversations_create',
+      'admin_conversations_create_for_objects',
+      'admin_conversations_delete',
+      'admin_conversations_disconnect_shared',
+      'admin_conversations_get_conversation_prefs',
+      'admin_conversations_get_custom_retention',
+      'admin_conversations_get_teams',
+      'admin_conversations_invite',
+      'admin_conversations_link_objects',
+      'admin_conversations_unlink_objects',
+      'admin_conversations_ekm_list_original_connected_channel_info',
+      'admin_conversations_lookup',
+      'admin_conversations_remove_custom_retention',
+      'admin_conversations_rename',
+      'admin_conversations_search',
+      'admin_conversations_set_conversation_prefs',
+      'admin_conversations_restrict_access_add_group',
+      'admin_conversations_set_custom_retention',
+      'admin_conversations_restrict_access_list_groups',
+      'admin_conversations_restrict_access_remove_group',
+      'apps_auth_external_delete',
+      'apps_auth_external_get',
+      'apps_datastore_bulk_get',
+      'apps_datastore_bulk_delete',
+      'apps_datastore_bulk_put',
+      'apps_datastore_count',
+      'apps_datastore_delete',
+      'apps_datastore_get',
+      'apps_datastore_put',
+      'apps_datastore_update',
+      'apps_datastore_query',
+      'apps_connections_open',
+      'get_channels_list',
+      'get_conversations_history',
+      'users_conversations',
+      'chat_post_message',
+      'chat_delete',
+      'chat_delete_scheduled_message',
+      'chat_get_permalink',
+      'chat_me_message',
+      'chat_post_ephemeral',
+      'chat_schedule_message',
+      'chat_scheduled_messages_list',
+      'chat_unfurl',
+      'chat_update',
+      'reactions_add',
+      'reactions_get',
+      'reactions_list',
+      'reactions_remove',
+      'search_all',
+      'search_files',
+      'search_messages',
+      'conversations_accept_shared_invite',
+      'conversations_approve_shared_invite',
+      'conversations_invite',
+      'conversations_create',
+      'conversations_decline_shared_invite',
+      'conversations_close',
+      'conversations_info',
+      'conversations_kick',
+      'conversations_leave',
+      'conversations_members',
+      'conversations_join',
+      'conversations_replies',
+      'conversations_rename',
+      'conversations_open',
+      'conversations_list',
+      'conversations_list_connect_invites',
+      'conversations_request_shared_invite_approve',
+      'conversations_request_shared_invite_deny',
+      'conversations_request_shared_invite_list',
+      'conversations_external_invite_permissions_set',
+      'conversations_set_purpose',
+      'conversations_set_topic',
+      'conversations_archive',
+      'conversations_unarchive',
+      'admin_conversations_set_teams',
+      'admin_emoji_add',
+      'admin_emoji_add_alias',
+      'emoji_list',
+      'admin_emoji_list',
+      'admin_emoji_remove',
+      'admin_emoji_rename',
+      'admin_functions_list',
+      'admin_functions_permissions_lookup',
+      'admin_functions_permissions_set',
+      'admin_inviteRequests_approve',
+      'admin_inviteRequests_deny',
+      'admin_inviteRequests_list',
+      'admin_inviteRequests_approved_list',
+      'admin_inviteRequests_denied_list',
+      'admin_roles_addAssignments',
+      'admin_roles_listAssignments',
+      'admin_roles_removeAssignments',
+      'admin_teams_create',
+      'admin_teams_list',
+      'admin_teams_owners_list',
+      'admin_teams_settings_info',
+      'admin_teams_settings_set_default_channels',
+      'admin_teams_admins_list',
+      'admin_teams_settings_set_description',
+      'admin_teams_settings_set_discoverability',
+      'admin_teams_settings_set_icon',
+      'admin_teams_settings_set_name',
+      'admin_usergroups_add_channels',
+      'admin_usergroups_add_teams',
+      'admin_usergroups_list_channels',
+      'admin_usergroups_remove_channels',
+      'admin_users_set_admin',
+      'admin_users_set_expiration',
+      'admin_users_set_owner',
+      'admin_users_set_regular',
+      'admin_users_session_clear_settings',
+      'admin_users_session_get_settings',
+      'admin_users_session_invalidate',
+      'admin_users_session_list',
+      'admin_users_session_reset',
+      'admin_users_session_reset_bulk',
+      'admin_users_session_set_settings',
+      'admin_users_unsupported_versions_export',
+      'admin_users_list',
+      'admin_workflows_collaborators_add',
+      'admin_workflows_collaborators_remove',
+      'admin_workflows_permissions_lookup',
+      'admin_workflows_search',
+      'admin_workflows_unpublish',
+      'admin_workflows_triggers_types_permissions_lookup',
+      'admin_workflows_triggers_types_permissions_set',
+      'files_remote_add',
+      'files_remote_list',
+      'files_remote_remove',
+      'files_remote_update',
+      'files_remote_info',
+      'files_comments_delete',
+      'files_delete',
+      'files_info',
+      'files_list',
+      'files_get_upload_url_external',
+      'files_complete_upload_external',
+      'files_remote_share',
+      'files_revoke_public_url',
+      'files_shared_public_url',
+      'files_upload',
+      'calls_add',
+      'calls_end',
+      'calls_info',
+      'calls_update',
+      'calls_participants_add',
+      'calls_participants_remove',
+      'workflows_featured_add',
+      'workflows_featured_list',
+      'workflows_featured_remove',
+      'workflows_featured_set',
+      'functions_complete_error',
+      'functions_complete_success',
+      'functions_distributions_permissions_add',
+      'functions_distributions_permissions_list',
+      'functions_distributions_permissions_remove',
+      'functions_distributions_permissions_set',
+      'functions_workflows_steps_list',
+      'functions_workflows_steps_responses_export',
+      'bookmarks_add',
+      'bookmarks_edit',
+      'bookmarks_list',
+      'bookmarks_remove',
+      'slack_lists_create',
+      'slack_lists_items_list',
+      'usergroups_create',
+      'usergroups_disable',
+      'usergroups_enable',
+      'usergroups_list',
+      'team_access_logs',
+      'team_billable_info',
+      'team_billing_info',
+      'team_external_teams_disconnect',
+      'team_external_teams_list',
+      'team_info',
+      'team_integration_logs',
+      'team_preferences_list',
+      'team_profile_get',
+      'bots_info',
+      'slack_lists_download_start',
+      'slack_lists_download_get',
+      'rtm_connect',
+      'assistant_threads_set_status',
+      'assistant_threads_set_suggested_prompts',
+      'assistant_threads_set_title',
+      'assistant_search_context',
+      'assistant_search_info',
+      'workflows_triggers_permissions_add',
+      'workflows_triggers_permissions_list',
+      'workflows_triggers_permissions_remove',
+      'workflows_triggers_permissions_set',
+      'usergroups_update',
+      'usergroups_users_list',
+      'usergroups_users_update',
+      'slack_lists_items_create',
+      'stars_add',
+      'stars_list',
+      'stars_remove',
+      'pins_add',
+      'pins_list',
+      'pins_remove',
+      'slack_lists_items_delete',
+      'slack_lists_items_delete_multiple',
+      'slack_lists_items_update',
+      'auth_revoke',
+      'auth_teams_list',
+      'auth_test',
+      'dnd_end_dnd',
+      'dnd_end_snooze',
+      'dnd_info',
+      'dnd_set_snooze',
+      'dnd_team_info',
+      'canvases_create',
+      'canvases_edit',
+      'canvases_delete',
+      'canvases_sections_lookup',
+      'slack_lists_items_info',
+      'slack_lists_update',
+      'slack_lists_access_set',
+      'slack_lists_access_delete',
+      'canvases_access_set',
+      'canvases_access_delete'
+    ];
+    // Create datalist element for tool names
+    const toolNameDataList = document.createElement('datalist');
+    toolNameDataList.id = 'toolNamesList';
+    availableTools.forEach(tool => {
+      const opt = document.createElement('option');
+      opt.value = tool;
+      toolNameDataList.appendChild(opt);
+    });
+    document.body.appendChild(toolNameDataList);
+
+    /**
+     * Attach a JSON validator to a textarea. Adds live validation highlighting and error messages.
+     * Also triggers export button status updates.
+     * @param {HTMLTextAreaElement} textarea
+     */
+    function attachJsonValidator(textarea) {
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'json-error-message';
+      textarea.after(errorMsg);
+      const validate = () => {
+        const value = textarea.value.trim();
+        if (!value) {
+          textarea.classList.remove('json-invalid', 'json-valid');
+          errorMsg.style.display = 'none';
+          updateExportButton();
+          return;
+        }
+        try {
+          JSON.parse(value);
+          // valid
+          textarea.classList.remove('json-invalid');
+          textarea.classList.add('json-valid');
+          errorMsg.style.display = 'none';
+        } catch (e) {
+          // invalid
+          textarea.classList.add('json-invalid');
+          textarea.classList.remove('json-valid');
+          errorMsg.textContent = 'Invalid JSON: ' + e.message;
+          errorMsg.style.display = 'block';
+        }
+        updateExportButton();
+      };
+      // validate on input and blur
+      textarea.addEventListener('input', validate);
+      textarea.addEventListener('blur', validate);
+      // initial call
+      validate();
+    }
+
+    /**
+     * Enable or disable the export button based on validation states.
+     */
+    function updateExportButton() {
+      const exportBtn = document.getElementById('export-btn');
+      // check for any invalid JSON or invalid tools
+      const hasInvalidJson = document.querySelector('.json-invalid');
+      const hasInvalidTool = document.querySelector('.invalid-tool');
+      if (hasInvalidJson || hasInvalidTool) {
+        exportBtn.disabled = true;
+        exportBtn.title = 'Fix invalid inputs before exporting';
+      } else {
+        exportBtn.disabled = false;
+        exportBtn.title = '';
+      }
+    }
+    // Utility functions to create elements with classes and attributes
+    function createElement(tag, options = {}) {
+      const el = document.createElement(tag);
+      if (options.class) el.className = options.class;
+      if (options.id) el.id = options.id;
+      if (options.text) el.textContent = options.text;
+      if (options.html) el.innerHTML = options.html;
+      return el;
+    }
+
+    let turnCount = 0;
+
+    function addTurn() {
+      turnCount++;
+      const turnId = turnCount;
+      const turnDiv = createElement('div', {class: 'section nested'});
+      turnDiv.dataset.turnId = turnId;
+      // Header
+      const h3 = createElement('h3', {text: `Turn ${turnId}`});
+      turnDiv.appendChild(h3);
+      // User input
+      const userLabel = createElement('label', {text: 'User Input'});
+      // Tooltip for user input: describe what to enter
+      userLabel.title = 'Exact user prompt. Should be natural language and describe the task the assistant needs to accomplish.';
+      const userInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      userInfo.title = userLabel.title;
+      userLabel.appendChild(userInfo);
+      const userInput = createElement('textarea');
+      userInput.rows = 3;
+      userInput.name = `turn_${turnId}_user_input`;
+      // tag for easier retrieval
+      userInput.dataset.field = 'user_input';
+      turnDiv.appendChild(userLabel);
+      turnDiv.appendChild(userInput);
+      // Continuation
+      const contLabel = createElement('label', {text: 'Continuation Mode'});
+      // Tooltip for continuation mode
+      contLabel.title = 'Choose “new” for the first turn, “continue” to build on prior turns, or “reset” if the user explicitly starts over.';
+      const contInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      contInfo.title = contLabel.title;
+      contLabel.appendChild(contInfo);
+      const contSelect = createElement('select');
+      ['new','continue','reset'].forEach(mode => {
+        const opt = createElement('option');
+        opt.value = mode;
+        opt.textContent = mode;
+        if (mode === 'new') opt.selected = turnId === 1; // first turn default new
+        contSelect.appendChild(opt);
+      });
+      const sumLabel = createElement('label', {text: 'Prior Turn Summary'});
+      // Tooltip for prior turn summary
+      sumLabel.title = 'Concise summary of key facts from prior turns needed for this turn. Include IDs, names, and state established earlier. Leave empty for new mode.';
+      const sumInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      sumInfo.title = sumLabel.title;
+      sumLabel.appendChild(sumInfo);
+      const sumInput = createElement('textarea');
+      sumInput.rows = 2;
+      sumInput.name = `turn_${turnId}_prior_summary`;
+      // tags
+      contSelect.dataset.field = 'mode';
+      sumInput.dataset.field = 'prior_summary';
+      turnDiv.appendChild(contLabel);
+      turnDiv.appendChild(contSelect);
+      turnDiv.appendChild(sumLabel);
+      turnDiv.appendChild(sumInput);
+      // Steps container
+      const stepsContainer = createElement('div', {class: 'nested'});
+      stepsContainer.id = `turn_${turnId}_steps`;
+      turnDiv.appendChild(createElement('h4', {text: 'Steps'}));
+      turnDiv.appendChild(stepsContainer);
+      // Add Step button
+      const addStepBtn = createElement('button', {text: 'Add Step'});
+      addStepBtn.addEventListener('click', () => addStep(stepsContainer));
+      turnDiv.appendChild(addStepBtn);
+      // Final response
+      const finalLabel = createElement('h4', {text: 'Final Response'});
+      turnDiv.appendChild(finalLabel);
+      const finalReasonLabel = createElement('label', {text: 'Reason'});
+      // Tooltip: internal reasoning for the final response
+      finalReasonLabel.title = 'Internal reasoning for why this response is appropriate. Summarize what was accomplished and why the response is structured this way. Always 1st person.';
+      const finalReasonInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      finalReasonInfo.title = finalReasonLabel.title;
+      finalReasonLabel.appendChild(finalReasonInfo);
+      const finalReasonInput = createElement('textarea');
+      finalReasonInput.rows = 2;
+      finalReasonInput.name = `turn_${turnId}_final_reason`;
+      finalReasonInput.dataset.field = 'final_reason';
+      turnDiv.appendChild(finalReasonLabel);
+      turnDiv.appendChild(finalReasonInput);
+      const finalTextLabel = createElement('label', {text: 'Text'});
+      // Tooltip: final user-visible response
+      finalTextLabel.title = 'This is the final response shown to the user. No internal identifiers; provide logical next step suggestions in a natural tone.';
+      const finalTextInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      finalTextInfo.title = finalTextLabel.title;
+      finalTextLabel.appendChild(finalTextInfo);
+      const finalTextInput = createElement('textarea');
+      finalTextInput.rows = 3;
+      finalTextInput.name = `turn_${turnId}_final_text`;
+      finalTextInput.dataset.field = 'final_text';
+      turnDiv.appendChild(finalTextLabel);
+      turnDiv.appendChild(finalTextInput);
+      // Remove turn button
+      if (turnId > 1) {
+        const removeTurnBtn = createElement('button', {class: 'remove-btn', text: 'Remove Turn'});
+        removeTurnBtn.addEventListener('click', () => {
+          if (confirm('Are you sure you want to remove this turn? All data in this turn will be lost.')) {
+            // Remove the turn
+            turnDiv.parentNode.removeChild(turnDiv);
+            // Renumber remaining turns and update nested structures
+            renumberTurnIds();
+            hasUnsavedChanges = true;
+          }
+        });
+        turnDiv.appendChild(removeTurnBtn);
+      }
+      document.getElementById('turns-container').appendChild(turnDiv);
+      // Add first step automatically for first turn
+      if (turnId === 1) addStep(stepsContainer);
+    }
+
+    // Step numbering resets within each turn. Determine step ID based on current container's children.
+    function addStep(container) {
+      const stepId = container.children.length + 1;
+      const stepDiv = createElement('div', {class:'section nested'});
+      stepDiv.dataset.stepId = stepId;
+      const h5 = createElement('h5', {text: `Step ${stepId}`});
+      stepDiv.appendChild(h5);
+      // Reason
+      const reasonLabel = createElement('label', {text: 'Reason Text'});
+      // Tooltip: plan before execution with constraints and justification
+      reasonLabel.title = 'Plan before execution. Should justify the upcoming tool call and specify what constraint you\'re satisfying. Use tool names, parameters or required facts.';
+      const reasonInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      reasonInfo.title = reasonLabel.title;
+      reasonLabel.appendChild(reasonInfo);
+      const reasonInput = createElement('textarea');
+      reasonInput.rows = 2;
+      reasonInput.name = `step_${stepId}_reason_text`;
+      reasonInput.dataset.field = 'reason_text';
+      stepDiv.appendChild(reasonLabel);
+      stepDiv.appendChild(reasonInput);
+      const intentLabel = createElement('label', {text: 'Reason Intent'});
+      // Tooltip: classify the reason for this step
+      intentLabel.title = 'Classify why you\'re doing this step: discover_state, search, state_change, validate or error_recovery.';
+      const intentInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      intentInfo.title = intentLabel.title;
+      intentLabel.appendChild(intentInfo);
+      const intentSelect = createElement('select');
+      ['discover_state','search','state_change','validate','error_recovery'].forEach(v => {
+        const opt = createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        intentSelect.appendChild(opt);
+      });
+      stepDiv.appendChild(intentLabel);
+      stepDiv.appendChild(intentSelect);
+      intentSelect.dataset.field = 'intent';
+      // Action type
+      const actionTypeLabel = createElement('label', {text: 'Action Type'});
+      // Tooltip: differentiate sequential vs parallel
+      actionTypeLabel.title = 'sequential = one call; parallel = two or more independent calls in this step.';
+      const typeInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      typeInfo.title = actionTypeLabel.title;
+      actionTypeLabel.appendChild(typeInfo);
+      const actionTypeSelect = createElement('select');
+      ['sequential','parallel'].forEach(v => {
+        const opt = createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        actionTypeSelect.appendChild(opt);
+      });
+      stepDiv.appendChild(actionTypeLabel);
+      stepDiv.appendChild(actionTypeSelect);
+      actionTypeSelect.dataset.field = 'action_type';
+      // Calls container
+      const callsContainer = createElement('div', {class: 'nested'});
+      callsContainer.id = `step_${stepId}_calls`;
+      stepDiv.appendChild(createElement('h6', {text: 'Tool Calls'}));
+      stepDiv.appendChild(callsContainer);
+      const addCallBtn = createElement('button', {text: 'Add Call'});
+      addCallBtn.addEventListener('click', () => addCall(callsContainer));
+      stepDiv.appendChild(addCallBtn);
+      // Decision
+      const decisionLabel = createElement('label', {text:'Decision Text'});
+      // Tooltip: describe what happens next based on observations
+      decisionLabel.title = 'The “therefore” after observing results — bridge to the next step. If this is the final step, indicate ready to respond.';
+      const decisionInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      decisionInfo.title = decisionLabel.title;
+      decisionLabel.appendChild(decisionInfo);
+      const decisionInput = createElement('textarea');
+      decisionInput.rows = 2;
+      decisionInput.dataset.field = 'decision_text';
+      stepDiv.appendChild(decisionLabel);
+      stepDiv.appendChild(decisionInput);
+      // Step-level Observation
+      const obsLabel = createElement('h6', {text:'Step-Level Observation'});
+      stepDiv.appendChild(obsLabel);
+      const obsFactsLabel = createElement('label', {text:'Key Facts (comma separated)'});
+      // Tooltip: describe what key facts should capture
+      obsFactsLabel.title = 'Synthesized facts across all calls in this step. For parallel calls, combine and dedupe; for sequential, emphasise overall task insight.';
+      const obsFactsInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      obsFactsInfo.title = obsFactsLabel.title;
+      obsFactsLabel.appendChild(obsFactsInfo);
+      const obsFactsInput = createElement('textarea');
+      obsFactsInput.rows = 2;
+      obsFactsInput.dataset.field = 'obs_key_facts';
+      stepDiv.appendChild(obsFactsLabel);
+      stepDiv.appendChild(obsFactsInput);
+      const obsConfLabel = createElement('label', {text:'Confidence'});
+      // Tooltip: describe confidence levels
+      obsConfLabel.title = 'Overall confidence for this step. high = clear path forward, medium = partial info, low = uncertain.';
+      const obsConfInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      obsConfInfo.title = obsConfLabel.title;
+      obsConfLabel.appendChild(obsConfInfo);
+      const obsConfSelect = createElement('select');
+      ['low','medium','high'].forEach(v => {
+        const opt = createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        obsConfSelect.appendChild(opt);
+      });
+      stepDiv.appendChild(obsConfLabel);
+      stepDiv.appendChild(obsConfSelect);
+      obsConfSelect.dataset.field = 'obs_confidence';
+      const obsIssuesLabel = createElement('label', {text:'Issues (comma separated)'});
+      // Tooltip: describe issues for step-level
+      obsIssuesLabel.title = 'Any unresolved issues from this step that affect future steps; leave blank if none.';
+      const obsIssuesInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      obsIssuesInfo.title = obsIssuesLabel.title;
+      obsIssuesLabel.appendChild(obsIssuesInfo);
+      const obsIssuesInput = createElement('textarea');
+      obsIssuesInput.rows = 2;
+      obsIssuesInput.dataset.field = 'obs_issues';
+      stepDiv.appendChild(obsIssuesLabel);
+      stepDiv.appendChild(obsIssuesInput);
+      // Remove step
+      const removeStepBtn = createElement('button', {class: 'remove-btn', text:'Remove Step'});
+      removeStepBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to remove this step? All data in this step will be lost.')) {
+          // Remove the step from its container
+          container.removeChild(stepDiv);
+          // After removal, renumber remaining steps within this turn and update call IDs
+          const turnDiv = container.closest('[data-turn-id]');
+          if (turnDiv) {
+            renumberStepsInTurn(turnDiv);
+          }
+          hasUnsavedChanges = true;
+        }
+      });
+      stepDiv.appendChild(removeStepBtn);
+      container.appendChild(stepDiv);
+      // Add a call by default for each new step
+      addCall(callsContainer);
+    }
+
+    let callGlobalCounter = 0;
+    function addCall(container) {
+      callGlobalCounter++;
+      // Determine call index within this step
+      const callIndex = container.children.length + 1;
+      // Determine step and turn IDs from DOM
+      const stepDiv = container.closest('[data-step-id]');
+      const stepId = stepDiv ? stepDiv.dataset.stepId : callIndex;
+      const turnDiv = stepDiv ? stepDiv.closest('[data-turn-id]') : null;
+      const turnId = turnDiv ? turnDiv.dataset.turnId : '1';
+      // Compose call identifier using turn, step and call indices
+      const callIdentifier = `t${turnId}s${stepId}c${callIndex}`;
+      const callDiv = createElement('div', {class:'section nested'});
+      callDiv.dataset.callId = callIdentifier;
+      const h6 = createElement('h6', {text: `Call ${callIndex}`});
+      callDiv.appendChild(h6);
+      // Call ID
+      const callIdLabel = createElement('label', {text: 'Call ID'});
+      const callIdInput = createElement('input');
+      callIdInput.type = 'text';
+      // Auto-populate call ID in format tXsYcZ
+      callIdInput.value = callIdentifier;
+      callIdInput.dataset.field = 'call_id';
+      // Mark call ID field as read-only to prevent accidental edits
+      callIdInput.readOnly = true;
+      callDiv.appendChild(callIdLabel);
+      callDiv.appendChild(callIdInput);
+      // Tool name
+      const toolLabel = createElement('label', {text:'Tool Name'});
+      // Tooltip: tool name must be selected from the approved list
+      toolLabel.title = 'Choose the exact tool name to call from the available list. Manual entries are not allowed.';
+      const toolInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      toolInfo.title = toolLabel.title;
+      toolLabel.appendChild(toolInfo);
+      const toolInputField = createElement('input');
+      toolInputField.type = 'text';
+      // Attach searchable dropdown via datalist. Value must match availableTools
+      toolInputField.setAttribute('list', 'toolNamesList');
+      toolInputField.dataset.field = 'tool_name';
+      callDiv.appendChild(toolLabel);
+      callDiv.appendChild(toolInputField);
+      // Error message for invalid tool selection
+      const toolErrorMsg = createElement('div', {class: 'tool-error'});
+      toolErrorMsg.textContent = '';
+      callDiv.appendChild(toolErrorMsg);
+      // Validate tool selection: value must be in availableTools list
+      function validateToolName() {
+        const value = toolInputField.value.trim();
+        if (value === '') {
+          // No value: treat as no tool selected; clear error
+          toolInputField.classList.remove('invalid-tool');
+          toolErrorMsg.textContent = '';
+          updateExportButton();
+          return;
+        }
+        // Compare case-insensitive to availableTools
+        const found = availableTools.some(t => t.toLowerCase() === value.toLowerCase());
+        if (found) {
+          toolInputField.classList.remove('invalid-tool');
+          toolErrorMsg.textContent = '';
+        } else {
+          toolInputField.classList.add('invalid-tool');
+          toolErrorMsg.textContent = 'Invalid tool name; select from list';
+        }
+        // After validation, update export button status
+        updateExportButton();
+      }
+      // Validate on input and blur events
+      toolInputField.addEventListener('input', validateToolName);
+      toolInputField.addEventListener('blur', validateToolName);
+      // On blur, clear invalid entries to enforce selection from list
+      toolInputField.addEventListener('blur', () => {
+        // If still invalid after validation, clear the value and error
+        const value = toolInputField.value.trim();
+        const found = availableTools.some(t => t.toLowerCase() === value.toLowerCase());
+        if (value !== '' && !found) {
+          toolInputField.value = '';
+          toolInputField.classList.remove('invalid-tool');
+          toolErrorMsg.textContent = '';
+        }
+        // Ensure export button state is updated after clearing value
+        updateExportButton();
+      });
+      // Tool input
+      const toolInputLabel = createElement('label', {text:'Tool Input (JSON)'});
+      // Tooltip: JSON parameters passed to the tool
+      toolInputLabel.title = 'JSON parameters passed to the tool. Use exact parameter names from the RL platform and include required and relevant optional fields.';
+      const toolInputInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      toolInputInfo.title = toolInputLabel.title;
+      toolInputLabel.appendChild(toolInputInfo);
+      const toolInputArea = createElement('textarea');
+      toolInputArea.rows = 3;
+      toolInputArea.placeholder = '{"param":"value"}';
+      toolInputArea.dataset.field = 'tool_input';
+      callDiv.appendChild(toolInputLabel);
+      callDiv.appendChild(toolInputArea);
+      // Attach live JSON validator to tool input area
+      attachJsonValidator(toolInputArea);
+      // Observation - tool output
+      const outLabel = createElement('label', {text:'Tool Output (JSON)'});
+      // Tooltip: paste the actual tool response here
+      outLabel.title = 'Paste the actual tool response here (JSON).';
+      const outInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      outInfo.title = outLabel.title;
+      outLabel.appendChild(outInfo);
+      const outArea = createElement('textarea');
+      outArea.rows = 3;
+      outArea.dataset.field = 'tool_output';
+      callDiv.appendChild(outLabel);
+      callDiv.appendChild(outArea);
+      // Attach live JSON validator to tool output area
+      attachJsonValidator(outArea);
+      // Key facts
+      const kfLabel = createElement('label', {text:'Key Facts (comma separated)'});
+      // Tooltip: actionable facts from the tool output
+      kfLabel.title = '2–4 bullet points with actionable information: IDs/names, counts, confirmations and surprises.';
+      const kfInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      kfInfo.title = kfLabel.title;
+      kfLabel.appendChild(kfInfo);
+      const kfInput = createElement('textarea');
+      kfInput.rows = 2;
+      kfInput.dataset.field = 'key_facts';
+      callDiv.appendChild(kfLabel);
+      callDiv.appendChild(kfInput);
+      // Confidence
+      const confLabel = createElement('label', {text:'Confidence'});
+      // Tooltip: confidence in the call results
+      confLabel.title = 'Confidence in this call\'s results: high (clear path forward), medium (partial info) or low (unexpected response).';
+      const confInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      confInfo.title = confLabel.title;
+      confLabel.appendChild(confInfo);
+      const confSelect = createElement('select');
+      ['low','medium','high'].forEach(v => {
+        const opt = createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        confSelect.appendChild(opt);
+      });
+      callDiv.appendChild(confLabel);
+      callDiv.appendChild(confSelect);
+      confSelect.dataset.field = 'confidence';
+      // Issues
+      const issuesLabel = createElement('label', {text:'Issues (comma separated)'});
+      // Tooltip: issues from this call
+      issuesLabel.title = 'Problems, warnings or concerns from this call; leave blank if none.';
+      const issuesInfo = createElement('span', {class: 'info-icon', text: 'ℹ️'});
+      issuesInfo.title = issuesLabel.title;
+      issuesLabel.appendChild(issuesInfo);
+      const issuesInput = createElement('textarea');
+      issuesInput.rows = 2;
+      issuesInput.dataset.field = 'issues';
+      callDiv.appendChild(issuesLabel);
+      callDiv.appendChild(issuesInput);
+      // Remove call
+      const removeCallBtn = createElement('button', {class:'remove-btn', text:'Remove Call'});
+      removeCallBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to remove this call? All data in this call will be lost.')) {
+          container.removeChild(callDiv);
+          // After removal, renumber remaining calls in this container
+          renumberCalls(container);
+          hasUnsavedChanges = true;
+        }
+      });
+      callDiv.appendChild(removeCallBtn);
+      container.appendChild(callDiv);
+    }
+
+    function collectData() {
+      const trajectoryId = document.getElementById('trajectory_id').value.trim();
+      const domain = document.getElementById('domain').value.trim();
+      const taskType = document.getElementById('task_type').value;
+      const difficulty = document.getElementById('difficulty').value;
+      const turns = [];
+      const turnsContainer = document.getElementById('turns-container');
+      const turnDivs = Array.from(turnsContainer.children);
+      turnDivs.forEach((turnDiv, idx) => {
+        const turnId = idx + 1;
+        const userInputEl = turnDiv.querySelector('[data-field="user_input"]');
+        const userInput = userInputEl ? userInputEl.value.trim() : '';
+        const modeEl = turnDiv.querySelector('[data-field="mode"]');
+        const mode = modeEl ? modeEl.value : 'new';
+        const priorSummaryEl = turnDiv.querySelector('[data-field="prior_summary"]');
+        const priorSummary = priorSummaryEl ? priorSummaryEl.value.trim() : '';
+        const stepsContainer = turnDiv.querySelector(`#turn_${turnDiv.dataset.turnId}_steps`);
+        const stepDivs = stepsContainer ? Array.from(stepsContainer.children) : [];
+        const steps = [];
+        stepDivs.forEach((stepDiv, sidx) => {
+          const stepId = sidx + 1;
+          const reasonTextEl = stepDiv.querySelector('[data-field="reason_text"]');
+          const reasonText = reasonTextEl ? reasonTextEl.value.trim() : '';
+          const intentEl = stepDiv.querySelector('[data-field="intent"]');
+          const intentValue = intentEl ? intentEl.value : '';
+          const actionTypeEl = stepDiv.querySelector('[data-field="action_type"]');
+          const actionType = actionTypeEl ? actionTypeEl.value : '';
+          // Calls
+          const callsContainer = stepDiv.querySelector(`[id^="step_${stepDiv.dataset.stepId}_calls"]`);
+          const callDivs = callsContainer ? Array.from(callsContainer.children) : [];
+          const calls = [];
+          callDivs.forEach(callDiv => {
+            const callIdEl = callDiv.querySelector('[data-field="call_id"]');
+            const callId = callIdEl ? callIdEl.value.trim() : '';
+            const toolNameEl = callDiv.querySelector('[data-field="tool_name"]');
+            const toolName = toolNameEl ? toolNameEl.value.trim() : '';
+            const toolInputEl = callDiv.querySelector('[data-field="tool_input"]');
+            const toolInput = parseJsonSafe(toolInputEl ? toolInputEl.value : '');
+            const toolOutputEl = callDiv.querySelector('[data-field="tool_output"]');
+            const toolOutput = parseJsonSafe(toolOutputEl ? toolOutputEl.value : '');
+            const keyFactsEl = callDiv.querySelector('[data-field="key_facts"]');
+            const keyFacts = keyFactsEl ? keyFactsEl.value.split(',').map(s => s.trim()).filter(s => s) : [];
+            const confidenceEl = callDiv.querySelector('[data-field="confidence"]');
+            const confidence = confidenceEl ? confidenceEl.value : '';
+            const issuesEl = callDiv.querySelector('[data-field="issues"]');
+            const issues = issuesEl ? issuesEl.value.split(',').map(s => s.trim()).filter(s => s) : [];
+            calls.push({
+              call_id: callId,
+              tool_name: toolName,
+              tool_input: toolInput,
+              observation: {
+                tool_output: toolOutput,
+                key_facts: keyFacts,
+                confidence: confidence,
+                issues: issues
+              }
+            });
+          });
+          // Decision
+          const decisionEl = stepDiv.querySelector('[data-field="decision_text"]');
+          const decisionText = decisionEl ? decisionEl.value.trim() : '';
+          // Step-level observation
+          const obsFactsEl = stepDiv.querySelector('[data-field="obs_key_facts"]');
+          const obsFacts = obsFactsEl ? obsFactsEl.value.split(',').map(s => s.trim()).filter(s => s) : [];
+          const obsConfEl = stepDiv.querySelector('[data-field="obs_confidence"]');
+          const obsConfidence = obsConfEl ? obsConfEl.value : '';
+          const obsIssuesEl = stepDiv.querySelector('[data-field="obs_issues"]');
+          const obsIssues = obsIssuesEl ? obsIssuesEl.value.split(',').map(s => s.trim()).filter(s => s) : [];
+          steps.push({
+            step_id: stepId,
+            reason: {
+              text: reasonText,
+              intent: intentValue
+            },
+            action: {
+              type: actionType,
+              calls: calls
+            },
+            decision: {
+              text: decisionText
+            },
+            observation: {
+              key_facts: obsFacts,
+              confidence: obsConfidence,
+              issues: obsIssues
+            }
+          });
+        });
+        // Final response
+        const finalReasonEl = turnDiv.querySelector('[data-field="final_reason"]');
+        const finalTextEl = turnDiv.querySelector('[data-field="final_text"]');
+        const finalReason = finalReasonEl ? finalReasonEl.value.trim() : '';
+        const finalText = finalTextEl ? finalTextEl.value.trim() : '';
+        turns.push({
+          turn_id: turnId,
+          user_input: userInput,
+          continuation: {
+            mode: mode,
+            prior_turn_summary: priorSummary
+          },
+          steps: steps,
+          final_response: {
+            reason: finalReason,
+            text: finalText
+          }
+        });
+      });
+      const trajectory = {
+        trajectory_id: trajectoryId,
+        metadata: {
+          domain: domain,
+          task_type: taskType,
+          difficulty: difficulty
+        },
+        turns: turns
+      };
+      return trajectory;
+    }
+
+    function parseJsonSafe(str) {
+      try {
+        return str ? JSON.parse(str) : {};
+      } catch(e) {
+        return {};
+      }
+    }
+
+    function exportJson() {
+      const data = collectData();
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById('download-link');
+      link.href = url;
+      // Name the file after the trajectory ID if provided
+      const filename = data.trajectory_id ? data.trajectory_id + '.json' : 'human_trace.json';
+      link.download = filename;
+      link.style.display = 'inline-block';
+      link.textContent = 'Click to Download';
+      // Reset unsaved changes flag since data has been exported
+      hasUnsavedChanges = false;
+    }
+
+    // Renumber call IDs within a step container after addition/removal
+    function renumberCalls(container) {
+      const callDivs = Array.from(container.children);
+      callDivs.forEach((callDiv, index) => {
+        const callIndex = index + 1;
+        const stepDiv = container.closest('[data-step-id]');
+        const stepId = stepDiv ? stepDiv.dataset.stepId : callIndex;
+        const turnDiv = stepDiv ? stepDiv.closest('[data-turn-id]') : null;
+        const turnId = turnDiv ? turnDiv.dataset.turnId : '1';
+        const callIdentifier = `t${turnId}s${stepId}c${callIndex}`;
+        // update dataset
+        callDiv.dataset.callId = callIdentifier;
+        // update header
+        const h6 = callDiv.querySelector('h6');
+        if (h6) h6.textContent = `Call ${callIndex}`;
+        // update call ID input value
+        const callIdInput = callDiv.querySelector('[data-field="call_id"]');
+        if (callIdInput) {
+          callIdInput.value = callIdentifier;
+        }
+      });
+    }
+
+    // Renumber steps within a turn after addition/removal and update call IDs accordingly
+    function renumberStepsInTurn(turnDiv) {
+      const stepsContainer = turnDiv.querySelector(`[id^="turn_${turnDiv.dataset.turnId}_steps"]`);
+      if (!stepsContainer) return;
+      const stepDivs = Array.from(stepsContainer.children);
+      stepDivs.forEach((stepDiv, index) => {
+        const newStepId = index + 1;
+        const oldStepId = stepDiv.dataset.stepId;
+        if (String(oldStepId) !== String(newStepId)) {
+          // update dataset and header
+          stepDiv.dataset.stepId = newStepId;
+          const h5 = stepDiv.querySelector('h5');
+          if (h5) h5.textContent = `Step ${newStepId}`;
+          // update calls container id
+          const callsContainer = stepDiv.querySelector(`[id^="step_${oldStepId}_calls"]`);
+          if (callsContainer) {
+            callsContainer.id = `step_${newStepId}_calls`;
+            // renumber calls inside
+            renumberCalls(callsContainer);
+          }
+        }
+      });
+    }
+
+    // Renumber turn IDs and update nested structures when a turn is removed
+    function renumberTurnIds() {
+      const turnsContainer = document.getElementById('turns-container');
+      const turnDivs = Array.from(turnsContainer.children);
+      turnDivs.forEach((turnDiv, index) => {
+        const newTurnId = index + 1;
+        const oldTurnId = turnDiv.dataset.turnId;
+        if (String(oldTurnId) !== String(newTurnId)) {
+          turnDiv.dataset.turnId = newTurnId;
+          // update header
+          const h3 = turnDiv.querySelector('h3');
+          if (h3) h3.textContent = `Turn ${newTurnId}`;
+          // update steps container id
+          const stepsContainer = turnDiv.querySelector(`#turn_${oldTurnId}_steps`);
+          if (stepsContainer) {
+            stepsContainer.id = `turn_${newTurnId}_steps`;
+          }
+          // renumber steps within this turn
+          renumberStepsInTurn(turnDiv);
+        }
+      });
+      // After renumbering turns, update call IDs within all turns
+      turnDivs.forEach(turnDiv => {
+        const stepsContainer = turnDiv.querySelector(`[id^="turn_${turnDiv.dataset.turnId}_steps"]`);
+        const stepDivs = stepsContainer ? Array.from(stepsContainer.children) : [];
+        stepDivs.forEach(stepDiv => {
+          const callsContainer = stepDiv.querySelector(`[id^="step_${stepDiv.dataset.stepId}_calls"]`);
+          if (callsContainer) {
+            renumberCalls(callsContainer);
+          }
+        });
+      });
+    }
+
+    // ===== Validation Modal Popup =====
+    function showValidationIssues(issuesArray) {
+    const modal = document.getElementById("validationModal");
+    const output = document.getElementById("validationOutput");
+
+    output.textContent = issuesArray.join("\n");
+    modal.style.display = "flex";
+    }
+
+    function closeValidationModal() {
+    document.getElementById("validationModal").style.display = "none";
+    }
+
+    // ===== Checklist Modal Functions =====
+    function closeChecklistModal() {
+      document.getElementById('checklistModal').style.display = 'none';
+    }
+
+    function closeToolsModal() {
+      document.getElementById('toolsModal').style.display = 'none';
+    }
+
+    /**
+     * Run a series of trainer checks on the current UI data and present the results.
+     * Warnings will not block export but will alert the trainer of missing coverage.
+     */
+    function runTrainerChecklist() {
+      const data = collectData();
+      // Build sections of checks for a structured checklist
+      const sections = [];
+      const turnCount = data.turns.length;
+      // Section: minimum turns
+      sections.push({ title: 'Turn count', items: [ { desc: 'At least 3 turns', passed: turnCount >= 3, detail: 'Found ' + turnCount } ] });
+      // Bonus: more than 6 turns -> only show as passed when >6
+      if (turnCount > 6) {
+        sections.push({ title: 'Bonus turns', items: [ { desc: 'More than 6 turns', passed: true, detail: 'Good job! (' + turnCount + ')' } ] });
+      }
+      // Section: parallel steps
+      let hasParallel = false;
+      data.turns.forEach(turn => {
+        turn.steps.forEach(step => {
+          if (step.action && step.action.type === 'parallel' && Array.isArray(step.action.calls) && step.action.calls.length >= 2) {
+            hasParallel = true;
+          }
+        });
+      });
+      sections.push({ title: 'Parallel steps', items: [ { desc: 'At least one parallel step (>=2 calls in a step)', passed: hasParallel, detail: hasParallel ? '' : '' } ] });
+      // Section: tool calls per turn
+      const perTurnCallItems = [];
+      data.turns.forEach((turn, idx) => {
+        let callCount = 0;
+        turn.steps.forEach(step => {
+          if (step.action && Array.isArray(step.action.calls)) {
+            callCount += step.action.calls.length;
+          }
+        });
+        perTurnCallItems.push({ desc: 'Turn ' + (idx + 1) + ' has at least 2 tool calls', passed: callCount >= 2, detail: '(' + callCount + ')' });
+      });
+      sections.push({ title: 'Tool calls per turn', items: perTurnCallItems });
+      // Section: total tool calls
+      let totalCalls = 0;
+      data.turns.forEach(turn => {
+        turn.steps.forEach(step => {
+          if (step.action && Array.isArray(step.action.calls)) {
+            totalCalls += step.action.calls.length;
+          }
+        });
+      });
+      sections.push({ title: 'Total tool calls', items: [ { desc: 'Total tool calls ≥ 10', passed: totalCalls >= 10, detail: '(' + totalCalls + ')' } ] });
+      // Section: steps per turn
+      const perTurnStepItems = [];
+      data.turns.forEach((turn, idx) => {
+        perTurnStepItems.push({ desc: 'Turn ' + (idx + 1) + ' has at least 2 steps', passed: Array.isArray(turn.steps) && turn.steps.length >= 2, detail: '(' + (turn.steps ? turn.steps.length : 0) + ')' });
+      });
+      sections.push({ title: 'Steps per turn', items: perTurnStepItems });
+      // Section: sequential steps across turns
+      let sequentialTurnCount = 0;
+      data.turns.forEach(turn => {
+        let hasSeq = false;
+        turn.steps.forEach(step => {
+          if (step.action && step.action.type === 'sequential') {
+            hasSeq = true;
+          }
+        });
+        if (hasSeq) sequentialTurnCount++;
+      });
+      sections.push({ title: 'Sequential steps in turns', items: [ { desc: 'At least 3 turns contain sequential steps', passed: sequentialTurnCount >= 3, detail: '(' + sequentialTurnCount + ')' } ] });
+      // Section: sequential call validation
+      let sequentialCallViolation = false;
+      data.turns.forEach(turn => {
+        turn.steps.forEach(step => {
+          if (step.action && step.action.type === 'sequential' && Array.isArray(step.action.calls) && step.action.calls.length !== 1) {
+            sequentialCallViolation = true;
+          }
+        });
+      });
+      sections.push({ title: 'Sequential call check', items: [ { desc: 'Sequential steps must contain exactly one call', passed: !sequentialCallViolation, detail: '' } ] });
+
+      // Render the sections into the checklist modal
+      const checklistDiv = document.getElementById('checklistContent');
+      checklistDiv.innerHTML = '';
+      sections.forEach((section, sIdx) => {
+        const secTitle = document.createElement('h4');
+        secTitle.textContent = section.title;
+        checklistDiv.appendChild(secTitle);
+        const ul = document.createElement('ul');
+        section.items.forEach((item, idx) => {
+          const li = document.createElement('li');
+          li.style.marginBottom = '0.5rem';
+          const statusSpan = document.createElement('strong');
+          statusSpan.textContent = (item.passed ? 'Passed: ' : 'Failed: ');
+          statusSpan.style.color = item.passed ? '#27ae60' : '#e74c3c';
+          const textSpan = document.createElement('span');
+          textSpan.textContent = ' ' + item.desc + ' ' + (item.detail || '');
+          li.appendChild(statusSpan);
+          li.appendChild(textSpan);
+          if (!item.passed) {
+            const reasonLabel = document.createElement('label');
+            reasonLabel.textContent = 'Reason:';
+            reasonLabel.style.display = 'block';
+            const reasonInput = document.createElement('textarea');
+            reasonInput.rows = 2;
+            reasonInput.style.width = '100%';
+            // Store an index to identify reason fields when copying; combine section index and item index
+            reasonInput.dataset.sectionIndex = sIdx;
+            reasonInput.dataset.itemIndex = idx;
+            li.appendChild(reasonLabel);
+            li.appendChild(reasonInput);
+          }
+          ul.appendChild(li);
+        });
+        checklistDiv.appendChild(ul);
+      });
+      document.getElementById('checklistModal').style.display = 'flex';
+    }
+
+    /**
+     * Copy the checklist warnings and reasons to the clipboard.
+     */
+    function copyChecklistToClipboard() {
+      const contentDiv = document.getElementById('checklistContent');
+      const lines = [];
+      // Add heading
+      lines.push('Trainer Checklist');
+      // Iterate through the children of checklistContent: expected pattern h4 -> ul -> h4 -> ul ...
+      const children = Array.from(contentDiv.children);
+      let currentSection = null;
+      children.forEach(child => {
+        if (child.tagName === 'H4') {
+          // Start new section
+          if (currentSection !== null) {
+            // add a blank line between sections for readability
+            lines.push('');
+          }
+          currentSection = child.textContent.trim();
+          lines.push(currentSection);
+        } else if (child.tagName === 'UL') {
+          const items = child.querySelectorAll('li');
+          items.forEach(li => {
+            let statusLine = '';
+            const strong = li.querySelector('strong');
+            const span = strong ? strong.nextSibling : null;
+            if (strong && span) {
+              statusLine = strong.textContent.trim() + span.textContent.trim();
+            } else {
+              statusLine = li.textContent.trim();
+            }
+            const reasonArea = li.querySelector('textarea');
+            const reasonText = reasonArea ? reasonArea.value.trim() : '';
+            // Indent each item with four spaces for readability
+            const indent = '    ';
+            if (reasonArea) {
+              if (reasonText) {
+                lines.push(indent + statusLine + ' Reason: ' + reasonText);
+              } else {
+                lines.push(indent + statusLine);
+              }
+            } else {
+              lines.push(indent + statusLine);
+            }
+          });
+        }
+      });
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Checklist copied to clipboard!');
+      });
+    }
+
+    /**
+     * Generate and display the list of unique tools used in the current trajectory.
+     */
+    function showToolsList() {
+      const data = collectData();
+      const toolSet = new Set();
+      data.turns.forEach(turn => {
+        turn.steps.forEach(step => {
+          step.action.calls.forEach(call => {
+            if (call.tool_name) toolSet.add(call.tool_name);
+          });
+        });
+      });
+      const toolsList = Array.from(toolSet).sort();
+      const toolsOutputEl = document.getElementById('toolsOutput');
+      toolsOutputEl.textContent = toolsList.join('\n');
+      document.getElementById('toolsModal').style.display = 'flex';
+    }
+
+    /**
+     * Copy the tools list to the clipboard.
+     */
+    function copyToolsToClipboard() {
+      const toolsOutputEl = document.getElementById('toolsOutput');
+      const rawText = toolsOutputEl.textContent;
+      const prefix = 'Tools used:';
+      const text = prefix + '\n' + rawText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Tools list copied to clipboard!');
+      });
+    }
+
+    /**
+     * Download the unique tools used as a text file named after the trajectory_id.
+     */
+    function downloadToolsFile() {
+      const data = collectData();
+      const toolSet = new Set();
+      data.turns.forEach(turn => {
+        turn.steps.forEach(step => {
+          step.action.calls.forEach(call => {
+            if (call.tool_name) toolSet.add(call.tool_name);
+          });
+        });
+      });
+      const toolsList = Array.from(toolSet).sort().join('\n');
+      const blob = new Blob([toolsList], {type: 'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById('toolsDownloadLink');
+      const trajectoryId = data.trajectory_id ? data.trajectory_id : 'tools';
+      link.href = url;
+      link.download = trajectoryId + '_tools.txt';
+      link.style.display = 'none';
+      // Trigger download
+      link.click();
+      // Revoke URL after download to free memory
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // ===== JSON Import Support =====
+    // Validate minimal structural correctness of imported trajectory JSON.
+    // Returns an array of string warnings; empty if OK.
+    function validateImportedJson(data) {
+      const warnings = [];
+      if (!data.trajectory_id) warnings.push('Missing trajectory_id');
+      if (!data.metadata) warnings.push('Missing metadata');
+      if (!Array.isArray(data.turns)) warnings.push('Missing or invalid turns array');
+      // Check each turn
+      (data.turns || []).forEach((turn, tIndex) => {
+        const turnNum = tIndex + 1;
+        (turn.steps || []).forEach((step, sIndex) => {
+          const stepNum = sIndex + 1;
+          if (!step.reason || !step.reason.text) warnings.push(`Turn ${turnNum} Step ${stepNum}: Missing reason.text`);
+          if (!step.reason || !step.reason.intent) warnings.push(`Turn ${turnNum} Step ${stepNum}: Missing reason.intent`);
+          if (!step.decision || !step.decision.text) warnings.push(`Turn ${turnNum} Step ${stepNum}: Missing decision.text`);
+          const calls = (step.action && step.action.calls) || [];
+          const actionType = step.action ? step.action.type : '';
+          if (actionType === 'sequential' && calls.length > 1) warnings.push(`Turn ${turnNum} Step ${stepNum}: Sequential step has multiple calls`);
+          if (actionType === 'parallel' && calls.length < 2) warnings.push(`Turn ${turnNum} Step ${stepNum}: Parallel step has fewer than 2 calls`);
+          calls.forEach((call, cIndex) => {
+            const cid = call.call_id || '';
+            if (!/^t\d+s\d+c\d+$/.test(cid)) warnings.push(`Turn ${turnNum} Step ${stepNum} Call ${cIndex+1}: Invalid call_id ${cid}`);
+          });
+        });
+      });
+      return warnings;
+    }
+
+    // Populate UI from imported JSON data.
+    function populateUIFromJson(data) {
+      // Clear existing turns
+      const turnsContainer = document.getElementById('turns-container');
+      turnsContainer.innerHTML = '';
+      // Reset counters
+      turnCount = 0;
+      // Metadata
+      document.getElementById('trajectory_id').value = data.trajectory_id || '';
+      document.getElementById('domain').value = data.metadata?.domain || '';
+      document.getElementById('task_type').value = data.metadata?.task_type || 'info_seek';
+      document.getElementById('difficulty').value = data.metadata?.difficulty || 'easy';
+      // Turns
+      (data.turns || []).forEach((turn, tIndex) => {
+        addTurn();
+        // After addTurn, turnCount increments and new turn is last child
+        const turnDiv = turnsContainer.lastElementChild;
+        // Fill basic fields
+        const userInputEl = turnDiv.querySelector('[data-field="user_input"]');
+        if (userInputEl) userInputEl.value = turn.user_input || '';
+        const modeEl = turnDiv.querySelector('[data-field="mode"]');
+        if (modeEl) modeEl.value = turn.continuation?.mode || 'new';
+        const priorEl = turnDiv.querySelector('[data-field="prior_summary"]');
+        if (priorEl) priorEl.value = turn.continuation?.prior_turn_summary || '';
+        // Steps container
+        const stepsContainer = turnDiv.querySelector(`#turn_${turnDiv.dataset.turnId}_steps`);
+        // Remove default step if exists
+        stepsContainer.innerHTML = '';
+        (turn.steps || []).forEach((step) => {
+          addStep(stepsContainer);
+          const stepDiv = stepsContainer.lastElementChild;
+          // Fill reason
+          const reasonTextEl = stepDiv.querySelector('[data-field="reason_text"]');
+          if (reasonTextEl) reasonTextEl.value = step.reason?.text || '';
+          const intentEl = stepDiv.querySelector('[data-field="intent"]');
+          if (intentEl) intentEl.value = step.reason?.intent || '';
+          const actionTypeEl = stepDiv.querySelector('[data-field="action_type"]');
+          if (actionTypeEl) actionTypeEl.value = step.action?.type || '';
+          // Calls container
+          const callsContainer = stepDiv.querySelector(`[id^="step_${stepDiv.dataset.stepId}_calls"]`);
+          callsContainer.innerHTML = '';
+          (step.action?.calls || []).forEach((call) => {
+            addCall(callsContainer);
+            const callDiv = callsContainer.lastElementChild;
+            // call id
+            const callIdEl = callDiv.querySelector('[data-field="call_id"]');
+            if (callIdEl) callIdEl.value = call.call_id || '';
+            const toolNameEl = callDiv.querySelector('[data-field="tool_name"]');
+            if (toolNameEl) toolNameEl.value = call.tool_name || '';
+            const toolInputEl = callDiv.querySelector('[data-field="tool_input"]');
+            if (toolInputEl) toolInputEl.value = call.tool_input ? JSON.stringify(call.tool_input, null, 2) : '';
+            const toolOutputEl = callDiv.querySelector('[data-field="tool_output"]');
+            if (toolOutputEl) toolOutputEl.value = call.observation?.tool_output ? JSON.stringify(call.observation.tool_output, null, 2) : '';
+            const keyFactsEl = callDiv.querySelector('[data-field="key_facts"]');
+            if (keyFactsEl) keyFactsEl.value = Array.isArray(call.observation?.key_facts) ? call.observation.key_facts.join(', ') : '';
+            const confEl = callDiv.querySelector('[data-field="confidence"]');
+            if (confEl) confEl.value = call.observation?.confidence || '';
+            const issuesEl = callDiv.querySelector('[data-field="issues"]');
+            if (issuesEl) issuesEl.value = Array.isArray(call.observation?.issues) ? call.observation.issues.join(', ') : '';
+          });
+          // Decision
+          const decisionEl = stepDiv.querySelector('[data-field="decision_text"]');
+          if (decisionEl) decisionEl.value = step.decision?.text || '';
+          // Step-level observation
+          const obsFactsEl = stepDiv.querySelector('[data-field="obs_key_facts"]');
+          if (obsFactsEl) obsFactsEl.value = Array.isArray(step.observation?.key_facts) ? step.observation.key_facts.join(', ') : '';
+          const obsConfEl = stepDiv.querySelector('[data-field="obs_confidence"]');
+          if (obsConfEl) obsConfEl.value = step.observation?.confidence || '';
+          const obsIssuesEl = stepDiv.querySelector('[data-field="obs_issues"]');
+          if (obsIssuesEl) obsIssuesEl.value = Array.isArray(step.observation?.issues) ? step.observation.issues.join(', ') : '';
+        });
+        // Final response
+        const finalReasonEl = turnDiv.querySelector('[data-field="final_reason"]');
+        if (finalReasonEl) finalReasonEl.value = turn.final_response?.reason || '';
+        const finalTextEl = turnDiv.querySelector('[data-field="final_text"]');
+        if (finalTextEl) finalTextEl.value = turn.final_response?.text || '';
+      });
+      // After populating turns and steps, renumber to ensure correct call ids
+      renumberTurnIds();
+      // Reset unsaved flag to imported state
+      hasUnsavedChanges = true;
+      // Validate tool names and JSON fields to refresh UI status
+      updateExportButton();
+    }
+
+    document.getElementById('add-turn-btn').addEventListener('click', addTurn);
+    document.getElementById('export-btn').addEventListener('click', exportJson);
+    // Import JSON: show file picker and load trajectory
+    document.getElementById('import-btn').addEventListener('click', () => {
+      document.getElementById('import-input').click();
+    });
+    document.getElementById('import-input').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = JSON.parse(evt.target.result);
+          const warnings = validateImportedJson(data);
+          if (warnings.length) {
+            // Use validation modal for import warnings
+            showValidationIssues(warnings);
+          }
+          populateUIFromJson(data);
+        } catch(err) {
+          alert('Invalid JSON file');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Attach event listeners after DOM is fully loaded
+    window.addEventListener('load', () => {
+      // Checklist & Tools button event listeners
+      document.getElementById('checklist-btn').addEventListener('click', runTrainerChecklist);
+      document.getElementById('tools-btn').addEventListener('click', showToolsList);
+      document.getElementById('copyChecklistBtn').addEventListener('click', copyChecklistToClipboard);
+      document.getElementById('copyToolsBtn').addEventListener('click', copyToolsToClipboard);
+      document.getElementById('downloadToolsFileBtn').addEventListener('click', downloadToolsFile);
+    });
+    // Initialize with one turn on script load
+    addTurn();
+  </script>
+  <!-- Validation Popup Modal -->
+  <div id="validationModal" class="modal">
+    <div class="modal-content">
+      <h3>Validation Issues Found</h3>
+      <pre id="validationOutput"></pre>
+      <button onclick="closeValidationModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- Checklist Popup Modal -->
+  <div id="checklistModal" class="modal">
+    <div class="modal-content">
+      <h3>Trainer Checklist</h3>
+      <div id="checklistContent"></div>
+      <div style="margin-top:1rem;">
+        <button id="copyChecklistBtn">Copy Checklist &amp; Reasons</button>
+        <button onclick="closeChecklistModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tools List Popup Modal -->
+  <div id="toolsModal" class="modal">
+    <div class="modal-content">
+      <h3>Unique Tools Used</h3>
+      <pre id="toolsOutput"></pre>
+      <div style="margin-top:1rem;">
+        <button id="copyToolsBtn">Copy Tools List</button>
+        <button id="downloadToolsFileBtn">Download Tools File</button>
+        <a id="toolsDownloadLink" style="display:none;"></a>
+        <button onclick="closeToolsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

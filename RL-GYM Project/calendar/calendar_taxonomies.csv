@@ -1,0 +1,28 @@
+L1,L2,L3
+Calendar Management,Calendar Structure,Primary Calendar Lifecycle
+Calendar Management,Calendar Structure,Time Zone & Locale Settings
+Event Management,Event Lifecycle,Create & Modify Events
+Event Management,Event Lifecycle,Event Lifecycle
+Event Management,Event Lifecycle,Attachments & Recurrence
+Event Management,Event Exceptions,Occurrence Modifications
+People & Availability,Attendee Management,Update Attendees & RSVP
+People & Availability,Scheduling,Free/Busy Lookups
+People & Availability,Scheduling,Suggest Meeting Times
+Resource Management,Room Management,Rooms Directory
+Resource Management,Room Management,Room Booking
+Notifications & Alerts,Event Notifications,Event Reminders
+Notifications & Alerts,Event Notifications,Default Reminder Settings
+Notifications & Alerts,System Notifications,Invitation Emails
+Sharing & Permissions,Calendar Sharing,Share Calendar
+Sharing & Permissions,Access Control,Permission Levels
+Sharing & Permissions,Event Privacy,Visibility Settings
+Integrations & Sync,Video Conferencing,Add Google Meet Link
+Integrations & Sync,Third-Party Integrations,External Conference Tools
+Integrations & Sync,Sync & Automation,Calendar Sync Jobs
+Integrations & Sync,Import & Export,ICS & CSV Import/Export
+Administration,Org Policies,Org-Level Calendar Settings
+Administration,Security & Compliance,Audit Logs
+Administration,Data Retention,Retention Policies
+Insights & Reporting,Analytics,Calendar Usage Metrics
+Insights & Reporting,Meeting Analysis,Total Meeting Hours
+Insights & Reporting,Productivity Insights,Focus Time Calculation

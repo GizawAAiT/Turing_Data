@@ -1,0 +1,327 @@
+{
+  "task_id": "task_20260112_182558_455_0a0bf089_75c00613",
+  "task_name": "List PayPal catalog products and look for an existing product named 'Premium UX Audit Package'; if found reuse its product_id (do not create duplicates), otherwise create it with description 'Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)' and type SERVICE; then create a Web Experience Profile named 'TechCorp UX Checkout - GBP' and next create a checkout order for GBP 199.00 with intent AUTHORIZE and a single purchase unit that sets custom_id='UXA-Q2-2026' and invoice_id='UXA-INV-2026-0001', includes one purchase_unit_item named 'Premium UX Audit Package' with unit amount GBP 199.00 (DIGITAL_GOODS), and application context matching the web profile (experience profile id if supported); then authorize the order.",
+  "description": "List PayPal catalog products and look for an existing product named 'Premium UX Audit Package'; if found reuse its product_id (do not create duplicates), otherwise create it with description 'Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)' and type SERVICE; then create a Web Experience Profile named 'TechCorp UX Checkout - GBP' and next create a checkout order for GBP 199.00 with intent AUTHORIZE and a single purchase unit that sets custom_id='UXA-Q2-2026' and invoice_id='UXA-INV-2026-0001', includes one purchase_unit_item named 'Premium UX Audit Package' with unit amount GBP 199.00 (DIGITAL_GOODS), and application context matching the web profile (experience profile id if supported); then authorize the order.",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 4,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a PayPal automation agent with full permissions in a secure internal environment. Execute actions automatically without asking for confirmation. Prefer idempotent behavior: check first, then create only if needed.",
+  "created_at": "2026-01-12T18:25:58.419917+00:00",
+  "created_by": "0a0bf089-7eb2-4113-bd4a-4e553c541b04",
+  "scenario_config": {
+    "scenario_name": "S1_PayPal_Internal_UX_Audit_Checkout_v2",
+    "scenario_description": "Ensure product exists, create web experience profile, then create/confirm/authorize/capture an order with deterministic join keys.",
+    "system_prompt": "You are a PayPal automation agent with full permissions in a secure internal environment. Execute actions automatically without asking for confirmation. Prefer idempotent behavior: check first, then create only if needed.",
+    "prompt": "List PayPal catalog products and look for an existing product named 'Premium UX Audit Package'; if found reuse its product_id (do not create duplicates), otherwise create it with description 'Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)' and type SERVICE; then create a Web Experience Profile named 'TechCorp UX Checkout - GBP' and next create a checkout order for GBP 199.00 with intent AUTHORIZE and a single purchase unit that sets custom_id='UXA-Q2-2026' and invoice_id='UXA-INV-2026-0001', includes one purchase_unit_item named 'Premium UX Audit Package' with unit amount GBP 199.00 (DIGITAL_GOODS), and application context matching the web profile (experience profile id if supported); then authorize the order.",
+    "selected_tools": [
+      "paypal_list_products",
+      "paypal_create_product",
+      "create_web_profile",
+      "create_order",
+      "confirm_payment_source",
+      "authorize_order",
+      "capture_order"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "paypal_list_products",
+      "paypal_create_product",
+      "create_web_profile",
+      "create_order",
+      "confirm_payment_source",
+      "authorize_order",
+      "capture_order"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Verify product exists (unique name)",
+      "description": "Ensure exactly one catalog product exists with the expected name.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS count FROM products WHERE name = 'Premium UX Audit Package';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Verify product description matches",
+      "description": "Ensure the product description matches the expected service description.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS count FROM products WHERE name = 'Premium UX Audit Package' AND description = 'Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Verify web profile created (name + brand)",
+      "description": "Ensure the web experience profile exists and its presentation JSON contains the expected brand name.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS count FROM web_profiles WHERE name = 'TechCorp UX Checkout - GBP';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Verify order completed (intent + amount via purchase_units)",
+      "description": "Ensure the order is COMPLETED with intent AUTHORIZE, and has a purchase unit with the expected custom_id, currency, and value.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS count FROM orders o JOIN purchase_units pu ON pu.order_id = o.id WHERE o.intent = 'AUTHORIZE' AND pu.custom_id = 'UXA-Q2-2026' AND pu.currency_code = 'GBP' AND CAST(pu.value AS REAL) = 199.00;",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    },
+    {
+      "name": "Verify purchase unit item references product name",
+      "description": "Ensure the order includes a purchase unit item named 'Premium UX Audit Package' tied to the same purchase unit custom_id.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) AS count FROM purchase_unit_items pui JOIN purchase_units pu ON pu.id = pui.purchase_unit_id JOIN orders o ON o.id = pu.order_id WHERE pu.custom_id = 'UXA-Q2-2026' AND pui.name = 'Premium UX Audit Package';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": null,
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "paypal_list_products",
+      "arguments": {
+        "page_size": 20,
+        "page": 1
+      },
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "paypal_list_products",
+        "parameters": {
+          "page_size": 20,
+          "page": 1
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"products\": [\n    {\n      \"id\": \"PROD-4NL72MQWS8KP60000\",\n      \"name\": \"Electric Standing Desk\",\n      \"description\": \"Height-adjustable electric standing desk with memory presets, cable management, and bamboo desktop - 60x30 inches\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://office-furniture.com/products/electric-standing-desk.jpg\",\n      \"home_url\": \"https://office-furniture.com/desks/standing/electric-60\",\n      \"create_time\": \"2024-12-08T10:40:00Z\",\n      \"update_time\": \"2024-12-21T14:55:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4NL72MQWS8KP60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7WP93KQNM5VX80000\",\n      \"name\": \"Weekend City Tour Package\",\n      \"description\": \"2-day guided tour including transportation, museum entries, local cuisine experiences, and professional photography\",\n      \"type\": \"SERVICE\",\n      \"category\": \"TRAVEL_AND_TOURISM\",\n      \"image_url\": \"https://city-tours.com/packages/weekend-explorer.jpg\",\n      \"home_url\": \"https://city-tours.com/tours/weekend-package\",\n      \"create_time\": \"2024-12-05T13:25:00Z\",\n      \"update_time\": \"2024-12-21T08:30:20Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7WP93KQNM5VX80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3QK85NWMS7PL40000\",\n      \"name\": \"Language Learning App - Lifetime Access\",\n      \"description\": \"Learn 14 languages with AI-powered lessons, native speaker recordings, and interactive exercises - one-time purchase\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://polyglot-app.com/assets/lifetime-access.png\",\n      \"home_url\": \"https://polyglot-app.com/pricing/lifetime\",\n      \"create_time\": \"2024-12-01T09:10:00Z\",\n      \"update_time\": \"2024-12-20T11:15:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3QK85NWMS7PL40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9TY62KLNP4MV80000\",\n      \"name\": \"Artisan Chocolate Gift Box\",\n      \"description\": \"Luxury collection of 24 handcrafted chocolates with unique flavors, beautifully packaged for gifting\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://chocolate-boutique.com/products/luxury-gift-box.jpg\",\n      \"home_url\": \"https://chocolate-boutique.com/gifts/premium-collection\",\n      \"create_time\": \"2024-11-12T14:35:00Z\",\n      \"update_time\": \"2024-12-19T16:20:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9TY62KLNP4MV80000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-5LM83WQPT7KN20000\",\n      \"name\": \"Digital Marketing Strategy Package\",\n      \"description\": \"Comprehensive digital marketing audit, strategy development, and 3-month implementation plan with analytics setup\",\n      \"type\": \"SERVICE\",\n      \"category\": \"PROFESSIONAL_SERVICES\",\n      \"image_url\": \"https://digital-agency.com/services/strategy-package.jpg\",\n      \"home_url\": \"https://digital-agency.com/services/marketing-strategy\",\n      \"create_time\": \"2024-10-05T11:20:00Z\",\n      \"update_time\": \"2024-12-18T09:45:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-5LM83WQPT7KN20000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-9AP57996L8062935M\",\n      \"name\": \"Online Learning Platform - Basic\",\n      \"description\": \"Online Learning Platform - Basic with production-like metadata\",\n      \"type\": \"SERVICE\",\n      \"category\": \"EDUCATION\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-9AP57996L8062935M.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-9AP57996L8062935M\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9AP57996L8062935M\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-9AP57996L8062935M\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-8ZN46885H3950824L\",\n      \"name\": \"Cloud Storage Business - Tiered Monthly\",\n      \"description\": \"Cloud Storage Business - Tiered Monthly with production-like metadata\",\n      \"type\": \"SERVICE\",\n      \"category\": \"CLOUD_STORAGE\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-8ZN46885H3950824L.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-8ZN46885H3950824L\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8ZN46885H3950824L\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8ZN46885H3950824L\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7YM35774N905582KK\",\n      \"name\": \"Fitness App Pro - Quarterly\",\n      \"description\": \"Fitness App Pro - Quarterly with production-like metadata\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"HEALTH_FITNESS\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-7YM35774N905582KK.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-7YM35774N905582KK\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N905582KK\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N905582KK\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6XB24663H409493LL\",\n      \"name\": \"Professional Software Suite - Annual\",\n      \"description\": \"Professional Software Suite - Annual with production-like metadata\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-6XB24663H409493LL.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-6XB24663H409493LL\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H409493LL\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H409493LL\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3DS80219P1395268Q\",\n      \"name\": \"Gaming Server Hosting - Pro\",\n      \"description\": \"Gaming Server Hosting - Pro with production-like metadata\",\n      \"type\": \"SERVICE\",\n      \"category\": \"CLOUD_INFRA\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-3DS80219P1395268Q.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-3DS80219P1395268Q\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3DS80219P1395268Q\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3DS80219P1395268Q\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-2CR79108N0284157P\",\n      \"name\": \"Digital Magazine Subscription\",\n      \"description\": \"Digital Magazine Subscription with production-like metadata\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"MEDIA\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-2CR79108N0284157P.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-2CR79108N0284157P\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2CR79108N0284157P\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2CR79108N0284157P\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-1BQ68997M9173046N\",\n      \"name\": \"VPN Service Premium - Semi-Annual\",\n      \"description\": \"VPN Service Premium - Semi-Annual with production-like metadata\",\n      \"type\": \"SERVICE\",\n      \"category\": \"SECURITY\",\n      \"image_url\": \"https://cdn.sandbox.paypal-internal.Foster/products/PROD-1BQ68997M9173046N.png\",\n      \"home_url\": \"https://sandbox.paypal-internal.Foster/products/PROD-1BQ68997M9173046N\",\n      \"create_time\": \"2024-10-01T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-1BQ68997M9173046N\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-1BQ68997M9173046N\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-2KP47NQMS8YL60000\",\n      \"name\": \"Yoga Studio Membership - Monthly\",\n      \"description\": \"Unlimited access to all yoga classes, workshops, and meditation sessions at our downtown location\",\n      \"type\": \"SERVICE\",\n      \"category\": \"MEMBERSHIP_CLUBS_AND_ORGANIZATIONS\",\n      \"image_url\": \"https://zen-yoga-studio.com/membership/unlimited.jpg\",\n      \"home_url\": \"https://zen-yoga-studio.com/membership\",\n      \"create_time\": \"2024-09-10T08:30:00Z\",\n      \"update_time\": \"2024-12-15T12:00:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-2KP47NQMS8YL60000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-8XQ95TMLP3NV70000\",\n      \"name\": \"Smart Home Security System\",\n      \"description\": \"Complete home security package with 4 cameras, motion sensors, smart doorbell, and 24/7 professional monitoring\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://secure-home-tech.com/products/complete-system.jpg\",\n      \"home_url\": \"https://secure-home-tech.com/systems/professional\",\n      \"create_time\": \"2024-08-21T10:15:00Z\",\n      \"update_time\": \"2024-12-09T14:50:25Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8XQ95TMLP3NV70000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6VB72JQNK8XM40000\",\n      \"name\": \"Web Development Bootcamp\",\n      \"description\": \"12-week intensive bootcamp covering HTML, CSS, JavaScript, React, Node.js, and MongoDB with job placement assistance\",\n      \"type\": \"SERVICE\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://tech-academy.com/bootcamps/web-development.jpg\",\n      \"home_url\": \"https://tech-academy.com/bootcamps/full-stack\",\n      \"create_time\": \"2024-07-07T13:50:00Z\",\n      \"update_time\": \"2024-12-11T08:25:15Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6VB72JQNK8XM40000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-4MZ86WQLS7PT30000\",\n      \"name\": \"Handcrafted Leather Wallet\",\n      \"description\": \"Premium full-grain leather bifold wallet with RFID blocking, 8 card slots, and bill compartment - Handmade in Italy\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://leather-goods.com/products/classic-bifold-wallet.jpg\",\n      \"home_url\": \"https://leather-goods.com/wallets/classic-bifold\",\n      \"create_time\": \"2024-06-14T16:25:00Z\",\n      \"update_time\": \"2024-12-08T11:40:30Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-4MZ86WQLS7PT30000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7HN93KXMP4BV50000\",\n      \"name\": \"Fitness Tracking App - Annual Plan\",\n      \"description\": \"Full-featured fitness tracking application with personalized workout plans, nutrition tracking, and progress analytics\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"SOFTWARE\",\n      \"image_url\": \"https://fittrack-app.com/assets/app-preview.png\",\n      \"home_url\": \"https://fittrack-app.com/pricing/annual\",\n      \"create_time\": \"2024-05-28T12:00:00Z\",\n      \"update_time\": \"2024-12-12T10:30:00Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7HN93KXMP4BV50000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-3WK58LPTN2QM90000\",\n      \"name\": \"Organic Coffee Subscription Box\",\n      \"description\": \"Monthly delivery of premium single-origin organic coffee beans from small farms worldwide - 2 bags per month\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://coffee-subscription.com/products/organic-monthly-box.jpg\",\n      \"home_url\": \"https://coffee-subscription.com/subscriptions/organic\",\n      \"create_time\": \"2024-04-18T09:10:00Z\",\n      \"update_time\": \"2024-11-20T15:55:18Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-3WK58LPTN2QM90000\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-7YM35774N9055821K\",\n      \"name\": \"Wireless Noise-Canceling Headphones\",\n      \"description\": \"Premium over-ear headphones with 30-hour battery life, active noise cancellation, and Hi-Res audio support\",\n      \"type\": \"PHYSICAL\",\n      \"category\": \"PHYSICAL_GOODS\",\n      \"image_url\": \"https://electronics-store.com/products/wireless-headphones-pro.jpg\",\n      \"home_url\": \"https://electronics-store.com/audio/headphones/nc-pro\",\n      \"create_time\": \"2024-03-05T14:20:00Z\",\n      \"update_time\": \"2024-12-10T09:30:45Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-7YM35774N9055821K\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    },\n    {\n      \"id\": \"PROD-6XB24663H4094933L\",\n      \"name\": \"Professional Video Editing Course\",\n      \"description\": \"Complete 40-hour masterclass on Adobe Premiere Pro and After Effects with lifetime access and certification\",\n      \"type\": \"DIGITAL\",\n      \"category\": \"ONLINE_SERVICES\",\n      \"image_url\": \"https://courses.creativepro.com/video-editing-masterclass.jpg\",\n      \"home_url\": \"https://creativepro.com/courses/video-editing\",\n      \"create_time\": \"2024-02-10T08:15:00Z\",\n      \"update_time\": \"2024-11-28T16:45:12Z\",\n      \"links\": [\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"self\",\n          \"method\": \"GET\"\n        },\n        {\n          \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-6XB24663H4094933L\",\n          \"rel\": \"edit\",\n          \"method\": \"PATCH\"\n        }\n      ]\n    }\n  ],\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products?page=1&page_size=20\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products?page=2&page_size=20\",\n      \"rel\": \"next\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 255,
+        "executed_at": "2026-01-12T17:37:33.778391"
+      }
+    },
+    {
+      "name": "paypal_create_product",
+      "arguments": {
+        "name": "Premium UX Audit Package",
+        "description": "Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)",
+        "type": "SERVICE"
+      },
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "paypal_create_product",
+        "parameters": {
+          "name": "Premium UX Audit Package",
+          "description": "Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)",
+          "type": "SERVICE"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"PROD-0060A350C4D342EC8\",\n  \"status\": \"ACTIVE\",\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-0060A350C4D342EC8\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 284,
+        "executed_at": "2026-01-12T17:38:34.900467"
+      }
+    },
+    {
+      "name": "create_web_profile",
+      "arguments": {
+        "name": "TechCorp UX Checkout - GBP"
+      },
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "create_web_profile",
+        "parameters": {
+          "name": "TechCorp UX Checkout - GBP"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"status_code\": 201,\n  \"body\": {\n    \"id\": \"XP-WNMX-3LUT-D9U9-ESEU\",\n    \"name\": \"TechCorp UX Checkout - GBP\",\n    \"temporary\": false\n  }\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 328,
+        "executed_at": "2026-01-12T17:48:54.359627"
+      }
+    },
+    {
+      "name": "create_order",
+      "arguments": {
+        "intent": "AUTHORIZE",
+        "purchase_units": [
+          {
+            "custom_id": "UXA-Q2-2026",
+            "invoice_id": "UXA-INV-2026-0001",
+            "amount": {
+              "currency_code": "GBP",
+              "value": "199.00"
+            },
+            "items": [
+              {
+                "name": "Premium UX Audit Package",
+                "quantity": "1",
+                "unit_amount": {
+                  "currency_code": "GBP",
+                  "value": "199.00"
+                },
+                "category": "DIGITAL_GOODS"
+              }
+            ]
+          }
+        ],
+        "application_context": {
+          "experience_profile_id": "XP-WNMX-3LUT-D9U9-ESEU"
+        }
+      },
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "create_order",
+        "parameters": {
+          "intent": "AUTHORIZE",
+          "purchase_units": [
+            {
+              "custom_id": "UXA-Q2-2026",
+              "invoice_id": "UXA-INV-2026-0001",
+              "amount": {
+                "currency_code": "GBP",
+                "value": "199.00"
+              },
+              "items": [
+                {
+                  "name": "Premium UX Audit Package",
+                  "quantity": "1",
+                  "unit_amount": {
+                    "currency_code": "GBP",
+                    "value": "199.00"
+                  },
+                  "category": "DIGITAL_GOODS"
+                }
+              ]
+            }
+          ],
+          "application_context": {
+            "experience_profile_id": "XP-WNMX-3LUT-D9U9-ESEU"
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"2026011270690AC9EC90462C\",\n  \"status\": \"CREATED\",\n  \"intent\": \"AUTHORIZE\",\n  \"create_time\": \"2026-01-12T17:56:16Z\",\n  \"update_time\": null,\n  \"links\": [\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/2026011270690AC9EC90462C\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/2026011270690AC9EC90462C\",\n      \"rel\": \"update\",\n      \"method\": \"PATCH\"\n    },\n    {\n      \"href\": \"https://www.sandbox.paypal.com/checkoutnow?token=2026011270690AC9EC90462C\",\n      \"rel\": \"approve\",\n      \"method\": \"GET\"\n    },\n    {\n      \"href\": \"https://api.sandbox.paypal.com/v2/checkout/orders/2026011270690AC9EC90462C/capture\",\n      \"rel\": \"capture\",\n      \"method\": \"POST\"\n    }\n  ],\n  \"purchase_units\": [\n    {\n      \"reference_id\": \"default-0\",\n      \"amount\": {\n        \"currency_code\": \"GBP\",\n        \"value\": \"199.00\"\n      },\n      \"custom_id\": \"UXA-Q2-2026\",\n      \"invoice_id\": \"UXA-INV-2026-0001\",\n      \"items\": [\n        {\n          \"name\": \"Premium UX Audit Package\",\n          \"unit_amount\": {\n            \"currency_code\": \"GBP\",\n            \"value\": \"199.00\"\n          },\n          \"quantity\": \"1\",\n          \"category\": \"DIGITAL_GOODS\"\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 451,
+        "executed_at": "2026-01-12T17:56:16.807077"
+      }
+    },
+    {
+      "name": "authorize_order",
+      "arguments": {
+        "id": "2026011270690AC9EC90462C"
+      },
+      "context": {
+        "x-paypal-access-token": "Bearer TEST_TOKEN_ALL_PERMISSIONS_2024"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "paypal-internal-prod",
+        "tool_name": "authorize_order",
+        "parameters": {
+          "id": "2026011270690AC9EC90462C"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"id\": \"2026011270690AC9EC90462C\",\n  \"status\": \"APPROVED\",\n  \"intent\": \"AUTHORIZE\",\n  \"create_time\": \"2026-01-12T17:56:16Z\",\n  \"update_time\": \"2026-01-12T18:07:32.950247Z\",\n  \"payer\": {},\n  \"purchase_units\": [\n    {\n      \"reference_id\": \"default-0\",\n      \"amount\": {\n        \"currency_code\": \"GBP\",\n        \"value\": \"199.00\"\n      },\n      \"custom_id\": \"UXA-Q2-2026\",\n      \"invoice_id\": \"UXA-INV-2026-0001\"\n    }\n  ],\n  \"payment_source\": {},\n  \"links\": [\n    {\n      \"href\": \"/v2/checkout/orders/2026011270690AC9EC90462C\",\n      \"rel\": \"self\",\n      \"method\": \"GET\"\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 443,
+        "executed_at": "2026-01-12T18:07:33.104006"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1768237653639_osqz2gnjv",
+      "context": {},
+      "gym_server_id": "paypal-internal-prod"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "List PayPal catalog products and look for an existing product named 'Premium UX Audit Package'; if found reuse its product_id (do not create duplicates), otherwise create it with description 'Q2 UX audit kickoff package (includes heuristics review + accessibility scan + findings readout)' and type SERVICE; then create a Web Experience Profile named 'TechCorp UX Checkout - GBP' and next create a checkout order for GBP 199.00 with intent AUTHORIZE and a single purchase unit that sets custom_id='UXA-Q2-2026' and invoice_id='UXA-INV-2026-0001', includes one purchase_unit_item named 'Premium UX Audit Package' with unit amount GBP 199.00 (DIGITAL_GOODS), and application context matching the web profile (experience profile id if supported); then authorize the order.",
+  "models_to_test": [
+    {
+      "model_name": "qwen3-14b",
+      "platform_name": "qwen",
+      "platform_config_id": "default-qwen-qwen3-14b"
+    }
+  ],
+  "runs_per_prompt": 4,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true,
+    "enableVerifier": true
+  },
+  "L1": "Payments",
+  "L2": "Checkout Orders",
+  "L3": "Authorization and Capture Lifecycle"
+}

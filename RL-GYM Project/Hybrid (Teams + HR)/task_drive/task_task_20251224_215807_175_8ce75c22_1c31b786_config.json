@@ -1,0 +1,562 @@
+{
+  "task_id": "task_20251224_215807_175_8ce75c22_1c31b786",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a highly capable and intelligent AI assistant designed to help users by executing tasks. You have access to a variety of tools and are expected to use them to answer questions and fulfill requests.\n\n**Your Thought Process:**\n1.  **Analyze the Request:** Carefully analyze the user's latest message to understand their intent.\n2.  **Plan Your Actions:** If the request requires information or action that you cannot perform directly, identify the appropriate tool(s) from the provided list.\n3.  **Execute Tools:** Make one or more tool calls in a structured format. You can call multiple tools in parallel if needed.\n4.  **Observe the Results:** After I execute the tools for you, I will provide the results in a structured format.\n5.  **Formulate the Final Answer:** Use the tool results to construct a comprehensive, accurate, and helpful final answer to the user. If a tool fails, inform the user and ask for clarification if necessary.\n\n**Constraints:**\n-   **Respond Only to the Latest Message:** The conversation history is for context only. Focus on resolving the user's most recent request.\n-   **Use Tools When Necessary:** Do not try to guess information that a tool can provide. If you need to know something, use a tool.\n-   **Stick to Available Tools:** Only use the tools provided to you in the tool list. Do not invent tools.\n-   **Final Response:** Once all necessary tool calls are complete and you have the information you need, provide a final, user-facing response without any further tool calls.\n",
+  "created_at": "2025-12-24T21:58:07.093786+00:00",
+  "created_by": "8ce75c22-7279-4d6a-a19a-3ec0e4746e71",
+  "scenario_config": {
+    "scenario_name": "HR Case Assignment with Teams Notification",
+    "scenario_description": "Find critical HR case, get assigned employee's email from HR system, locate same user in Teams, send Teams chat notification, update HR case status, and verify cross-platform changes",
+    "system_prompt": "You are a highly capable and intelligent AI assistant designed to help users by executing tasks. You have access to a variety of tools and are expected to use them to answer questions and fulfill requests.\n\n**Your Thought Process:**\n1.  **Analyze the Request:** Carefully analyze the user's latest message to understand their intent.\n2.  **Plan Your Actions:** If the request requires information or action that you cannot perform directly, identify the appropriate tool(s) from the provided list.\n3.  **Execute Tools:** Make one or more tool calls in a structured format. You can call multiple tools in parallel if needed.\n4.  **Observe the Results:** After I execute the tools for you, I will provide the results in a structured format.\n5.  **Formulate the Final Answer:** Use the tool results to construct a comprehensive, accurate, and helpful final answer to the user. If a tool fails, inform the user and ask for clarification if necessary.\n\n**Constraints:**\n-   **Respond Only to the Latest Message:** The conversation history is for context only. Focus on resolving the user's most recent request.\n-   **Use Tools When Necessary:** Do not try to guess information that a tool can provide. If you need to know something, use a tool.\n-   **Stick to Available Tools:** Only use the tools provided to you in the tool list. Do not invent tools.\n-   **Final Response:** Once all necessary tool calls are complete and you have the information you need, provide a final, user-facing response without any further tool calls.\n",
+    "prompt": "We have a critical HR case in draft status related to Workforce Administration that needs immediate attention. List all HR cases with draft status and critical priority to find the one related to HR policies. Get the full details of that case to see who it's assigned to. Then find that same person in  Teams by looking them up using their email address from case details. Create a one-on-one chat with me in Teams and send a message saying \"Urgent: HR case (add case number here) requires your immediate attention. Please review and respond.\". Pin this urgent message in the chat so it stays visible. After sending the and pinning Teams message, update the HR case status from draft to ready so it moves forward in the workflow. Finally, list the chat messages to confirm the urgent message was successfully sent and pinned.",
+    "selected_tools": [
+      "list_hr_cases",
+      "find_hr_case_by_number",
+      "get_user",
+      "create_chat",
+      "send_chat_message",
+      "update_hr_case",
+      "list_chat_messages",
+      "pin_chat_message"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "list_hr_cases",
+      "find_hr_case_by_number",
+      "get_user",
+      "create_chat",
+      "send_chat_message",
+      "update_hr_case",
+      "list_chat_messages",
+      "pin_chat_message"
+    ],
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123",
+      "x-user-email": "joanne.simpson@servicenow.com"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Verify HR Case Status Updated",
+      "description": "Confirms HR case HRC0000711 status changed from draft to ready",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM hr_case WHERE hr_case_id = 1 AND status = 'ready'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Chat Created",
+      "description": "Confirms one-on-one chat created between Joanne and Travis",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Message Sent",
+      "description": "Confirms urgent message sent in chat about HR case HRC0000711",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chat_messages WHERE chat_id IN (SELECT chat_id FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')) AND body_json LIKE '%HRC0000711%' AND body_json LIKE '%urgent%'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Message Pinned",
+      "description": "Confirms urgent message was pinned in the chat",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM pinned_chat_messages WHERE chat_id IN (SELECT chat_id FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')) AND message_id IN (SELECT message_id FROM chat_messages WHERE body_json LIKE '%HRC0000711%' AND body_json LIKE '%urgent%')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify HR Case Status Updated",
+      "description": "Confirms HR case HRC0000711 status changed from draft to ready",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM hr_case WHERE hr_case_id = 1 AND status = 'ready'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Chat Created",
+      "description": "Confirms one-on-one chat created between Joanne and Travis",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Message Sent",
+      "description": "Confirms urgent message sent in chat about HR case HRC0000711",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chat_messages WHERE chat_id IN (SELECT chat_id FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')) AND body_json LIKE '%HRC0000711%' AND body_json LIKE '%urgent%'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Message Pinned",
+      "description": "Confirms urgent message was pinned in the chat",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM pinned_chat_messages WHERE chat_id IN (SELECT chat_id FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')) AND message_id IN (SELECT message_id FROM chat_messages WHERE body_json LIKE '%HRC0000711%' AND body_json LIKE '%urgent%')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify HR Case Status Updated",
+      "description": "Confirms HR case HRC0000711 status changed from draft to ready",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM hr_case WHERE hr_case_id = 1 AND status = 'ready'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Chat Created",
+      "description": "Confirms one-on-one chat created between Joanne and Travis",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Verify Teams Message Sent",
+      "description": "Confirms urgent message sent in chat about HR case HRC0000711",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM chat_messages WHERE chat_id IN (SELECT chat_id FROM chats WHERE chat_type = 'oneOnOne' AND org_id = 'servicenow' AND EXISTS (SELECT 1 FROM chat_members cm1 WHERE cm1.chat_id = chats.chat_id AND cm1.user_id = 'joanne.simpson') AND EXISTS (SELECT 1 FROM chat_members cm2 WHERE cm2.chat_id = chats.chat_id AND cm2.user_id = 'travis.wood')) AND body_json LIKE '%HRC0000711%' AND body_json LIKE '%urgent%'",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_hr_cases",
+      "arguments": {
+        "status": "draft",
+        "priority": "critical",
+        "coe_type": "Workforce Administration"
+      },
+      "context": {
+        "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-hr-internal",
+        "tool_name": "list_hr_cases",
+        "parameters": {
+          "status": "draft",
+          "priority": "critical",
+          "coe_type": "Workforce Administration"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"total_count\": 2,\n  \"returned_count\": 2,\n  \"hr_cases\": [\n    {\n      \"hr_case_id\": 1,\n      \"number\": \"HRC0000711\",\n      \"status\": \"draft\",\n      \"priority\": \"critical\",\n      \"source\": \"self-service\",\n      \"short_description\": \"General inquiry regarding HR policies\",\n      \"worknotes\": \"Case created via self-service\",\n      \"skills\": null,\n      \"coe_type\": \"Workforce Administration\",\n      \"request_status\": null,\n      \"account_number\": \"ACC-2-0\",\n      \"account_type\": \"checking\",\n      \"org_id\": 1,\n      \"created_at\": \"2023-01-15T10:00:00\",\n      \"updated_at\": \"2023-01-15T10:00:00\",\n      \"hr_service\": {\n        \"hr_service_id\": 1,\n        \"service_name\": \"General Inquiry\",\n        \"fulfillment_type\": \"manual\",\n        \"active\": true\n      },\n      \"opened_for\": {\n        \"hr_profile_id\": 2,\n        \"number\": \"HRP00002\",\n        \"user_id\": 2,\n        \"user_name\": \"Christina Oliver\",\n        \"personal_email\": \"christina.oliver.2@personal.example.com\",\n        \"position\": \"Sales\"\n      },\n      \"opened_by\": {\n        \"hr_profile_id\": 2,\n        \"number\": \"HRP00002\",\n        \"user_id\": 2,\n        \"user_name\": \"Christina Oliver\",\n        \"personal_email\": \"christina.oliver.2@personal.example.com\",\n        \"position\": \"Sales\"\n      },\n      \"assigned_to\": {\n        \"user_id\": 11,\n        \"first_name\": \"Travis\",\n        \"last_name\": \"Wood\",\n        \"email\": \"travis.wood@servicenow.com\",\n        \"role\": \"agent\"\n      },\n      \"assignment_group\": {\n        \"group_id\": 4,\n        \"name\": \"HR Service Desk\",\n        \"type\": \"Service Desk\",\n        \"active\": true\n      },\n      \"approval_criteria\": null,\n      \"approver\": null\n    },\n    {\n      \"hr_case_id\": 46,\n      \"number\": \"HRC0000756\",\n      \"status\": \"draft\",\n      \"priority\": \"critical\",\n      \"source\": \"chat\",\n      \"short_description\": \"Request Relocation Assistance\",\n      \"worknotes\": \"Case created via chat\",\n      \"skills\": null,\n      \"coe_type\": \"Workforce Administration\",\n      \"request_status\": null,\n      \"account_number\": \"ACC-99-45\",\n      \"account_type\": \"checking\",\n      \"org_id\": 6,\n      \"created_at\": \"2023-01-15T10:00:00\",\n      \"updated_at\": \"2023-01-15T10:00:00\",\n      \"hr_service\": {\n        \"hr_service_id\": 46,\n        \"service_name\": \"Request Relocation Assistance\",\n        \"fulfillment_type\": \"manual\",\n        \"active\": true\n      },\n      \"opened_for\": {\n        \"hr_profile_id\": 99,\n        \"number\": \"HRP00099\",\n        \"user_id\": 99,\n        \"user_name\": \"John Ramirez\",\n        \"personal_email\": \"john.ramirez.99@personal.example.com\",\n        \"position\": \"Sales\"\n      },\n      \"opened_by\": {\n        \"hr_profile_id\": 99,\n        \"number\": \"HRP00099\",\n        \"user_id\": 99,\n        \"user_name\": \"John Ramirez\",\n        \"personal_email\": \"john.ramirez.99@personal.example.com\",\n        \"position\": \"Sales\"\n      },\n      \"assigned_to\": {\n        \"user_id\": 12,\n        \"first_name\": \"Samantha\",\n        \"last_name\": \"Stone\",\n        \"email\": \"samantha.stone47@servicenow.com\",\n        \"role\": \"agent\"\n      },\n      \"assignment_group\": {\n        \"group_id\": 5,\n        \"name\": \"Field Ops - North\",\n        \"type\": \"Field Support Technicians\",\n        \"active\": true\n      },\n      \"approval_criteria\": null,\n      \"approver\": null\n    }\n  ]\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 255,
+        "executed_at": "2025-12-24T21:24:15.630519"
+      }
+    },
+    {
+      "name": "find_hr_case_by_number",
+      "arguments": {
+        "number": "HRC0000711"
+      },
+      "context": {
+        "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-hr-internal",
+        "tool_name": "find_hr_case_by_number",
+        "parameters": {
+          "number": "HRC0000711"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"hr_case\": {\n    \"hr_case_id\": 1,\n    \"number\": \"HRC0000711\",\n    \"status\": \"draft\",\n    \"priority\": \"critical\",\n    \"source\": \"self-service\",\n    \"short_description\": \"General inquiry regarding HR policies\",\n    \"worknotes\": \"Case created via self-service\",\n    \"skills\": null,\n    \"coe_type\": \"Workforce Administration\",\n    \"request_status\": null,\n    \"account_number\": \"ACC-2-0\",\n    \"account_type\": \"checking\",\n    \"org_id\": 1,\n    \"created_at\": \"2023-01-15T10:00:00\",\n    \"updated_at\": \"2023-01-15T10:00:00\",\n    \"hr_service\": {\n      \"hr_service_id\": 1,\n      \"service_name\": \"General Inquiry\",\n      \"fulfillment_type\": \"manual\",\n      \"active\": true\n    },\n    \"opened_for\": {\n      \"hr_profile_id\": 2,\n      \"number\": \"HRP00002\",\n      \"user_id\": 2,\n      \"user_name\": \"Christina Oliver\",\n      \"personal_email\": \"christina.oliver.2@personal.example.com\",\n      \"position\": \"Sales\"\n    },\n    \"opened_by\": {\n      \"hr_profile_id\": 2,\n      \"number\": \"HRP00002\",\n      \"user_id\": 2,\n      \"user_name\": \"Christina Oliver\",\n      \"personal_email\": \"christina.oliver.2@personal.example.com\",\n      \"position\": \"Sales\"\n    },\n    \"assigned_to\": {\n      \"user_id\": 11,\n      \"first_name\": \"Travis\",\n      \"last_name\": \"Wood\",\n      \"email\": \"travis.wood@servicenow.com\",\n      \"role\": \"agent\"\n    },\n    \"assignment_group\": {\n      \"group_id\": 4,\n      \"name\": \"HR Service Desk\",\n      \"type\": \"Service Desk\",\n      \"active\": true\n    },\n    \"approval_criteria\": null,\n    \"approver\": null\n  }\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 237,
+        "executed_at": "2025-12-24T21:24:51.383086"
+      }
+    },
+    {
+      "name": "get_user",
+      "arguments": {
+        "userPrincipalName": "joanne.simpson@servicenow.com"
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "get_user",
+        "parameters": {
+          "userPrincipalName": "joanne.simpson@servicenow.com"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#users/$entity\",\n  \"id\": \"joanne.simpson\",\n  \"userPrincipalName\": \"joanne.simpson@servicenow.com\",\n  \"displayName\": \"Joanne Simpson\",\n  \"givenName\": \"Joanne\",\n  \"surname\": \"Simpson\",\n  \"jobTitle\": \"Security Program Manager\",\n  \"mail\": \"joanne.simpson@servicenow.com\",\n  \"mailNickname\": \"joanne.simpson\",\n  \"accountEnabled\": true,\n  \"department\": \"Security\",\n  \"companyName\": \"Simpson Co.\",\n  \"usageLocation\": \"US\",\n  \"city\": \"San Francisco\",\n  \"state\": \"CA\",\n  \"country\": \"United States\",\n  \"streetAddress\": \"4 San Francisco Business Park\",\n  \"postalCode\": \"10003\",\n  \"businessPhones\": [\n    \"+1 (555) 105-0746\"\n  ],\n  \"mobilePhone\": \"+1 (555) 251-0507\",\n  \"officeLocation\": \"HQ - San Francisco\",\n  \"preferredLanguage\": \"en-US\",\n  \"employeeId\": \"E4FB8AE\",\n  \"employeeType\": \"Employee\",\n  \"userType\": \"Member\",\n  \"employeeHireDate\": \"2022-07-11T00:00:00+00:00\",\n  \"otherMails\": [\n    \"joanne.simpson+alt@servicenow.com\"\n  ],\n  \"onPremisesSyncEnabled\": false,\n  \"aboutMe\": \"Security-focused professional driving risk reduction and compliance.\",\n  \"birthday\": \"1980-12-04T00:00:00+00:00\",\n  \"interests\": [\n    \"CTF\",\n    \"Threat Intel\",\n    \"Security Research\",\n    \"Open Source Security\"\n  ],\n  \"skills\": [\n    \"IAM\",\n    \"Risk Assessment\",\n    \"OWASP\",\n    \"SOC 2\",\n    \"ISO 27001\"\n  ],\n  \"mySite\": \"https://joanne-simpson.servicenow.com\",\n  \"preferredName\": \"Joanne\",\n  \"faxNumber\": \"+1 (555) 510-5074\",\n  \"ageGroup\": \"Adult\",\n  \"lastPasswordChangeDateTime\": null,\n  \"isResourceAccount\": false,\n  \"pastProjects\": [\n    \"Zero Trust Rollout\",\n    \"IAM Modernization\",\n    \"Threat Detection Uplift\"\n  ],\n  \"responsibilities\": [\n    \"Policy Development\",\n    \"Incident Response\",\n    \"Vendor Risk\",\n    \"Vulnerability Management\"\n  ],\n  \"schools\": [\n    \"State University\",\n    \"Institute of Technology\"\n  ],\n  \"employeeOrgData\": {\n    \"costCenter\": \"CC-FIN-005\",\n    \"division\": \"Sales\"\n  },\n  \"identities\": null,\n  \"passwordPolicies\": null,\n  \"orgId\": \"servicenow\",\n  \"createdDateTime\": \"2025-12-24T18:54:49\",\n  \"lastModifiedDateTime\": \"2025-12-24T18:54:49\",\n  \"softDeleted\": false\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 298,
+        "executed_at": "2025-12-24T21:47:31.659605"
+      }
+    },
+    {
+      "name": "get_user",
+      "arguments": {
+        "userId": "",
+        "userPrincipalName": "travis.wood@servicenow.com",
+        "_select": ""
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "get_user",
+        "parameters": {
+          "userId": "",
+          "userPrincipalName": "travis.wood@servicenow.com",
+          "_select": ""
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#users/$entity\",\n  \"id\": \"travis.wood\",\n  \"userPrincipalName\": \"travis.wood@servicenow.com\",\n  \"displayName\": \"Travis Wood\",\n  \"givenName\": \"Travis\",\n  \"surname\": \"Wood\",\n  \"jobTitle\": \"Identity & Access Management Specialist\",\n  \"mail\": \"travis.wood@servicenow.com\",\n  \"mailNickname\": \"travis.wood\",\n  \"accountEnabled\": true,\n  \"department\": \"GRC\",\n  \"companyName\": \"Wood Co.\",\n  \"usageLocation\": \"US\",\n  \"city\": \"San Francisco\",\n  \"state\": \"CA\",\n  \"country\": \"United States\",\n  \"streetAddress\": \"11 San Francisco Business Park\",\n  \"postalCode\": \"10010\",\n  \"businessPhones\": [\n    \"+1 (555) 622-1523\"\n  ],\n  \"mobilePhone\": \"+1 (555) 226-2215\",\n  \"officeLocation\": \"HQ - San Francisco\",\n  \"preferredLanguage\": \"en-US\",\n  \"employeeId\": \"E87B31D\",\n  \"employeeType\": \"Employee\",\n  \"userType\": \"Member\",\n  \"employeeHireDate\": \"2023-01-23T00:00:00+00:00\",\n  \"otherMails\": [\n    \"travis.wood+alt@servicenow.com\"\n  ],\n  \"onPremisesSyncEnabled\": false,\n  \"aboutMe\": \"Security-focused professional driving risk reduction and compliance.\",\n  \"birthday\": \"2000-02-25T00:00:00+00:00\",\n  \"interests\": [\n    \"CTF\",\n    \"Open Source Security\",\n    \"Security Research\",\n    \"Threat Intel\"\n  ],\n  \"skills\": [\n    \"SIEM\",\n    \"IAM\",\n    \"Incident Response\",\n    \"ISO 27001\",\n    \"SOC 2\"\n  ],\n  \"mySite\": \"https://travis-wood.servicenow.com\",\n  \"preferredName\": \"Travis\",\n  \"faxNumber\": \"+1 (555) 262-2152\",\n  \"ageGroup\": \"Adult\",\n  \"lastPasswordChangeDateTime\": null,\n  \"isResourceAccount\": false,\n  \"pastProjects\": [\n    \"Zero Trust Rollout\",\n    \"IAM Modernization\",\n    \"Threat Detection Uplift\"\n  ],\n  \"responsibilities\": [\n    \"Vendor Risk\",\n    \"Vulnerability Management\",\n    \"Incident Response\",\n    \"Security Awareness Training\"\n  ],\n  \"schools\": [\n    \"State University\",\n    \"Institute of Technology\"\n  ],\n  \"employeeOrgData\": {\n    \"costCenter\": \"CC-PDT-007\",\n    \"division\": \"Operations\"\n  },\n  \"identities\": null,\n  \"passwordPolicies\": null,\n  \"orgId\": \"servicenow\",\n  \"createdDateTime\": \"2025-12-24T18:54:49\",\n  \"lastModifiedDateTime\": \"2025-12-24T18:54:49\",\n  \"softDeleted\": false\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 357,
+        "executed_at": "2025-12-24T21:37:12.220687"
+      }
+    },
+    {
+      "name": "create_chat",
+      "arguments": {
+        "chatType": "oneOnOne",
+        "members": [
+          {
+            "user_odata_bind": "https://graph.microsoft.com/v1.0/users/joanne.simpson",
+            "roles": [
+              "owner"
+            ]
+          },
+          {
+            "user_odata_bind": "https://graph.microsoft.com/v1.0/users/travis.wood",
+            "roles": [
+              "owner"
+            ]
+          }
+        ]
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "create_chat",
+        "parameters": {
+          "chatType": "oneOnOne",
+          "members": [
+            {
+              "user_odata_bind": "https://graph.microsoft.com/v1.0/users/joanne.simpson",
+              "roles": [
+                "owner"
+              ]
+            },
+            {
+              "user_odata_bind": "https://graph.microsoft.com/v1.0/users/travis.wood",
+              "roles": [
+                "owner"
+              ]
+            }
+          ]
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#chats/$entity\",\n  \"id\": \"joanne.simpson_travis.wood\",\n  \"topic\": null,\n  \"createdDateTime\": \"2025-12-24T22:10:17.118253Z\",\n  \"lastUpdatedDateTime\": \"2025-12-24T22:10:17.118284Z\",\n  \"chatType\": \"oneOnOne\",\n  \"webUrl\": \"https://teams.microsoft.com/l/chat/joanne.simpson%3Atravis.wood/0?tenantId=servicenow\",\n  \"tenantId\": \"servicenow\",\n  \"onlineMeetingInfo\": null,\n  \"viewpoint\": {\n    \"isHidden\": false,\n    \"lastMessageReadDateTime\": null\n  },\n  \"isHiddenForAllMembers\": false\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 279,
+        "executed_at": "2025-12-24T22:10:17.167297"
+      }
+    },
+    {
+      "name": "send_chat_message",
+      "arguments": {
+        "chatId": "joanne.simpson_travis.wood",
+        "body": {
+          "content": "Urgent: HR case HRC0000711 requires your immediate attention. Please review and respond.",
+          "contentType": "text"
+        }
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "send_chat_message",
+        "parameters": {
+          "chatId": "joanne.simpson_travis.wood",
+          "body": {
+            "content": "Urgent: HR case HRC0000711 requires your immediate attention. Please review and respond.",
+            "contentType": "text"
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#chats('joanne.simpson_travis.wood')/messages/$entity\",\n  \"id\": \"1766614236253\",\n  \"replyToId\": null,\n  \"etag\": \"1766614236253\",\n  \"messageType\": \"message\",\n  \"createdDateTime\": \"2025-12-24T22:10:36.270599Z\",\n  \"lastModifiedDateTime\": \"2025-12-24T22:10:36.270599Z\",\n  \"lastEditedDateTime\": null,\n  \"deletedDateTime\": null,\n  \"subject\": null,\n  \"summary\": null,\n  \"chatId\": \"joanne.simpson_travis.wood\",\n  \"importance\": \"normal\",\n  \"locale\": \"en-us\",\n  \"webUrl\": null,\n  \"channelIdentity\": null,\n  \"policyViolation\": null,\n  \"eventDetail\": null,\n  \"from\": {\n    \"application\": null,\n    \"device\": null,\n    \"user\": {\n      \"id\": \"joanne.simpson\",\n      \"displayName\": \"Joanne Simpson\",\n      \"userIdentityType\": \"aadUser\"\n    }\n  },\n  \"body\": {\n    \"contentType\": \"text\",\n    \"content\": \"Urgent: HR case HRC0000711 requires your immediate attention. Please review and respond.\"\n  },\n  \"attachments\": [],\n  \"mentions\": [],\n  \"reactions\": [],\n  \"messageHistory\": []\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 288,
+        "executed_at": "2025-12-24T22:10:36.318206"
+      }
+    },
+    {
+      "name": "pin_chat_message",
+      "arguments": {
+        "chatId": "joanne.simpson_travis.wood",
+        "messageId": "1766614236253"
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "pin_chat_message",
+        "parameters": {
+          "chatId": "joanne.simpson_travis.wood",
+          "messageId": "1766614236253"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.type\": \"#microsoft.graph.pinnedChatMessageInfo\",\n  \"id\": \"e81688caf640489589a0eacdf5039f51\"\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 322,
+        "executed_at": "2025-12-24T22:11:07.136608"
+      }
+    },
+    {
+      "name": "update_hr_case",
+      "arguments": {
+        "hr_case_id": "1",
+        "status": "ready"
+      },
+      "context": {
+        "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "sn-hr-internal",
+        "tool_name": "update_hr_case",
+        "parameters": {
+          "hr_case_id": "1",
+          "status": "ready"
+        },
+        "result": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"case\": {\n    \"hr_case_id\": 1,\n    \"number\": \"HRC0000711\",\n    \"status\": \"ready\",\n    \"priority\": \"critical\",\n    \"source\": \"self-service\",\n    \"short_description\": \"General inquiry regarding HR policies\",\n    \"worknotes\": \"Case created via self-service\",\n    \"skills\": null,\n    \"coe_type\": \"Workforce Administration\",\n    \"request_status\": null,\n    \"account_number\": \"ACC-2-0\",\n    \"account_type\": \"checking\",\n    \"org_id\": 1,\n    \"created_at\": \"2023-01-15T10:00:00\",\n    \"updated_at\": \"2025-12-24T22:10:54.642349\",\n    \"hr_service\": {\n      \"hr_service_id\": 1,\n      \"service_name\": \"General Inquiry\",\n      \"fulfillment_type\": \"manual\",\n      \"active\": true\n    },\n    \"opened_for\": {\n      \"hr_profile_id\": 2,\n      \"number\": \"HRP00002\",\n      \"user_id\": 2,\n      \"user_name\": \"Christina Oliver\",\n      \"personal_email\": \"christina.oliver.2@personal.example.com\",\n      \"position\": \"Sales\"\n    },\n    \"opened_by\": {\n      \"hr_profile_id\": 2,\n      \"number\": \"HRP00002\",\n      \"user_id\": 2,\n      \"user_name\": \"Christina Oliver\",\n      \"personal_email\": \"christina.oliver.2@personal.example.com\",\n      \"position\": \"Sales\"\n    },\n    \"assigned_to\": {\n      \"user_id\": 11,\n      \"first_name\": \"Travis\",\n      \"last_name\": \"Wood\",\n      \"email\": \"travis.wood@servicenow.com\",\n      \"role\": \"agent\"\n    },\n    \"assignment_group\": {\n      \"group_id\": 4,\n      \"name\": \"HR Service Desk\",\n      \"type\": \"Service Desk\",\n      \"active\": true\n    },\n    \"approval_criteria\": null,\n    \"approver\": null\n  },\n  \"changes_made\": [\n    \"status\"\n  ]\n}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 226,
+        "executed_at": "2025-12-24T22:10:54.728653"
+      }
+    },
+    {
+      "name": "list_chat_messages",
+      "arguments": {
+        "chatId": "joanne.simpson_travis.wood",
+        "userId": "joanne.simpson"
+      },
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "teams-internal-prod",
+        "tool_name": "list_chat_messages",
+        "parameters": {
+          "chatId": "joanne.simpson_travis.wood",
+          "userId": "joanne.simpson"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#chats('joanne.simpson_travis.wood')/messages\",\n  \"@odata.count\": 1,\n  \"@odata.nextLink\": \"https://graph.microsoft.com/v1.0/chats/joanne.simpson_travis.wood/messages?_top=20&_skiptoken=2025-12-24T22:10:36.270599Z\",\n  \"value\": [\n    {\n      \"id\": \"1766614236253\",\n      \"replyToId\": null,\n      \"etag\": \"1766614236253\",\n      \"messageType\": \"message\",\n      \"createdDateTime\": \"2025-12-24T22:10:36.270599Z\",\n      \"lastModifiedDateTime\": \"2025-12-24T22:10:36.270599Z\",\n      \"lastEditedDateTime\": null,\n      \"deletedDateTime\": null,\n      \"subject\": null,\n      \"summary\": null,\n      \"chatId\": \"joanne.simpson_travis.wood\",\n      \"importance\": \"normal\",\n      \"locale\": \"en-us\",\n      \"webUrl\": null,\n      \"channelIdentity\": null,\n      \"policyViolation\": null,\n      \"onBehalfOf\": null,\n      \"eventDetail\": null,\n      \"from\": {\n        \"application\": null,\n        \"device\": null,\n        \"user\": {\n          \"id\": \"joanne.simpson\",\n          \"displayName\": \"Joanne Simpson\",\n          \"userIdentityType\": \"aadUser\"\n        }\n      },\n      \"body\": {\n        \"contentType\": \"text\",\n        \"content\": \"Urgent: HR case HRC0000711 requires your immediate attention. Please review and respond.\"\n      },\n      \"attachments\": [],\n      \"mentions\": [],\n      \"reactions\": [],\n      \"messageHistory\": []\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 325,
+        "executed_at": "2025-12-24T22:11:01.011321"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1766589213562_joamimo4i",
+      "context": {
+        "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAwNCIsImlzcyI6Iml0c20ifQ.kL3_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_123",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "gym_server_id": "sn-hr-internal"
+    },
+    {
+      "database_id": "db_1765880090918_aymg8twv8",
+      "context": {
+        "x-teams-access-token": "tok_f4d363b73d4b_83e7a19d05bc_0195c10f",
+        "x-user-email": "joanne.simpson@servicenow.com"
+      },
+      "gym_server_id": "teams-internal-prod"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gpt-5-High",
+      "platform_name": "openai",
+      "platform_config_id": "default-openai-gpt-5-High",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "default-gemini-gemini-2.5-pro",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true,
+    "enableVerifier": true
+  },
+  "L1": "Integrations & Content",
+  "L2": "Tabs & Apps",
+  "L3": "Chat Extensions & Integrations"
+}

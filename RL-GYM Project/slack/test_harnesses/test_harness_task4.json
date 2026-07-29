@@ -1,0 +1,42 @@
+{
+  "system_prompt": "You are a helpful assistant that can start Slack calls, add participants, post messages, and update call details for a user.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Start a call, invite two teammates, share link, and update the title.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "James here (UWN7ZJUZZFG0) from core dev. We need a quick live huddle in #dev-022 (CAJ7ZFT1Q8O7) for a quick issue fix. Start a call, add Abigail (UE6EJQJ6TD65) and Jackson (U9C5B0E1E0OE), post the join link, and update the call title to \"P1: Login failures.\"",
+          "expected_tools": [
+            "calls_add",
+            "calls_participants_add",
+            "chat_post_message",
+            "calls_update"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_call_participants WHERE call_id = 'R13195862575092'",
+                "expected_value": 2,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_calls WHERE id = 'R13195862575092' AND title = 'P1: Login failures.'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

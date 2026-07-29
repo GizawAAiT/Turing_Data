@@ -1,0 +1,135 @@
+{
+  "scenario_config": {
+    "scenario_name": "hackathon_calendar_setup",
+    "scenario_description": "Hackathon Calendar Creation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Create a calendar named 'Hackathon 2026' in the UTC time, ensuring it uses a color ID clearly different from all existing calendars for easy identification. Schedule a 48-hour all-day event titled 'Build, Ship, Win!' from March 20 to March 22. Also, schedule a Google Meet 'Hackathon Kickoff Session' at 09:00 UTC on March 20, inviting all attendees who were invited to any event in the 'Projects' calendar and have their email addresses listed. Separately, schedule an 'Evening Recap Session' at 18:00 UTC on March 22. Finally, set up automatic notifications for any updates or changes to this calendar via 'https://intra.techcorp.com/hackathon/hook’",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "list_events",
+      "create_calendar",
+      "add_calendar_to_list",
+      "create_event",
+      "create_event",
+      "create_event",
+      "watch_events",
+        "delete_calendar",
+        "clear_calendar",
+        "move_event",
+        "update_event",
+        "patch_event",
+        "import_event",
+        "quick_add_event",
+        "replace_calendar_in_list",
+        "remove_calendar_from_list",
+        "update_calendar",
+        "patch_calendar",
+        "get_event",
+        "get_event_instances",
+        "get_acl_rule",
+        "watch_calendar_list"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "list_events",
+      "create_calendar",
+      "add_calendar_to_list",
+      "create_event",
+      "create_event",
+      "create_event",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Created",
+      "description": "Check calendar creation with unique color",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'alice_manager' AND summary = 'Hackathon 2026' AND time_zone = 'UTC' AND color_id NOT IN (1,7,11)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Main Event Created",
+      "description": "Verify 48-hour event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Hackathon 2026') AND user_id = 'alice_manager' AND summary = 'Build, Ship, Win!' AND start_datetime = '2026-03-20 00:00:00.000000' AND end_datetime = '2026-03-22 00:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Kickoff Event Created",
+      "description": "Verify kickoff session event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Hackathon 2026') AND user_id = 'alice_manager' AND summary = 'Hackathon Kickoff Session' AND start_datetime = '2026-03-20 09:00:00.000000' AND start_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Recap Event Created",
+      "description": "Verify evening recap event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Hackathon 2026') AND user_id = 'alice_manager' AND summary = 'Evening Recap Session' AND start_datetime = '2026-03-22 18:00:00.000000' AND start_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Kickoff Attendees",
+      "description": "Check attendees of kickoff session",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id IN (SELECT event_id FROM events WHERE summary = 'Hackathon Kickoff Session') AND user_id IN ('alice_manager', 'bob_developer', 'carol_designer')",
+      "expected_value": "3",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Alert Setup",
+      "description": "Verify calendar notifications setup",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Hackathon 2026') AND user_id = 'alice_manager' AND webhook_address = 'https://intra.techcorp.com/hackathon/hook'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Setup calendar for Hackathon event, create events, attendees, and alerts.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

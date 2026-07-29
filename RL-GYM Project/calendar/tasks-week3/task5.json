@@ -1,0 +1,116 @@
+{
+  "scenario_config": {
+    "scenario_name": "personal_calendar_cleanup",
+    "scenario_description": "Move confirmed events to personal calendar",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I want to organize and clean up my schedule. First, remove all tentative events from my primary calendar. Then, move any confirmed events from my primary calendar to my personal calendar; if a personal calendar does not exist, create one specifically for this cleanup. Also, grant Bob (bob.smith@techcorp.com) reader access to it. Additionally, for each event moved to the personal calendar, add Bob as an attendee.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "create_calendar",
+      "move_event",
+      "clear_calendar",
+      "insert_acl_rule",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "create_calendar",
+      "move_event",
+      "clear_calendar",
+      "insert_acl_rule",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Personal Cal Created",
+      "description": "Verify personal calendar exists",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Confirmed Event Moved",
+      "description": "Verify confirmed event moved to personal",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'alexander_mitchell-evt-1104-2-default' AND user_id = 'alexander_mitchell' AND status = 'confirmed' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Tentative Cleared",
+      "description": "Verify tentative event removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'alexander_mitchell-evt-1127-1-workingLocation'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Primary Emptied",
+      "description": "Verify primary calendar cleared",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id = 'alexander_mitchell-primary'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "2",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob ACL Added",
+      "description": "Verify Bob reader ACL",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE user_id = 'alexander_mitchell' AND summary LIKE '%personal%') AND user_id = 'alexander_mitchell' AND role = 'reader' AND scope_id LIKE '%bob%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob Attendee Added",
+      "description": "Verify Bob as attendee on moved event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'alexander_mitchell-evt-1104-2-default' AND user_id = 'bob_developer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_f7b76a8516f72277cd2adaad6f2927b216ce685c4fa3637c"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Clean primary calendar, move confirmed events to personal, and grant Bob access.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

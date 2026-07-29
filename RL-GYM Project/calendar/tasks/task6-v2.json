@@ -1,0 +1,105 @@
+{
+  "scenario_config": {
+    "scenario_name": "update_client_demo",
+    "scenario_description": "Recurring Event Update",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Find the recurring “Enterprise Client Demo” series in my Sales Activities calendar. Update the first instance’s location to TechCorp Main Campus – Building 1, and make sure Alice and I are on the guest list for every occurrence with proper display names. Check Alice's permission on this calendar: if she can edit, change it to read-only; if she isn't listed, give her read-only access.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "patch_event",
+      "list_acl_rules",
+      "insert_acl_rule"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "patch_event",
+      "patch_event",
+      "patch_event",
+      "list_acl_rules",
+      "insert_acl_rule"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Location Updated",
+      "description": "Check Nov 16 location",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE summary LIKE '%Enterprise Client Demo%' AND location = 'TechCorp Main Campus – Building 1' AND start_datetime LIKE '2025-11-16%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Attendees Event 006",
+      "description": "Check attendees for event 006",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'event-corrected-006' AND displayname IN ('Dave Brown', 'Alice Johnson')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Attendees Event 007",
+      "description": "Check attendees for event 007",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'event-corrected-007' AND displayname IN ('Dave Brown', 'Alice Johnson')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Attendees Event 008",
+      "description": "Check attendees for event 008",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM attendees WHERE event_id = 'event-corrected-008' AND displayname IN ('Dave Brown', 'Alice Johnson')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+    "name": "Bob's ACL Permission",
+    "description": "Verify Bob's read-only access",
+    "type": "database_state",
+    "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'dave-sales' AND user_id = 'dave_sales' AND scope_id LIKE '%alice%' AND role = 'reader'",
+    "expected_value": "1",
+    "comparison_type": "equals",
+    "expected_response": "",
+    "original_value": "0",
+    "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1762868439331_kf914hbmw",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Update location and attendees for recurring client demo event series.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "scenario_config": {
+    "scenario_name": "customer_schedules",
+    "scenario_description": "Customer schedule consolidation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I want to streamline my customer-related schedules into a dedicated calendar. First, check if I already have a calendar with \"customer\" in its title. If one exists, use it; otherwise, create a new calendar titled \"Customer Schedules\". Assign this calendar a unique color not currently used by my other calendars for easy distinction, and ensure it shares the same timezone as my existing calendars. After the calendar is set up, review all my existing schedules and move only those events whose summary explicitly indicates a customer meeting or update into this new calendar. Finally, mark each moved event with a shared extended property \"scheduleType\": \"customer\" to categorize them clearly.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "get_colors",
+      "create_calendar",
+      "add_calendar_to_list",
+      "list_events",
+      "list_events",
+      "move_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Customer Cal Created",
+      "description": "Verify customer calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Customer Schedules' AND user_id = 'abigail_scott' AND color_id NOT IN (9,10) AND time_zone = 'America/Toronto'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Customer Event Moved",
+      "description": "Verify customer event move",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'abigail_scott-evt-1027-1-default' AND user_id = 'abigail_scott' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Customer Schedules')",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Customer Ext Prop",
+      "description": "Verify shared extended property",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM extended_properties WHERE event_id = 'abigail_scott-evt-1027-1-default' AND scope = 'shared' AND json_extract(properties, '$.scheduleType') = 'customer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "get_calendar_list",
+    "arguments": {},
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "get_calendar_list",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1764493889049_iuydddoc0\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNS0xMi0wMVQyMDoyOTo1MS43NTU3NTc=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-abigail_scott-primary-2025-12-01T20:29:32\",\n      \"id\": \"abigail_scott-primary\",\n      \"summary\": \"Abigail Scott\",\n      \"description\": \"Primary calendar for Abigail Scott\",\n      \"location\": null,\n      \"timeZone\": \"America/Toronto\",\n      \"summaryOverride\": null,\n      \"colorId\": \"9\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-abigail_scott-team-2025-12-01T20:29:32\",\n      \"id\": \"abigail_scott-team\",\n      \"summary\": \"Team Coordination\",\n      \"description\": \"Team meetings, 1-on-1s, and events\",\n      \"location\": null,\n      \"timeZone\": \"America/Toronto\",\n      \"summaryOverride\": null,\n      \"colorId\": \"10\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 171,
+      "executed_at": "2025-12-01T20:29:51.779397"
+    }
+  },
+  {
+    "name": "get_colors",
+    "arguments": {},
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "get_colors",
+      "parameters": {},
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#colors\",\n  \"updated\": \"2025-12-01T20:29:32\",\n  \"calendar\": {\n    \"1\": {\n      \"background\": \"#ac725e\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"2\": {\n      \"background\": \"#d06b64\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"3\": {\n      \"background\": \"#f83a22\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"4\": {\n      \"background\": \"#fa57c4\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"5\": {\n      \"background\": \"#9fc6e7\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"6\": {\n      \"background\": \"#9a9cff\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"7\": {\n      \"background\": \"#4986e7\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"8\": {\n      \"background\": \"#9aa116\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"9\": {\n      \"background\": \"#ef6c00\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"10\": {\n      \"background\": \"#ff7537\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"11\": {\n      \"background\": \"#42d692\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"12\": {\n      \"background\": \"#16a765\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"13\": {\n      \"background\": \"#7bd148\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"14\": {\n      \"background\": \"#b3dc6c\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"15\": {\n      \"background\": \"#fbe983\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"16\": {\n      \"background\": \"#fad165\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"17\": {\n      \"background\": \"#92e1c0\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"18\": {\n      \"background\": \"#9fe1e7\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"19\": {\n      \"background\": \"#9fc6e7\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"20\": {\n      \"background\": \"#4986e7\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"21\": {\n      \"background\": \"#9aa116\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"22\": {\n      \"background\": \"#16a765\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"23\": {\n      \"background\": \"#ff7537\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"24\": {\n      \"background\": \"#ffad46\",\n      \"foreground\": \"#1d1d1d\"\n    }\n  },\n  \"event\": {\n    \"1\": {\n      \"background\": \"#a4bdfc\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"2\": {\n      \"background\": \"#7ae7bf\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"3\": {\n      \"background\": \"#dbadff\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"4\": {\n      \"background\": \"#ff887c\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"5\": {\n      \"background\": \"#fbd75b\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"6\": {\n      \"background\": \"#ffb878\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"7\": {\n      \"background\": \"#46d6db\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"8\": {\n      \"background\": \"#e1e1e1\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"9\": {\n      \"background\": \"#5484ed\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"10\": {\n      \"background\": \"#51b749\",\n      \"foreground\": \"#1d1d1d\"\n    },\n    \"11\": {\n      \"background\": \"#dc2127\",\n      \"foreground\": \"#1d1d1d\"\n    }\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 129,
+      "executed_at": "2025-12-01T20:30:08.320692"
+    }
+  },
+  {
+    "name": "create_calendar",
+    "arguments": {
+      "summary": "Customer Schedules",
+      "timeZone": "America/Toronto",
+      "description": "Dedicated calendar for customer-related schedules"
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "create_calendar",
+      "parameters": {
+        "summary": "Customer Schedules",
+        "timeZone": "America/Toronto",
+        "description": "Dedicated calendar for customer-related schedules"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendar\",\n  \"etag\": \"etag-5ed4a0e7-ff68-4874-8914-29cfb1b970f3-2025-12-01T20:30:50.166472\",\n  \"id\": \"5ed4a0e7-ff68-4874-8914-29cfb1b970f3\",\n  \"summary\": \"Customer Schedules\",\n  \"description\": \"Dedicated calendar for customer-related schedules\",\n  \"location\": null,\n  \"timeZone\": \"America/Toronto\",\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": null\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 259,
+      "executed_at": "2025-12-01T20:30:50.303388"
+    }
+  },
+  {
+    "name": "add_calendar_to_list",
+    "arguments": {
+      "id": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3",
+      "colorRgbFormat": true,
+      "backgroundColor": "#42d692",
+      "foregroundColor": "#1d1d1d"
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "add_calendar_to_list",
+      "parameters": {
+        "id": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3",
+        "colorRgbFormat": true,
+        "backgroundColor": "#42d692",
+        "foregroundColor": "#1d1d1d"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#calendarListEntry\",\n  \"etag\": \"etag-list-5ed4a0e7-ff68-4874-8914-29cfb1b970f3-2025-12-01T20:32:02.980792\",\n  \"id\": \"5ed4a0e7-ff68-4874-8914-29cfb1b970f3\",\n  \"summary\": \"Customer Schedules\",\n  \"description\": \"Dedicated calendar for customer-related schedules\",\n  \"location\": null,\n  \"timeZone\": \"America/Toronto\",\n  \"summaryOverride\": null,\n  \"colorId\": \"11\",\n  \"backgroundColor\": \"#42d692\",\n  \"foregroundColor\": \"#1d1d1d\",\n  \"hidden\": false,\n  \"selected\": true,\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": null,\n  \"notificationSettings\": null,\n  \"primary\": false,\n  \"deleted\": false,\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": []\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 241,
+      "executed_at": "2025-12-01T20:32:03.066112"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "abigail_scott-primary"
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "abigail_scott-primary"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-abigail_scott-primary\",\n  \"summary\": \"Abigail Scott\",\n  \"description\": \"Primary calendar for Abigail Scott\",\n  \"updated\": \"2025-12-01T20:32:46.043681+00:00\",\n  \"timeZone\": \"America/Toronto\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": [\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1764620972.0\\\"\",\n      \"id\": \"abigail_scott-evt-1027-1-default\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=abigail_scott-evt-1027-1-default\",\n      \"created\": \"2025-12-01T20:29:32\",\n      \"updated\": \"2025-12-01T20:29:32\",\n      \"summary\": \"[CS-0000032][Moderate] Customer Update\",\n      \"description\": \"Related case CS-0000032 (priority: moderate). Issue: is not working as expected.\",\n      \"location\": \"Zoom\",\n      \"colorId\": \"12\",\n      \"creator\": {\n        \"id\": \"abigail_scott\",\n        \"email\": \"abigail.scott@spencerinc.com\",\n        \"displayName\": \"Abigail Scott\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"abigail_scott\",\n        \"email\": \"abigail.scott@spencerinc.com\",\n        \"displayName\": \"Abigail Scott\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2025-10-27T09:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2025-10-27T10:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [],\n      \"recurringEventId\": null,\n      \"originalStartTime\": null,\n      \"transparency\": null,\n      \"visibility\": \"private\",\n      \"iCalUID\": null,\n      \"sequence\": 2,\n      \"attendees\": [],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": true,\n      \"guestsCanModify\": false,\n      \"guestsCanSeeOtherGuests\": true,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://cases.example.com/CS-0000032\",\n        \"title\": \"CS-0000032 details\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"default\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    },\n    {\n      \"kind\": \"calendar#event\",\n      \"etag\": \"\\\"1764620972.0\\\"\",\n      \"id\": \"abigail_scott-evt-1028-2-fromGmail\",\n      \"status\": \"confirmed\",\n      \"htmlLink\": \"https://calendar.google.com/event?eid=abigail_scott-evt-1028-2-fromGmail\",\n      \"created\": \"2025-12-01T20:29:32\",\n      \"updated\": \"2025-12-01T20:29:32\",\n      \"summary\": \"[CS-0000001][Critical] Email Thread Synced\",\n      \"description\": \"Auto-added from Gmail. Related case CS-0000001 (priority: critical). Issue: is not working as expected.\",\n      \"location\": \"Zoom\",\n      \"colorId\": \"12\",\n      \"creator\": {\n        \"id\": \"abigail_scott\",\n        \"email\": \"abigail.scott@spencerinc.com\",\n        \"displayName\": \"Abigail Scott\",\n        \"self\": true\n      },\n      \"organizer\": {\n        \"id\": \"abigail_scott\",\n        \"email\": \"abigail.scott@spencerinc.com\",\n        \"displayName\": \"Abigail Scott\",\n        \"self\": true\n      },\n      \"start\": {\n        \"dateTime\": \"2025-10-28T08:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"end\": {\n        \"dateTime\": \"2025-10-28T09:00:00+00:00\",\n        \"date\": null,\n        \"timeZone\": \"America/New_York\"\n      },\n      \"endTimeUnspecified\": false,\n      \"recurrence\": [],\n      \"recurringEventId\": null,\n      \"originalStartTime\": null,\n      \"transparency\": null,\n      \"visibility\": \"default\",\n      \"iCalUID\": null,\n      \"sequence\": 2,\n      \"attendees\": [\n        {\n          \"id\": \"att-corrected-040\",\n          \"email\": \"abigail.scott@spencerinc.com\",\n          \"displayName\": \"Abigail Scott\",\n          \"self\": true,\n          \"organizer\": true,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Invite originated from Gmail\",\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-041\",\n          \"email\": \"bob.smith@techcorp.com\",\n          \"displayName\": \"Bob Smith\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"needsAction\",\n          \"comment\": \"Joining if needed\",\n          \"additionalGuests\": 0,\n          \"optional\": true,\n          \"resource\": false\n        },\n        {\n          \"id\": \"att-corrected-042\",\n          \"email\": null,\n          \"displayName\": \"GMeet Room Hardware Kit #1\",\n          \"self\": false,\n          \"organizer\": false,\n          \"responseStatus\": \"accepted\",\n          \"comment\": \"Meet hardware kit\",\n          \"additionalGuests\": 0,\n          \"optional\": false,\n          \"resource\": true\n        }\n      ],\n      \"attendeesOmitted\": false,\n      \"extendedProperties\": null,\n      \"hangoutLink\": null,\n      \"conferenceData\": null,\n      \"gadget\": null,\n      \"anyoneCanAddSelf\": null,\n      \"guestsCanInviteOthers\": true,\n      \"guestsCanModify\": true,\n      \"guestsCanSeeOtherGuests\": false,\n      \"privateCopy\": null,\n      \"locked\": null,\n      \"reminders\": {\n        \"overrides\": [],\n        \"useDefault\": false\n      },\n      \"source\": {\n        \"url\": \"https://cases.example.com/CS-0000001\",\n        \"title\": \"CS-0000001 details\"\n      },\n      \"attachments\": [],\n      \"eventType\": \"fromGmail\",\n      \"birthdayProperties\": null,\n      \"focusTimeProperties\": null,\n      \"outOfOfficeProperties\": null,\n      \"workingLocationProperties\": null\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 353,
+      "executed_at": "2025-12-01T20:32:46.067537"
+    }
+  },
+  {
+    "name": "list_events",
+    "arguments": {
+      "calendarId": "abigail_scott-team"
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "list_events",
+      "parameters": {
+        "calendarId": "abigail_scott-team"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-abigail_scott-team\",\n  \"summary\": \"Team Coordination\",\n  \"description\": \"Team meetings, 1-on-1s, and events\",\n  \"updated\": \"2025-12-01T20:33:25.068745+00:00\",\n  \"timeZone\": \"America/Toronto\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": []\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 210,
+      "executed_at": "2025-12-01T20:33:25.092526"
+    }
+  },
+  {
+    "name": "move_event",
+    "arguments": {
+      "calendarId": "abigail_scott-primary",
+      "eventId": "abigail_scott-evt-1027-1-default",
+      "destination": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3"
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "move_event",
+      "parameters": {
+        "calendarId": "abigail_scott-primary",
+        "eventId": "abigail_scott-evt-1027-1-default",
+        "destination": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764621260.899297\\\"\",\n  \"id\": \"abigail_scott-evt-1027-1-default\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=abigail_scott-evt-1027-1-default\",\n  \"created\": \"2025-12-01T20:29:32\",\n  \"updated\": \"2025-12-01T20:34:20.899297\",\n  \"summary\": \"[CS-0000032][Moderate] Customer Update\",\n  \"description\": \"Related case CS-0000032 (priority: moderate). Issue: is not working as expected.\",\n  \"location\": \"Zoom\",\n  \"colorId\": \"12\",\n  \"creator\": {\n    \"id\": \"abigail_scott\",\n    \"email\": \"abigail.scott@spencerinc.com\",\n    \"displayName\": \"Abigail Scott\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"abigail_scott\",\n    \"email\": \"abigail.scott@spencerinc.com\",\n    \"displayName\": \"Abigail Scott\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-10-27T09:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-10-27T10:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": null,\n  \"transparency\": null,\n  \"visibility\": \"private\",\n  \"iCalUID\": null,\n  \"sequence\": 2,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": null,\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://cases.example.com/CS-0000032\",\n    \"title\": \"CS-0000032 details\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 324,
+      "executed_at": "2025-12-01T20:34:21.039955"
+    }
+  },
+  {
+    "name": "patch_event",
+    "arguments": {
+      "calendarId": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3",
+      "eventId": "abigail_scott-evt-1027-1-default",
+      "extendedProperties": {
+        "shared": {
+          "scheduleType": "customer"
+        }
+      }
+    },
+    "context": {
+      "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "calendar_internal",
+      "tool_name": "patch_event",
+      "parameters": {
+        "calendarId": "5ed4a0e7-ff68-4874-8914-29cfb1b970f3",
+        "eventId": "abigail_scott-evt-1027-1-default",
+        "extendedProperties": {
+          "shared": {
+            "scheduleType": "customer"
+          }
+        }
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764621339.929691\\\"\",\n  \"id\": \"abigail_scott-evt-1027-1-default\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=abigail_scott-evt-1027-1-default\",\n  \"created\": \"2025-12-01T20:29:32\",\n  \"updated\": \"2025-12-01T20:35:39.929691\",\n  \"summary\": \"[CS-0000032][Moderate] Customer Update\",\n  \"description\": \"Related case CS-0000032 (priority: moderate). Issue: is not working as expected.\",\n  \"location\": \"Zoom\",\n  \"colorId\": \"12\",\n  \"creator\": {\n    \"id\": \"abigail_scott\",\n    \"email\": \"abigail.scott@spencerinc.com\",\n    \"displayName\": \"Abigail Scott\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"abigail_scott\",\n    \"email\": \"abigail.scott@spencerinc.com\",\n    \"displayName\": \"Abigail Scott\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-10-27T09:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-10-27T10:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": null,\n  \"transparency\": null,\n  \"visibility\": \"private\",\n  \"iCalUID\": null,\n  \"sequence\": 3,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"shared\": {\n      \"scheduleType\": \"customer\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://cases.example.com/CS-0000032\",\n    \"title\": \"CS-0000032 details\"\n  },\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 264,
+      "executed_at": "2025-12-01T20:35:40.018913"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "tok_0baffd262cb384673b9289eb8c0db1a4f33f1aa5b1a4972f"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create or reuse customer calendar, move customer events, and tag them.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+"L1":"Calendar Management",
+"L2":"Calendar Structure",
+"L3":"Time Zone & Locale Settings"
+}

@@ -1,0 +1,14 @@
+L1, L2, L3
+Incident Management,Incidents (Creation + SLA),Incident Intake & SLA Management
+Incident Management,Child Incidents,Relationship Mapping Engine
+Incident Management,Affected CIs,CI Impact Association
+Incident Management,Templates,Intake Template Management
+Problem Management,Problems,Problem Analysis & Lifecycle
+Change Management,Changes,Change Request Lifecycle
+Change Management,Change Mappings,Change-Impact Linkage Engine
+Service,Services,Service Registry & Lifecycle
+Service,Service Offerings,Offering Management
+CMDB,Configuration Items,CI Registry & Attributes
+Knowledge,Knowledge Articles,Knowledge Publishing Lifecycle
+Knowledge,Incident ↔ KB Links,Knowledge Application Engine
+Communications,Notifications,Notification & Messaging Engine

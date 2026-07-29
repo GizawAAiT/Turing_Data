@@ -1,0 +1,94 @@
+{
+  "scenario_config": {
+    "scenario_name": "test scenario",
+    "scenario_description": "test",
+    "system_prompt": "You are an AI assistant with access to MCP tools.\n\nCRITICAL RESPONSE RULES:\n- Respond ONLY to the user's most recent/current message\n- Previous conversation history is provided for context understanding only\n- Do NOT re-answer previous questions or provide summaries of past exchanges\n- Do NOT reference previous conversations unless the current message explicitly asks about them\n- Treat each new message as an independent request requiring a specific response\n- Use conversation history only to understand context, references, and maintain coherent dialogue\n\nWhen using tools, provide clear and concise responses about what you accomplished.",
+    "prompt": "this is a user prompt text",
+    "restricted_tools": [
+      "create_draft"
+    ],
+    "expected_tools": [
+      "list_drafts"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "test",
+      "description": "test",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) FROM attachments;",
+      "expected_value": "1",
+      "comparison_type": "greater_than",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "list_drafts executed at least once",
+      "description": "Verify tool invocation count",
+      "type": "tool_execution",
+      "tool_name": "list_drafts",
+      "occurrence_expected_value": 1,
+      "occurrence_comparison_type": "greater_than",
+      "sql_query": "",
+      "expected_value": "",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_drafts",
+      "arguments": {
+        "maxResults": 100,
+        "pageToken": "",
+        "q": "",
+        "includeSpamTrash": false,
+        "user_id": "user_001"
+      },
+      "context": {
+        "x-email-user-token": "tok_alice_2025_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "Email",
+      "database_id": "db_1759957622884_07qnegpuw",
+      "context": {
+        "x-email-user-token": "tok_alice_2025_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+        "user-id": "user_001"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "test",
+  "models_to_test": [
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "0ac0eb6e-ab93-4d2e-8bae-d7e8e1bdd9ef",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "claude-sonnet-4-20250514",
+      "platform_name": "anthropic",
+      "platform_config_id": "6506dd44-bee4-4879-ba17-fb13016730cc",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 6,
+  "configs": {
+    "enableComments": false,
+    "enableGroundTruthComments": true,
+    "enableReview": false,
+    "enableToolCall": true
+  }
+}

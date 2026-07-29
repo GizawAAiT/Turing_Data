@@ -1,0 +1,460 @@
+{
+  "task_id": "task_20251201_175217_136_e0ac0c6d_867a82fe",
+  "task_name": "Task created from scenario",
+  "description": "Task created from scenario",
+  "version": "1.0",
+  "multipass_config": {
+    "runs_per_prompt": 3,
+    "reset_database_between_runs": true,
+    "statistical_confidence_level": 0.95
+  },
+  "system_prompt": "You are a highly capable and intelligent AI assistant designed to help users by executing tasks. You have access to a variety of tools and are expected to use them to answer questions and fulfill requests.\n\n**Your Thought Process:**\n1.  **Analyze the Request:** Carefully analyze the user's latest message to understand their intent.\n2.  **Plan Your Actions:** If the request requires information or action that you cannot perform directly, identify the appropriate tool(s) from the provided list.\n3.  **Execute Tools:** Make one or more tool calls in a structured format. You can call multiple tools in parallel if needed.\n4.  **Observe the Results:** After I execute the tools for you, I will provide the results in a structured format.\n5.  **Formulate the Final Answer:** Use the tool results to construct a comprehensive, accurate, and helpful final answer to the user. If a tool fails, inform the user and ask for clarification if necessary.\n\n**Constraints:**\n-   **Respond Only to the Latest Message:** The conversation history is for context only. Focus on resolving the user's most recent request.\n-   **Use Tools When Necessary:** Do not try to guess information that a tool can provide. If you need to know something, use a tool.\n-   **Stick to Available Tools:** Only use the tools provided to you in the tool list. Do not invent tools.\n-   **Final Response:** Once all necessary tool calls are complete and you have the information you need, provide a final, user-facing response without any further tool calls.\n",
+  "created_at": "2025-12-01T17:52:17.081902+00:00",
+  "created_by": "e0ac0c6d-da6a-4e08-b0fe-c690fec518ce",
+  "scenario_config": {
+    "scenario_name": "Alice’s Q4 Calendar Cleanup & Project Setup",
+    "scenario_description": "Alice Johnson is preparing her project calendar for Q4. She needs the following updates completed:  Make the Project Management calendar visible and selected.  Move the event “Sprint Planning & Architecture Review” from the Team Coordination calendar to the Project Management calendar.  Update the event description of that same event to reflect Q4 planning needs.  Create a new event on the Project Management calendar titled “Kickoff – New Project: Q4” scheduled for 2025-12-01 from 09:00 to 10:00 EST.  Delete the outdated event “Team Sync-Up” from the Team Coordination calendar (we will insert it into the seed via tool execution).  All calendars and events belong to alice_manager so there is no permission problem",
+    "system_prompt": "You are a highly capable and intelligent AI assistant designed to help users by executing tasks. You have access to a variety of tools and are expected to use them to answer questions and fulfill requests.\n\n**Your Thought Process:**\n1.  **Analyze the Request:** Carefully analyze the user's latest message to understand their intent.\n2.  **Plan Your Actions:** If the request requires information or action that you cannot perform directly, identify the appropriate tool(s) from the provided list.\n3.  **Execute Tools:** Make one or more tool calls in a structured format. You can call multiple tools in parallel if needed.\n4.  **Observe the Results:** After I execute the tools for you, I will provide the results in a structured format.\n5.  **Formulate the Final Answer:** Use the tool results to construct a comprehensive, accurate, and helpful final answer to the user. If a tool fails, inform the user and ask for clarification if necessary.\n\n**Constraints:**\n-   **Respond Only to the Latest Message:** The conversation history is for context only. Focus on resolving the user's most recent request.\n-   **Use Tools When Necessary:** Do not try to guess information that a tool can provide. If you need to know something, use a tool.\n-   **Stick to Available Tools:** Only use the tools provided to you in the tool list. Do not invent tools.\n-   **Final Response:** Once all necessary tool calls are complete and you have the information you need, provide a final, user-facing response without any further tool calls.\n",
+    "prompt": "I’m preparing for Q4. Please make my Project Management calendar visible, move my ‘Sprint Planning & Architecture Review’ event from the Team Coordination calendar to Project Management, update its description for Q4, create a new event called ‘Kickoff – New Project: Q4’ on my Project Management calendar for December 1st, and delete the Team Sync-Up event from my Team Coordination calendar.",
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "update_calendar_in_list",
+      "move_event",
+      "patch_event",
+      "create_event",
+      "delete_event"
+    ],
+    "restricted_tools": [],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "update_calendar_in_list",
+      "move_event",
+      "patch_event",
+      "create_event",
+      "delete_event"
+    ],
+    "context": {
+      "user_id ": "alice_manager",
+      "timezone ": "America/New_York",
+      "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Project Calendar Visible",
+      "description": "Ensures Alice's Project Management calendar is visible and selected after update.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM calendars WHERE calendar_id='alice-projects' AND hidden=0 AND selected=1 AND deleted=0;",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Event Moved to Projects",
+      "description": "Checks that the Sprint Planning event is now on the Project Management calendar.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM events WHERE event_id='event-corrected-001' AND calendar_id='alice-projects';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Event Description Updated",
+      "description": "Validates that the Sprint Planning event description reflects updated Q4 text .",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM events WHERE event_id='event-corrected-001' AND description='Updated Q4 planning session — reviewing new architectural goals and sprint outline.';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Kickoff Event Created",
+      "description": "Checks that the new Q4 kickoff event exists in the Project Management calendar.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM events WHERE summary='Kickoff – New Project: Q4' AND calendar_id='alice-projects';",
+      "expected_value": 1,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    },
+    {
+      "name": "Team Sync-Up Deleted",
+      "description": "Ensures the outdated Team Sync-Up event is deleted from Alice's Team Coordination calendar.",
+      "type": "database_state",
+      "timeout_seconds": 30,
+      "sql_query": "SELECT COUNT(*) FROM events WHERE event_id='alice-team-sync-up';",
+      "expected_value": 0,
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_events",
+      "arguments": {
+        "calendarId": "alice-team",
+        "alwaysIncludeEmail": false,
+        "eventTypes": "default",
+        "iCalUID": "",
+        "maxAttendees": 10,
+        "maxResults": 50,
+        "orderBy": "updated",
+        "pageToken": "",
+        "privateExtendedProperty": "",
+        "q": "",
+        "sharedExtendedProperty": "",
+        "showDeleted": false,
+        "showHiddenInvitations": false,
+        "singleEvents": false,
+        "syncToken": "",
+        "timeMax": "",
+        "timeMin": "",
+        "timeZone": "America/New_York",
+        "updatedMin": ""
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "list_events",
+        "parameters": {
+          "calendarId": "alice-team",
+          "alwaysIncludeEmail": false,
+          "eventTypes": "default",
+          "iCalUID": "",
+          "maxAttendees": 10,
+          "maxResults": 50,
+          "orderBy": "updated",
+          "pageToken": "",
+          "privateExtendedProperty": "",
+          "q": "",
+          "sharedExtendedProperty": "",
+          "showDeleted": false,
+          "showHiddenInvitations": false,
+          "singleEvents": false,
+          "syncToken": "",
+          "timeMax": "",
+          "timeMin": "",
+          "timeZone": "America/New_York",
+          "updatedMin": ""
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"calendar#events\",\n  \"etag\": \"etag-events-alice-team\",\n  \"summary\": \"Team Coordination\",\n  \"description\": \"Team meetings, 1-on-1s, and team events\",\n  \"updated\": \"2025-12-01T17:40:52.049827+00:00\",\n  \"timeZone\": \"America/New_York\",\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": [],\n  \"nextPageToken\": null,\n  \"nextSyncToken\": null,\n  \"items\": []\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 187,
+        "executed_at": "2025-12-01T17:40:52.073041"
+      }
+    },
+    {
+      "name": "update_calendar_in_list",
+      "arguments": {
+        "calendarId": "alice-projects",
+        "hidden": false,
+        "selected": true
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "update_calendar_in_list",
+        "parameters": {
+          "calendarId": "alice-projects",
+          "hidden": false,
+          "selected": true
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"calendar#calendarListEntry\",\n  \"etag\": \"etag-list-alice-projects-2025-12-01T15:36:04\",\n  \"id\": \"alice-projects\",\n  \"summary\": \"Project Management\",\n  \"description\": \"Project meetings, deadlines, and milestones\",\n  \"location\": null,\n  \"timeZone\": \"America/New_York\",\n  \"summaryOverride\": null,\n  \"colorId\": \"7\",\n  \"backgroundColor\": null,\n  \"foregroundColor\": null,\n  \"hidden\": false,\n  \"selected\": true,\n  \"accessRole\": \"owner\",\n  \"defaultReminders\": null,\n  \"notificationSettings\": null,\n  \"primary\": false,\n  \"deleted\": false,\n  \"conferenceProperties\": {\n    \"allowedConferenceSolutionTypes\": []\n  }\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 205,
+        "executed_at": "2025-12-01T17:42:14.803411"
+      }
+    },
+    {
+      "name": "move_event",
+      "arguments": {
+        "calendarId": "alice-team",
+        "eventId": "event-corrected-001",
+        "destination": "alice-projects",
+        "sendNotifications": false,
+        "sendUpdates": "none"
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "move_event",
+        "parameters": {
+          "calendarId": "alice-team",
+          "eventId": "event-corrected-001",
+          "destination": "alice-projects",
+          "sendNotifications": false,
+          "sendUpdates": "none"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Event not found: event-corrected-001"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 185,
+        "executed_at": "2025-12-01T17:43:47.306472"
+      }
+    },
+    {
+      "name": "patch_event",
+      "arguments": {
+        "calendarId": "alice-projects",
+        "eventId": "event-corrected-001",
+        "description": "Updated Q4 planning session — reviewing new architectural goals and sprint outline."
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "patch_event",
+        "parameters": {
+          "calendarId": "alice-projects",
+          "eventId": "event-corrected-001",
+          "description": "Updated Q4 planning session — reviewing new architectural goals and sprint outline."
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764611089.828587\\\"\",\n  \"id\": \"event-corrected-001\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=event-corrected-001\",\n  \"created\": \"2025-12-01T15:36:04\",\n  \"updated\": \"2025-12-01T17:44:49.828587\",\n  \"summary\": \"Sprint Planning & Architecture Review\",\n  \"description\": \"Updated Q4 planning session \\u2014 reviewing new architectural goals and sprint outline.\",\n  \"location\": \"Conference Room A, Building 1\",\n  \"colorId\": \"7\",\n  \"creator\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-10-06T09:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-10-06T11:00:00+00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": null,\n  \"transparency\": null,\n  \"visibility\": \"default\",\n  \"iCalUID\": null,\n  \"sequence\": 3,\n  \"attendees\": [\n    {\n      \"id\": \"att-corrected-001\",\n      \"email\": \"alice.manager@techcorp.com\",\n      \"displayName\": \"Alice Johnson\",\n      \"self\": true,\n      \"organizer\": true,\n      \"responseStatus\": \"accepted\",\n      \"comment\": \"Looking forward to planning Q4!\",\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-002\",\n      \"email\": \"bob.smith@techcorp.com\",\n      \"displayName\": \"Bob Smith\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-003\",\n      \"email\": \"carol.white@techcorp.com\",\n      \"displayName\": \"Carol White\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"tentative\",\n      \"comment\": \"Will join if no conflicts with user research session\",\n      \"additionalGuests\": 0,\n      \"optional\": true,\n      \"resource\": false\n    },\n    {\n      \"id\": \"att-corrected-004\",\n      \"email\": null,\n      \"displayName\": \"Conference Room A\",\n      \"self\": false,\n      \"organizer\": false,\n      \"responseStatus\": \"accepted\",\n      \"comment\": null,\n      \"additionalGuests\": 0,\n      \"optional\": false,\n      \"resource\": true\n    }\n  ],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": {\n    \"private\": {\n      \"departmentBudget\": \"engineering\",\n      \"projectCode\": \"PROJ-2024-Q4\"\n    },\n    \"shared\": {\n      \"meetingType\": \"sprint_planning\",\n      \"priority\": \"high\"\n    }\n  },\n  \"hangoutLink\": null,\n  \"conferenceData\": {\n    \"conferenceSolution\": {\n      \"iconUri\": null,\n      \"key\": {\n        \"type\": \"hangoutsMeet\"\n      },\n      \"name\": null\n    },\n    \"createRequest\": {\n      \"conferenceSolutionKey\": null,\n      \"requestId\": \"req-sprint-planning-001\",\n      \"status\": {\n        \"statusCode\": \"success\"\n      }\n    },\n    \"entryPoints\": [\n      {\n        \"accessCode\": null,\n        \"entryPointType\": \"video\",\n        \"label\": null,\n        \"meetingCode\": null,\n        \"passcode\": null,\n        \"password\": null,\n        \"pin\": null,\n        \"uri\": \"https://meet.google.com/abc-defg-hij\"\n      }\n    ],\n    \"notes\": null,\n    \"signature\": null\n  },\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": null,\n  \"locked\": null,\n  \"reminders\": {\n    \"overrides\": [\n      {\n        \"method\": \"email\",\n        \"minutes\": 1440\n      },\n      {\n        \"method\": \"popup\",\n        \"minutes\": 30\n      }\n    ],\n    \"useDefault\": false\n  },\n  \"source\": {\n    \"url\": \"https://jira.techcorp.com/sprint-planning-q4\",\n    \"title\": \"Sprint Planning Board\"\n  },\n  \"attachments\": [\n    {\n      \"fileUrl\": \"https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view\",\n      \"title\": \"view\"\n    },\n    {\n      \"fileUrl\": \"https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit\",\n      \"title\": \"edit\"\n    }\n  ],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 303,
+        "executed_at": "2025-12-01T17:44:49.969103"
+      }
+    },
+    {
+      "name": "create_event",
+      "arguments": {
+        "calendarId": "alice-projects",
+        "summary": "Kickoff – New Project: Q4",
+        "description": "Q4 project kickoff meeting",
+        "start": {
+          "dateTime": "2025-12-01T09:00:00",
+          "timeZone": "America/New_York"
+        },
+        "end": {
+          "dateTime": "2025-12-01T10:00:00",
+          "timeZone": "America/New_York"
+        }
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "create_event",
+        "parameters": {
+          "calendarId": "alice-projects",
+          "summary": "Kickoff – New Project: Q4",
+          "description": "Q4 project kickoff meeting",
+          "start": {
+            "dateTime": "2025-12-01T09:00:00",
+            "timeZone": "America/New_York"
+          },
+          "end": {
+            "dateTime": "2025-12-01T10:00:00",
+            "timeZone": "America/New_York"
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"calendar#event\",\n  \"etag\": \"\\\"1764611151.928971\\\"\",\n  \"id\": \"be447cbd-82f9-483c-b697-95a40c9ee75b\",\n  \"status\": \"confirmed\",\n  \"htmlLink\": \"https://calendar.google.com/event?eid=be447cbd-82f9-483c-b697-95a40c9ee75b\",\n  \"created\": \"2025-12-01T17:45:51.928965\",\n  \"updated\": \"2025-12-01T17:45:51.928971\",\n  \"summary\": \"Kickoff \\u2013 New Project: Q4\",\n  \"description\": \"Q4 project kickoff meeting\",\n  \"location\": null,\n  \"colorId\": null,\n  \"creator\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"organizer\": {\n    \"id\": \"alice_manager\",\n    \"email\": \"alice.manager@techcorp.com\",\n    \"displayName\": \"Alice Johnson\",\n    \"self\": true\n  },\n  \"start\": {\n    \"dateTime\": \"2025-12-01T09:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"end\": {\n    \"dateTime\": \"2025-12-01T10:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"endTimeUnspecified\": false,\n  \"recurrence\": [],\n  \"recurringEventId\": null,\n  \"originalStartTime\": {\n    \"dateTime\": \"2025-12-01T09:00:00\",\n    \"date\": null,\n    \"timeZone\": \"America/New_York\"\n  },\n  \"transparency\": \"opaque\",\n  \"visibility\": \"default\",\n  \"iCalUID\": \"be447cbd-82f9-483c-b697-95a40c9ee75b@calendar.google.com\",\n  \"sequence\": 0,\n  \"attendees\": [],\n  \"attendeesOmitted\": false,\n  \"extendedProperties\": null,\n  \"hangoutLink\": null,\n  \"conferenceData\": null,\n  \"gadget\": null,\n  \"anyoneCanAddSelf\": false,\n  \"guestsCanInviteOthers\": true,\n  \"guestsCanModify\": false,\n  \"guestsCanSeeOtherGuests\": true,\n  \"privateCopy\": false,\n  \"locked\": false,\n  \"reminders\": {\n    \"overrides\": [],\n    \"useDefault\": false\n  },\n  \"source\": null,\n  \"attachments\": [],\n  \"eventType\": \"default\",\n  \"birthdayProperties\": null,\n  \"focusTimeProperties\": null,\n  \"outOfOfficeProperties\": null,\n  \"workingLocationProperties\": null\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 260,
+        "executed_at": "2025-12-01T17:45:52.038740"
+      }
+    },
+    {
+      "name": "delete_event",
+      "arguments": {
+        "calendarId": "alice-team",
+        "eventId": "alice-team-sync-up",
+        "sendNotifications": false,
+        "sendUpdates": "none"
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "delete_event",
+        "parameters": {
+          "calendarId": "alice-team",
+          "eventId": "alice-team-sync-up",
+          "sendNotifications": false,
+          "sendUpdates": "none"
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Event not found: alice-team-sync-up"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 186,
+        "executed_at": "2025-12-01T17:47:56.941634"
+      }
+    },
+    {
+      "name": "get_calendar_list",
+      "arguments": {
+        "maxResults": 100,
+        "minAccessRole": "reader",
+        "pageToken": "",
+        "showDeleted": false,
+        "showHidden": false,
+        "syncToken": ""
+      },
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "tool_execution_results": {
+        "success": true,
+        "server_name": "calendar_internal",
+        "tool_name": "get_calendar_list",
+        "parameters": {
+          "maxResults": 100,
+          "minAccessRole": "reader",
+          "pageToken": "",
+          "showDeleted": false,
+          "showHidden": false,
+          "syncToken": ""
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\n  \"kind\": \"calendar#calendarList\",\n  \"etag\": \"etag-list-db_1764603359470_7n996yxg7\",\n  \"nextPageToken\": null,\n  \"nextSyncToken\": \"MjAyNS0xMi0wMVQxNzo0OTo0Ny4yNDIxNTY=\",\n  \"items\": [\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-primary-2025-12-01T15:36:04\",\n      \"id\": \"alice-primary\",\n      \"summary\": \"Alice Johnson\",\n      \"description\": \"Primary calendar for Alice Johnson - Project Manager\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"1\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": true,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-projects-2025-12-01T15:36:04\",\n      \"id\": \"alice-projects\",\n      \"summary\": \"Project Management\",\n      \"description\": \"Project meetings, deadlines, and milestones\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"7\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    },\n    {\n      \"kind\": \"calendar#calendarListEntry\",\n      \"etag\": \"etag-list-alice-team-2025-12-01T15:36:04\",\n      \"id\": \"alice-team\",\n      \"summary\": \"Team Coordination\",\n      \"description\": \"Team meetings, 1-on-1s, and team events\",\n      \"location\": null,\n      \"timeZone\": \"America/New_York\",\n      \"summaryOverride\": null,\n      \"colorId\": \"11\",\n      \"backgroundColor\": null,\n      \"foregroundColor\": null,\n      \"hidden\": false,\n      \"selected\": true,\n      \"accessRole\": \"owner\",\n      \"defaultReminders\": null,\n      \"notificationSettings\": null,\n      \"primary\": false,\n      \"deleted\": false,\n      \"conferenceProperties\": {\n        \"allowedConferenceSolutionTypes\": []\n      }\n    }\n  ]\n}"
+            }
+          ],
+          "isError": false
+        },
+        "error": null,
+        "execution_time_ms": 194,
+        "executed_at": "2025-12-01T17:49:47.269332"
+      }
+    }
+  ],
+  "gym_servers_config": [
+    {
+      "database_id": "db_1764603359470_7n996yxg7",
+      "context": {
+        "user_id ": "alice_manager",
+        "timezone ": "America/New_York",
+        "Authorization": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      },
+      "gym_server_id": "calendar_internal"
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 4,
+  "task_descriptions": "Task created from scenario",
+  "models_to_test": [
+    {
+      "model_name": "claude-sonnet-4-5",
+      "platform_name": "anthropic",
+      "platform_config_id": "default-anthropic-claude-sonnet-4-5",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gpt-5-High",
+      "platform_name": "openai",
+      "platform_config_id": "default-openai-gpt-5-High",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    },
+    {
+      "model_name": "gemini-2.5-pro",
+      "platform_name": "gemini",
+      "platform_config_id": "default-gemini-gemini-2.5-pro",
+      "max_tokens": 4000,
+      "temperature": 0,
+      "timeout": 60
+    }
+  ],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true
+  },
+  "L1": "Calendar Management",
+  "L2": "Calendar Structure",
+  "L3": "Calendar Properties"
+}

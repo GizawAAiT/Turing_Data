@@ -1,0 +1,82 @@
+{
+  "scenario_config": {
+    "scenario_name": "search_algo_kickoff",
+    "scenario_description": "Technical Kickoff Setup",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I’m planning to have a technical kickoff session with Carol. Create a secondary calendar called “Search Algorithm Beta.” Allow Carol(carol.white@techcorp.com) to edit. Starting from November 14, 2025, find the first day when I have no scheduled events, and schedule “Search Algorithm Beta – Technical Kickoff” for 60 minutes at 3:00 PM UTC with Google Meet.",
+    "restricted_tools": [],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "insert_acl_rule",
+      "query_freebusy",
+      "create_event"
+    ],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "insert_acl_rule",
+      "query_freebusy",
+      "create_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Creation",
+      "description": "Verify secondary calendar created",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Search Algorithm Beta' AND is_primary = 0 AND user_id = 'bob_developer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carol Edit Access",
+      "description": "Check Carol's edit permissions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE user_id = 'bob_developer' AND scope_id LIKE '%carol%' AND role = 'writer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Scheduled",
+      "description": "Verify event created on available day",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE user_id = 'bob_developer' AND summary LIKE '%Search Algorithm Beta – Technical Kickoff%' AND start_datetime = '2025-11-16 15:00:00.000000' AND end_datetime = '2025-11-16 16:00:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1767373264468_kqzud31y1",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-Zx8Nw3Q4pVb6Ls9R1mT0cG2uF5yH7kJd8sA1Lq2.wErtYuIoPaSdFgHjKlZxCvBnM987_65-43"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Create calendar and schedule technical kickoff session with Carol.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  },
+  "L1": "Event Management",
+  "L2": "Event Details",
+  "L3": "Event Title & Description"
+}

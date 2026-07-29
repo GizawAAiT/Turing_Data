@@ -1,0 +1,40 @@
+{
+  "system_prompt": "You are a helpful assistant for commerce and subscription setup tasks.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Create a product and a monthly billing plan, then activate it.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm Ms. Eliza Taylor. Can you set up a new product for my online Python class with the name \"Python course\" and make it purchasable as a monthly plan (20.00 USD to be paid every month)?",
+          "expected_tools": [
+            "paypal_create_product",
+            "create_billing_plan"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM products WHERE name = 'Python course'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM billing_plans bp JOIN products p ON p.id = bp.product_id WHERE p.name = 'Python course' AND bp.status = 'ACTIVE' AND json_extract(bp.billing_cycles, '$[0].frequency.interval_unit') = 'MONTH' AND json_extract(bp.billing_cycles, '$[0].frequency.interval_count') = 1 AND json_extract(bp.billing_cycles, '$[0].pricing_scheme.fixed_price.value') = '20.00' AND json_extract(bp.billing_cycles, '$[0].pricing_scheme.fixed_price.currency_code') = 'USD'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    }
+  ]
+}

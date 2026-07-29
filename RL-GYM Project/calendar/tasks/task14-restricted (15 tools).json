@@ -1,0 +1,129 @@
+{
+  "scenario_config": {
+    "scenario_name": "novax_launch_calendar_setup",
+    "scenario_description": "NovaX Launch Event Preparation",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I am preparing for the 'NovaX Launch' event. Please check if the 'Product Launches' calendar exists, and if not, create it in the America/Los_Angeles timezone. Add it to my list with background color #9fc6e7 and foreground #1d1d1d. Then, list all meetings from the 'Project Management' calendar that have 'Sprint' or 'Planning' in their title and move them to 'Product Launches'. For each of those events, set a 1-hour email reminder and background and foreground color to '#dbadff' and '#1d1d1d' respectively. After that, grant writer access to Adrian Burton(adrian.burton@servicenow.com) and reader access to Adriana Sanchez(adriana.sanchez1@chapman-wagner.com) on the 'Product Launches' calendar. Set up a webhook to monitor all the moved event changes and send notifications to https://hooks.launch.corp.com/novax with NOVAX_MONITOR as the Bearer Token.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "get_colors",
+      "update_calendar_in_list",
+      "list_events",
+      "move_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events",
+      "update_event",
+        "delete_calendar",
+        "clear_calendar",
+        "remove_calendar_from_list",
+        "replace_calendar_in_list",
+        "update_calendar",
+        "patch_calendar",
+        "quick_add_event",
+        "import_event",
+        "patch_event",
+        "get_event_instances",
+        "delete_event",
+        "patch_acl_rule",
+        "delete_acl_rule",
+        "watch_calendar_list",
+        "watch_acl"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "create_calendar",
+      "get_colors",
+      "update_calendar_in_list",
+      "list_events",
+      "move_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events",
+      "update_event"
+    ],
+    "context": {
+      "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+    }
+  },
+  "verifier_configs": [
+    {
+      "name": "Calendar Existence",
+      "description": "Check 'Product Launches' calendar exists",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM calendars WHERE summary = 'Product Launches'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Calendar Colors Set",
+      "description": "Check 'Product Launches' calendar color setup",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) FROM calendars WHERE summary = 'Product Launches' AND (color_id = 5 OR color_id = 19)",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Moved & Colored",
+      "description": "Verify event moved and correctly colored",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM events WHERE event_id = 'event-corrected-001' AND calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Product Launches') AND color_id = '3'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "ACL Rules Created",
+      "description": "Check ACL permissions set for calendar",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM acls WHERE calendar_id = (SELECT calendar_id FROM calendars WHERE summary = 'Product Launches')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Webhook Notification",
+      "description": "Verify webhook notification setup",
+      "type": "database_state",
+      "sql_query": "SELECT count() FROM watch_channels WHERE webhook_token = 'NOVAX_MONITOR' AND webhook_address = 'https://hooks.launch.corp.com/novax'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764009552843_dtjxuzni6",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-k9Vq7GzY2pL4mQf8sN1xT0bR3uHcJWv5yKzP6eF2.qwErTyUIopASDfGhJkLzXcVbNm12_34-56"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 2,
+  "task_descriptions": "Set up 'Product Launches' calendar, move events, configure permissions and notifications.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

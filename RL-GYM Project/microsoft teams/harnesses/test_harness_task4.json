@@ -1,0 +1,35 @@
+{
+  "system_prompt": "You are a Microsoft Teams assistant that helps manage teams, members, and roles. Always complete the requested task in a single turn without asking for clarification if it can be reasonably inferred.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Swap roles between two members within a team.",
+      "conversation_mode": true,
+      "context": {
+          "x-teams-access-token": "ya29.A0ARrdaM-super999unique888token777special666.SuperUserAllPermissionsTokenAccess_99-99"
+      },
+      "prompts": [
+        {
+          "prompt_text": "Hi, I'm James Wilson (james.wilson@techcorp.com), the super admin of the 'TechCorp Solutions Team.' Please exchange Alice Johnson's and Bob Smith's roles - give Bob the owner role and remove the owner role from Alice Johnson, giving her the member role instead.",
+          "expected_tools": [
+            "list_teams",
+            "list_team_members",
+            "update_team_member",
+            "update_team_member"
+          ],
+          "verifier": {
+            "verifier_type": "database_state",
+            "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM teams WHERE display_name = 'TechCorp Solutions Team' AND json_extract(members, '$[0].displayName') = 'Alice Johnson' AND json_extract(members, '$[0].roles[0]') = 'member' AND json_extract(members, '$[1].displayName') = 'Bob Smith' AND json_extract(members, '$[1].roles[0]') = 'owner'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "scenario_config": {
+    "scenario_name": "cloud_bootcamp_setup",
+    "scenario_description": "Bootcamp Calendar Setup",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I’m organizing a month-long 'Cloud Architecture Bootcamp' and need to streamline my calendars. Remove all events from any calendars except my primary and 'Sales Activities', then hide those cleared calendars. Starting from 20 Nov 2025, find the first continuous 30-day period without any scheduled events in my calendars. Create a new calendar called 'Cloud Architecture Bootcamp' in the UTC timezone, and select a unique color ID that isn't already used. Allow Bob Smith (bob.smith@techcorp.com) to edit and Carol White (carol.white@techcorp.com) to view this calendar. Schedule a two-hour bootcamp session titled 'Cloud Architecture Bootcamp Session' from 15:00 to 17:00 UTC, recurring weekly (every 7 days) throughout this 30-day period, and invite both Bob and Carol to these sessions. Set up notifications for any calendar changes to be sent to https://dev-hooks.techcorp.com/bootcamp-sync",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "query_freebusy",
+      "create_calendar",
+      "get_colors",
+      "add_calendar_to_list",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "create_event",
+      "watch_events",
+        "delete_calendar",
+        "clear_calendar",
+        "remove_calendar_from_list",
+        "update_calendar_in_list",
+        "update_calendar"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "query_freebusy",
+      "create_calendar",
+      "get_colors",
+      "add_calendar_to_list",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "create_event",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Bootcamp Calendar Created",
+      "description": "Verify bootcamp calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Cloud Architecture Bootcamp' AND user_id = 'dave_sales' AND time_zone = 'UTC' AND color_id NOT IN (6,23) AND hidden = 0",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Bob ACL Set",
+      "description": "Check Bob's editor access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Cloud Architecture Bootcamp') AND user_id = 'dave_sales' AND scope_id LIKE '%bob%' AND role = 'writer'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carol ACL Set",
+      "description": "Check Carol's reader access",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Cloud Architecture Bootcamp') AND user_id = 'dave_sales' AND scope_id LIKE '%carol%' AND role = 'reader'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Recurring Sessions Scheduled",
+      "description": "Check recurring bootcamp sessions",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Cloud Architecture Bootcamp') AND user_id = 'dave_sales' AND summary = 'Cloud Architecture Bootcamp Session' AND start_datetime BETWEEN '2025-12-18 15:00:00.000000' AND '2026-01-15 17:00:00.000000'",
+      "expected_value": "4",
+      "comparison_type": "greater_than_or_equal",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Calendar Notifications Set",
+      "description": "Verify notification setup",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Cloud Architecture Bootcamp') AND user_id = 'dave_sales' AND webhook_address = 'https://dev-hooks.techcorp.com/bootcamp-sync'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1763351831906_wtmgzwo0n",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Setup Bootcamp calendar, schedule events, configure ACLs, and notifications.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

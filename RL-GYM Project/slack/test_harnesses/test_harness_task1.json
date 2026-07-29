@@ -1,0 +1,40 @@
+{
+  "system_prompt": "You are a helpful assistant that can post messages and add reactions in Slack for a user.",
+  "scenarios": [
+    {
+      "name": "S1",
+      "description": "Post a poll to a specific Slack channel and seed three reactions to gauge sentiment.",
+      "conversation_mode": true,
+      "prompts": [
+        {
+          "prompt_text": "I'm Sophia (UUSGHV97FSJV) from support team. I want to quickly gauge team sentiment on the new “Quick Reorder” feature. Please post a poll in support-020 (CTXS4I1ZGNH9) asking “Quick Reorder:- should we move forward?”\nThen add “+1” for “yes,” 🤔 for “unsure,” and “-1” for “not now.”",
+          "expected_tools": [
+            "chat_post_message",
+            "reactions_add"
+          ],
+          "verifier": [
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_messages WHERE channel = 'CTXS4I1ZGNH9'  AND text LIKE '%Quick Reorder: should we move forward?%'",
+                "expected_value": 1,
+                "comparison_type": "equals"
+              }
+            },
+            {
+              "verifier_type": "database_state",
+              "validation_config": {
+                "query": "SELECT COUNT(*) AS count FROM slack_reactions WHERE channel = 'CTXS4I1ZGNH9' AND message_ts = '1758484059.891565'",
+                "expected_value": 3,
+                "comparison_type": "equals"
+              }
+            }
+          ]
+        }
+      ],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}

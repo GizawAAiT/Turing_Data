@@ -1,0 +1,105 @@
+{
+  "scenario_config": {
+    "scenario_name": "cleanup_ooo_shift",
+    "scenario_description": "Clean descriptions and shift OOO schedules",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action.\nWhen identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data.\nNever assume or fabricate IDs, responses, or outcomes — rely solely on verified API results.\nComplete each task in a single, logical, and efficient execution flow.",
+    "prompt": "I want to clean up and manage my schedules more effectively. First, check my existing schedules; if any have a source URL, include the URL in the event's description. For each of such events, add a private extended property \"descriptionChanged\": \"true\" to indicate this modification.\n\nNext, I'll be out of office from October 7, 2025, for 2 months. Mark this out-of-office period clearly on my primary calendar. If any schedules fall within this period, move them exactly one week forward. However, if moving a schedule forward by one week still places it within my out-of-office period, set its status to canceled.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "create_event",
+      "patch_event",
+      "patch_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "list_events",
+      "list_events",
+      "patch_event",
+      "create_event",
+      "patch_event",
+      "patch_event"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Desc Includes Source URL",
+      "description": "Verify event description includes source URL",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-006' AND description LIKE '%' || json_extract(source, '$.url') || '%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Extended Props Preserved",
+      "description": "Verify private flag added and shared props unchanged",
+      "type": "database_state",
+      "sql_query": "SELECT CASE WHEN EXISTS (SELECT 1 FROM extended_properties WHERE event_id = 'event-corrected-006' AND scope = 'private' AND json_extract(properties, '$.dealValue') = '$250000' AND json_extract(properties, '$.clientPriority') = 'high' AND json_extract(properties, '$.preparationTime') = '2 hours' AND json_extract(properties, '$.descriptionChanged') = 'true') AND EXISTS (SELECT 1 FROM extended_properties WHERE event_id = 'event-corrected-006' AND scope = 'shared' AND json_extract(properties, '$.meetingType') = 'client_demo' AND json_extract(properties, '$.department') = 'sales') THEN 1 ELSE 0 END AS count",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "OOO Event Created",
+      "description": "Verify out-of-office period event",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id = 'dave-primary' AND start_datetime LIKE '%2025-10-07%' AND end_datetime LIKE '%2025-12-07%' AND eventType = 'outOfOffice'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Client Demo Canceled",
+      "description": "Verify client demo marked canceled",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-006' AND status = 'cancelled'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Birthday Canceled",
+      "description": "Verify birthday event canceled",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE event_id = 'event-corrected-005' AND status = 'cancelled'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1764493889049_iuydddoc0",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Update descriptions with source URLs, mark OOO period, and shift/cancel affected events.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

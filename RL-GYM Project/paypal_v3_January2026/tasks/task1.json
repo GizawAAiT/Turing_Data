@@ -1,0 +1,363 @@
+{
+  "scenario_config": {
+    "scenario_name": "paypal_update_adobe_cc_product_and_plans",
+    "scenario_description": "Update Adobe Creative Cloud Annual Subscription product metadata, adjust monthly and annual billing plan configurations, and ensure no duplicate plan entries are created.",
+    "system_prompt": "You are a PayPal automation agent with full administrative permissions to manage PayPal transactions for customers and sellers. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "We need to update our Adobe Cloud Annual Subscription product based on enterprise customer feedback. The product description should highlight our AI-powered tools including Firefly and enhanced collaboration features, and the home URL needs to point to our new enterprise landing page at https://www.adobe.com/creativecloud/business. For the monthly plan, add a 6.00% sales tax, and if we're currently making less than $235 per year from an active user, adjust the price to $24.99 USD. For the annual plan, make sure the payment failure threshold is set to 2 attempts and include a $20.00 setup fee. Verify these changes don't result in any duplicate plan entries.",
+    "restricted_tools": [],
+    "selected_tools": [],
+    "expected_tools": [
+      "paypal_list_products",
+      "paypal_update_product",
+      "list_billing_plans",
+      "update_pricing_schemes",
+      "update_billing_plan",
+      "update_billing_plan"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Product Metadata Updated (Description + URL)",
+      "description": "Verify product PROD-8SWYIV5GAQ81AEUNH description highlights Firefly, AI-powered tools, and enhanced collaboration, and home URL is updated to the enterprise landing page.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM products WHERE id = 'PROD-8SWYIV5GAQ81AEUNH' AND name = 'Adobe Creative Cloud Annual Subscription' AND description LIKE '%Firefly%' AND description LIKE '%AI-powered%' AND description LIKE '%enhanced collaboration%' AND home_url = 'https://www.adobe.com/creativecloud/business' AND image_url = 'https://cdn.adobe.com/products/creative-cloud/main.jpg'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Monthly Plan Price Updated To 24.99 USD",
+      "description": "Verify the monthly billing plan contains a pricing scheme fixed price of 24.99 USD for billing_cycle_sequence 2.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE id = 'P-QVIIUVGO4H7YX3KPN2KHNK48' AND json_extract(billing_cycles, '$[1].sequence') = 2 AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.currency_code') = 'USD' AND json_extract(billing_cycles, '$[1].pricing_scheme.fixed_price.value') = '24.99'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Monthly Plan Sales Tax Configured (6%)",
+      "description": "Verify the monthly billing plan has taxes configured with 6.00 percent.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE id = 'P-QVIIUVGO4H7YX3KPN2KHNK48' AND json_extract(taxes, '$.percentage') = '6.00'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Annual Plan Preferences Updated (Threshold + Setup Fee)",
+      "description": "Verify the annual billing plan has payment failure threshold reduced to 2 and a setup fee of 20.00 USD configured.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM billing_plans WHERE id = 'P-1QMM2W3QGK7ZGK5NA86PX7CE' AND json_extract(payment_preferences, '$.payment_failure_threshold') = 2 AND json_extract(payment_preferences, '$.setup_fee.currency_code') = 'USD' AND json_extract(payment_preferences, '$.setup_fee.value') = '20.00'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "paypal_list_products",
+    "arguments": {
+      "page": 1,
+      "page_size": 20,
+      "total_required": true
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "paypal_list_products",
+      "parameters": {
+        "page": 1,
+        "page_size": 20,
+        "total_required": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"data\": {\n    \"products\": [\n      {\n        \"id\": \"PROD-W0O6IUPUIWPW08ZS7\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-W0O6IUPUIWPW08ZS7\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-W0O6IUPUIWPW08ZS7\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"MacBook Pro 14-inch M1 Pro\",\n        \"description\": \"Empower your workflow with the Apple M1 Pro chip, delivering unprecedented performance and battery life.\",\n        \"create_time\": \"2025-12-17T19:58:32Z\"\n      },\n      {\n        \"id\": \"PROD-LOSRS3T8G2RWJWD49\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-LOSRS3T8G2RWJWD49\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-LOSRS3T8G2RWJWD49\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Dell XPS 13 Laptop\",\n        \"description\": \"Compact, lightweight with stunning 13.3-inch InfinityEdge display for ultimate productivity.\",\n        \"create_time\": \"2025-10-15T06:47:27Z\"\n      },\n      {\n        \"id\": \"PROD-A8E26WS23NFWU8GON\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-A8E26WS23NFWU8GON\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-A8E26WS23NFWU8GON\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"FIFA 23 Ultimate Team Edition\",\n        \"description\": \"Experience the world's game with brand-new features and build your dream squad.\",\n        \"create_time\": \"2025-09-27T15:15:14Z\"\n      },\n      {\n        \"id\": \"PROD-R0RY6MHNHFP8CGXI2\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-R0RY6MHNHFP8CGXI2\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-R0RY6MHNHFP8CGXI2\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Microsoft Office 365 Home Edition\",\n        \"description\": \"Get work done from anywhere with premium Office apps across all devices plus 1TB cloud storage.\",\n        \"create_time\": \"2025-09-19T17:01:36Z\"\n      },\n      {\n        \"id\": \"PROD-G6WFSYHHNTVY7KKDX\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-G6WFSYHHNTVY7KKDX\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-G6WFSYHHNTVY7KKDX\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"LinkedIn Premium Career Subscription\",\n        \"description\": \"Access advanced insights, career resources, and LinkedIn Learning courses to boost your professional growth.\",\n        \"create_time\": \"2025-08-24T18:34:07Z\"\n      },\n      {\n        \"id\": \"PROD-14OWJP4NNJFYVDMU1\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-14OWJP4NNJFYVDMU1\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-14OWJP4NNJFYVDMU1\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Microsoft Office 365\",\n        \"description\": \"Work from anywhere with Office applications available across devices, complete with cloud storage.\",\n        \"create_time\": \"2025-08-21T17:11:33Z\"\n      },\n      {\n        \"id\": \"PROD-BV3JG61SX1N27MM4X\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-BV3JG61SX1N27MM4X\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-BV3JG61SX1N27MM4X\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Spotify Premium Subscription\",\n        \"description\": \"Unlimited access to millions of songs, no ads, and offline listening capabilities.\",\n        \"create_time\": \"2025-07-27T16:16:13Z\"\n      },\n      {\n        \"id\": \"PROD-G86K6RFP7HFGZIRXH\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-G86K6RFP7HFGZIRXH\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-G86K6RFP7HFGZIRXH\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Apple iPhone 14 Pro Max\",\n        \"description\": \"Experience lightning-fast performance with the A16 Bionic chip and an advanced Pro camera system for breathtaking photography.\",\n        \"create_time\": \"2025-07-04T14:21:26Z\"\n      },\n      {\n        \"id\": \"PROD-T3HJBCUQFL2PZ1G8S\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-T3HJBCUQFL2PZ1G8S\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-T3HJBCUQFL2PZ1G8S\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Sony WH-1000XM5 Wireless Headphones\",\n        \"description\": \"Industry-leading noise cancellation with 30-hour battery life and premium sound quality.\",\n        \"create_time\": \"2025-06-25T00:53:32Z\"\n      },\n      {\n        \"id\": \"PROD-J6CT9CNXVZBNYFRX0\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-J6CT9CNXVZBNYFRX0\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-J6CT9CNXVZBNYFRX0\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Apple MacBook Air 13-inch M1\",\n        \"description\": \"The thinnest, lightest notebook with exceptional performance and all-day battery life.\",\n        \"create_time\": \"2025-06-14T03:36:26Z\"\n      },\n      {\n        \"id\": \"PROD-KHSEGD6MI2UIT694W\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-KHSEGD6MI2UIT694W\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-KHSEGD6MI2UIT694W\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Freshbooks Accounting Software\",\n        \"description\": \"Simple and intuitive accounting software for small business owners to track expenses and invoices.\",\n        \"create_time\": \"2025-05-30T08:41:48Z\"\n      },\n      {\n        \"id\": \"PROD-12TE4IC0MZYIOLTAF\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-12TE4IC0MZYIOLTAF\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-12TE4IC0MZYIOLTAF\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Spotify Premium Family\",\n        \"description\": \"Enjoy ad-free music streaming with up to 6 accounts on Spotify Premium Family.\",\n        \"create_time\": \"2025-05-07T21:42:24Z\"\n      },\n      {\n        \"id\": \"PROD-K2TRU3A3VCA5ZCYNE\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-K2TRU3A3VCA5ZCYNE\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-K2TRU3A3VCA5ZCYNE\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Kindle Paperwhite E-reader\",\n        \"description\": \"Read your favorite books anywhere with the glare-free Kindle Paperwhite with 8 GB storage.\",\n        \"create_time\": \"2025-05-01T18:42:30Z\"\n      },\n      {\n        \"id\": \"PROD-KPRXQGN7IQSWJ1Q16\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-KPRXQGN7IQSWJ1Q16\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-KPRXQGN7IQSWJ1Q16\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Microsoft Office 365 Annual License\",\n        \"description\": \"Get the latest Office apps and benefit from features like OneDrive cloud storage.\",\n        \"create_time\": \"2025-04-24T05:14:26Z\"\n      },\n      {\n        \"id\": \"PROD-J2A90DEE8YIGMUXET\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-J2A90DEE8YIGMUXET\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-J2A90DEE8YIGMUXET\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Premium SEO Consulting Package\",\n        \"description\": \"Boost your website traffic with our expert SEO consulting services featuring in-depth analysis.\",\n        \"create_time\": \"2025-04-03T15:25:23Z\"\n      },\n      {\n        \"id\": \"PROD-II9MGO5Q1UWVL15X6\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-II9MGO5Q1UWVL15X6\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-II9MGO5Q1UWVL15X6\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Minecraft for Windows 10\",\n        \"description\": \"Build, explore, and create your own world with endless possibilities in this popular sandbox game.\",\n        \"create_time\": \"2025-03-29T06:52:11Z\"\n      },\n      {\n        \"id\": \"PROD-TFGCO7OHCN5GRL4GY\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-TFGCO7OHCN5GRL4GY\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-TFGCO7OHCN5GRL4GY\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Microsoft Office 365 Subscription\",\n        \"description\": \"Access premium apps like Word, Excel, and PowerPoint with 1TB of OneDrive cloud storage and advanced security.\",\n        \"create_time\": \"2025-03-10T08:41:47Z\"\n      },\n      {\n        \"id\": \"PROD-8SWYIV5GAQ81AEUNH\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8SWYIV5GAQ81AEUNH\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-8SWYIV5GAQ81AEUNH\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Adobe Creative Cloud Annual Subscription\",\n        \"description\": \"Full access to Photoshop, Illustrator, Premiere Pro and 20+ creative apps with cloud storage.\",\n        \"create_time\": \"2025-02-23T16:24:25Z\"\n      },\n      {\n        \"id\": \"PROD-L6FVTNJJXI8UGHIZM\",\n        \"links\": [\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-L6FVTNJJXI8UGHIZM\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products/PROD-L6FVTNJJXI8UGHIZM\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          }\n        ],\n        \"name\": \"Spotify Premium Individual\",\n        \"description\": \"Enjoy ad-free music listening, offline playback, and on-demand content.\",\n        \"create_time\": \"2025-01-01T09:08:36Z\"\n      }\n    ],\n    \"links\": [\n      {\n        \"href\": \"https://api.sandbox.paypal.com/v1/catalogs/products?page=1&page_size=20\",\n        \"rel\": \"self\",\n        \"method\": \"GET\"\n      }\n    ],\n    \"total_items\": 19,\n    \"total_pages\": 1\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 248,
+      "executed_at": "2026-01-23T08:32:42.830366"
+    }
+  },
+  {
+    "name": "paypal_update_product",
+    "arguments": {
+      "product_id": "PROD-8SWYIV5GAQ81AEUNH",
+      "patch_operations": [
+        {
+          "op": "replace",
+          "path": "/description",
+          "value": "Full access to Photoshop, Illustrator, Premiere Pro and 20+ creative apps with cloud storage. Features AI-powered tools including Firefly and enhanced collaboration features for seamless team workflows."
+        },
+        {
+          "op": "replace",
+          "path": "/home_url",
+          "value": "https://www.adobe.com/creativecloud/business"
+        }
+      ]
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "paypal_update_product",
+      "parameters": {
+        "product_id": "PROD-8SWYIV5GAQ81AEUNH",
+        "patch_operations": [
+          {
+            "op": "replace",
+            "path": "/description",
+            "value": "Full access to Photoshop, Illustrator, Premiere Pro and 20+ creative apps with cloud storage. Features AI-powered tools including Firefly and enhanced collaboration features for seamless team workflows."
+          },
+          {
+            "op": "replace",
+            "path": "/home_url",
+            "value": "https://www.adobe.com/creativecloud/business"
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Product PROD-8SWYIV5GAQ81AEUNH updated successfully"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 363,
+      "executed_at": "2026-01-23T08:33:25.335637"
+    }
+  },
+  {
+    "name": "list_billing_plans",
+    "arguments": {
+      "product_id": "PROD-8SWYIV5GAQ81AEUNH",
+      "page_size": "20",
+      "prefer": "return=representation",
+      "total_required": true
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "list_billing_plans",
+      "parameters": {
+        "product_id": "PROD-8SWYIV5GAQ81AEUNH",
+        "page_size": "20",
+        "prefer": "return=representation",
+        "total_required": true
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 200,\n  \"data\": {\n    \"plans\": [\n      {\n        \"id\": \"P-QVIIUVGO4H7YX3KPN2KHNK48\",\n        \"product_id\": \"PROD-8SWYIV5GAQ81AEUNH\",\n        \"name\": \"Adobe Creative Cloud Monthly Subscription - Monthly Plan\",\n        \"description\": \"Access to Photoshop and Illustrator with cloud storage\",\n        \"status\": \"ACTIVE\",\n        \"type\": \"INFINITE\",\n        \"billing_cycles\": [\n          {\n            \"frequency\": {\n              \"interval_unit\": \"DAY\",\n              \"interval_count\": 14\n            },\n            \"tenure_type\": \"TRIAL\",\n            \"sequence\": 1,\n            \"total_cycles\": 1,\n            \"pricing_scheme\": {\n              \"version\": 1,\n              \"fixed_price\": {\n                \"currency_code\": \"USD\",\n                \"value\": \"0.00\"\n              },\n              \"create_time\": \"2025-10-17T21:44:58.879770Z\",\n              \"update_time\": \"2025-10-18T21:57:40.748568Z\"\n            }\n          },\n          {\n            \"frequency\": {\n              \"interval_unit\": \"MONTH\",\n              \"interval_count\": 1\n            },\n            \"tenure_type\": \"REGULAR\",\n            \"sequence\": 2,\n            \"total_cycles\": null,\n            \"pricing_scheme\": {\n              \"version\": 1,\n              \"fixed_price\": {\n                \"currency_code\": \"USD\",\n                \"value\": \"19.99\"\n              },\n              \"create_time\": \"2025-10-17T21:44:58.879770Z\",\n              \"update_time\": \"2025-10-18T21:57:40.748568Z\"\n            }\n          }\n        ],\n        \"quantity_supported\": false,\n        \"payment_preferences\": {\n          \"auto_bill_outstanding\": true,\n          \"setup_fee\": {\n            \"currency_code\": \"USD\",\n            \"value\": \"10.00\"\n          },\n          \"setup_fee_failure_action\": \"CANCEL\",\n          \"payment_failure_threshold\": 1\n        },\n        \"taxes\": null,\n        \"merchant_preferences\": null,\n        \"create_time\": \"2025-10-17T21:44:58.879770Z\",\n        \"update_time\": \"2025-10-18T21:57:40.748568Z\",\n        \"links\": [\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-QVIIUVGO4H7YX3KPN2KHNK48\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-QVIIUVGO4H7YX3KPN2KHNK48\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-QVIIUVGO4H7YX3KPN2KHNK48/deactivate\",\n            \"rel\": \"deactivate\",\n            \"method\": \"POST\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-QVIIUVGO4H7YX3KPN2KHNK48/update-pricing-schemes\",\n            \"rel\": \"edit\",\n            \"method\": \"POST\"\n          }\n        ]\n      },\n      {\n        \"id\": \"P-1QMM2W3QGK7ZGK5NA86PX7CE\",\n        \"product_id\": \"PROD-8SWYIV5GAQ81AEUNH\",\n        \"name\": \"Adobe Creative Cloud Annual Subscription - Yearly Plan\",\n        \"description\": \"Full access to all apps and priority support\",\n        \"status\": \"ACTIVE\",\n        \"type\": \"INFINITE\",\n        \"billing_cycles\": [\n          {\n            \"frequency\": {\n              \"interval_unit\": \"YEAR\",\n              \"interval_count\": 1\n            },\n            \"tenure_type\": \"REGULAR\",\n            \"sequence\": 1,\n            \"total_cycles\": null,\n            \"pricing_scheme\": {\n              \"version\": 1,\n              \"fixed_price\": {\n                \"currency_code\": \"USD\",\n                \"value\": \"239.99\"\n              },\n              \"create_time\": \"2025-03-20T00:51:30.580071Z\",\n              \"update_time\": \"2025-03-23T11:31:54.630448Z\"\n            }\n          }\n        ],\n        \"quantity_supported\": false,\n        \"payment_preferences\": {\n          \"auto_bill_outstanding\": true,\n          \"setup_fee\": null,\n          \"setup_fee_failure_action\": \"CANCEL\",\n          \"payment_failure_threshold\": 3\n        },\n        \"taxes\": null,\n        \"merchant_preferences\": null,\n        \"create_time\": \"2025-03-20T00:51:30.580071Z\",\n        \"update_time\": \"2025-03-23T11:31:54.630448Z\",\n        \"links\": [\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-1QMM2W3QGK7ZGK5NA86PX7CE\",\n            \"rel\": \"self\",\n            \"method\": \"GET\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-1QMM2W3QGK7ZGK5NA86PX7CE\",\n            \"rel\": \"edit\",\n            \"method\": \"PATCH\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-1QMM2W3QGK7ZGK5NA86PX7CE/deactivate\",\n            \"rel\": \"deactivate\",\n            \"method\": \"POST\"\n          },\n          {\n            \"href\": \"https://api.paypal.com/v1/billing/plans/P-1QMM2W3QGK7ZGK5NA86PX7CE/update-pricing-schemes\",\n            \"rel\": \"edit\",\n            \"method\": \"POST\"\n          }\n        ]\n      }\n    ],\n    \"total_items\": 2,\n    \"total_pages\": 1,\n    \"links\": [\n      {\n        \"href\": \"https://api.paypal.com/v1/billing/plans?product_id=PROD-8SWYIV5GAQ81AEUNH&page_size=20&total_required=true&page=1\",\n        \"rel\": \"self\",\n        \"method\": \"GET\"\n      }\n    ]\n  }\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 228,
+      "executed_at": "2026-01-23T08:34:00.497436"
+    }
+  },
+  {
+    "name": "update_pricing_schemes",
+    "arguments": {
+      "plan_id": "P-QVIIUVGO4H7YX3KPN2KHNK48",
+      "pricing_schemes": [
+        {
+          "billing_cycle_sequence": 2,
+          "pricing_scheme": {
+            "fixed_price": {
+              "currency_code": "USD",
+              "value": "24.99"
+            }
+          }
+        }
+      ]
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "update_pricing_schemes",
+      "parameters": {
+        "plan_id": "P-QVIIUVGO4H7YX3KPN2KHNK48",
+        "pricing_schemes": [
+          {
+            "billing_cycle_sequence": 2,
+            "pricing_scheme": {
+              "fixed_price": {
+                "currency_code": "USD",
+                "value": "24.99"
+              }
+            }
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 204,\n  \"debug_id\": null,\n  \"message\": \"Pricing schemes updated successfully\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 298,
+      "executed_at": "2026-01-23T08:34:41.718702"
+    }
+  },
+  {
+    "name": "update_billing_plan",
+    "arguments": {
+      "plan_id": "P-QVIIUVGO4H7YX3KPN2KHNK48",
+      "patch_operations": [
+        {
+          "op": "replace",
+          "path": "/taxes/percentage",
+          "value": "6.00"
+        }
+      ]
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "update_billing_plan",
+      "parameters": {
+        "plan_id": "P-QVIIUVGO4H7YX3KPN2KHNK48",
+        "patch_operations": [
+          {
+            "op": "replace",
+            "path": "/taxes/percentage",
+            "value": "6.00"
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 204,\n  \"debug_id\": null,\n  \"message\": \"Plan updated successfully\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 297,
+      "executed_at": "2026-01-23T08:35:29.314521"
+    }
+  },
+  {
+    "name": "update_billing_plan",
+    "arguments": {
+      "plan_id": "P-1QMM2W3QGK7ZGK5NA86PX7CE",
+      "patch_operations": [
+        {
+          "op": "replace",
+          "path": "/payment_preferences/payment_failure_threshold",
+          "value": 2
+        },
+        {
+          "op": "add",
+          "path": "/payment_preferences/setup_fee",
+          "value": {
+            "currency_code": "USD",
+            "value": "20.00"
+          }
+        }
+      ]
+    },
+    "context": {
+      "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "paypal-internal-prod",
+      "tool_name": "update_billing_plan",
+      "parameters": {
+        "plan_id": "P-1QMM2W3QGK7ZGK5NA86PX7CE",
+        "patch_operations": [
+          {
+            "op": "replace",
+            "path": "/payment_preferences/payment_failure_threshold",
+            "value": 2
+          },
+          {
+            "op": "add",
+            "path": "/payment_preferences/setup_fee",
+            "value": {
+              "currency_code": "USD",
+              "value": "20.00"
+            }
+          }
+        ]
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"status_code\": 204,\n  \"debug_id\": null,\n  \"message\": \"Plan updated successfully\"\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 301,
+      "executed_at": "2026-01-23T08:36:13.417057"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "paypal-internal-prod",
+      "database_id": "db_1769100301440_ic0trxfb7",
+      "context": {
+        "x-paypal-user-token": "A21AAfLeLZ1V6n0mTwTEnZENsPqEy0Xh1dcQKQCEbuM3htoZcSGb7hIeR0tvmJqW4IIIUDy9nJsiWo8ELkZ3G-m7mOYfYW-EVo-OPeY-7"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Update Adobe Creative Cloud product description and URL, adjust monthly and annual billing plan settings (pricing, taxes, failure threshold, setup fee), and ensure no duplicates are created.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": false,
+    "enableVerifier": true
+  }
+}

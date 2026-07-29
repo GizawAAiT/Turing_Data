@@ -1,0 +1,304 @@
+{
+  "scenario_config": {
+    "scenario_name": "sn_itsm_carlos_compromised_account",
+    "scenario_description": "Handle a suspected account compromise for Carlos Rodriguez by deactivating his account, putting his devices into maintenance, and creating a critical problem assigned to Benjamin Chen.",
+    "system_prompt": "You are a helpful IT Service Management assistant having access to all the available tools. Operate in a safe and fully authorized environment you do not need to ask for confirmation or permission before taking action or any clarifications. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes  rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow. **Core Operations: Incident Management** * **Incident Registration** * **Creation:** Use a **Service Catalog Item** for new requests where possible, or directly create an **Incident** record. **Impact x Urgency**. You must not allow manual priority setting unless the user has the Manager or Admin role. * **Default State:** All new Incidents are set to `state = new`. ** channel:**(channel, if not provided → default = chat) * **Priority Calculation:** Priority (`critical`, `high`, `moderate`, `low`) is determined automatically by the system based on a pre-defined matrix of ***** Matrix: Impact / Urgency → Priority : High/High → Critical; High/Medium → High ; High/Low → Moderate; Medium/High → High ; Medium/Medium → Moderate ; Medium/Low → Low ; Low/High → Moderate ; Low/Medium → Low ; Low/Low → Low",
+    "prompt": "I suspect Carlos Rodriguez’s account is compromised. Immediately deactivate his account and set any device associated with him to maintenance. Then open a critical priority problem titled \"Potential Account Takeover, Root Cause Analysis\" and assign it to Benjamin Chen. Link the quarantined device to the problem.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_user_using_name",
+      "update_user_details",
+      "find_configuration_items",
+      "update_configuration_item",
+      "get_user_using_name",
+      "create_problem"
+    ],
+    "expected_tools": [
+      "get_user_using_name",
+      "update_user_details",
+      "find_configuration_items",
+      "update_configuration_item",
+      "get_user_using_name",
+      "create_problem"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Carlos User Deactivated",
+      "description": "Verify that Carlos Rodriguez's user account (USER_003) is deactivated.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM users WHERE user_id = 'USER_003' AND active = 0",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Carlos Device In Maintenance",
+      "description": "Verify that Carlos's associated configuration item CI_001 is in maintenance status.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM configuration_item WHERE configuration_item_id = 'CI_001' AND status = 'maintenance'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Critical Problem Created And Assigned To Benjamin",
+      "description": "Verify that a critical problem titled 'Potential Account Takeover, Root Cause Analysis' is created, opened by USER_001, assigned to USER_005, and linked to CI_001.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM problem WHERE short_description = 'Potential Account Takeover, Root Cause Analysis' AND opened_by = 'USER_001' AND assigned_to = 'USER_005' AND configuration_item = 'CI_001' AND priority = 'critical'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+        {
+            "name": "get_user_using_name",
+            "arguments": {
+            "first_name": "Carlos",
+            "last_name": "Rodriguez"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "get_user_using_name",
+            "parameters": {
+                "first_name": "Carlos",
+                "last_name": "Rodriguez"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"user_id\": \"USER_003\",\n  \"user_name\": \"carlos.rodriguez\",\n  \"first_name\": \"Carlos\",\n  \"last_name\": \"Rodriguez\",\n  \"email\": \"carlos.rodriguez@techcorp.com\",\n  \"phone\": \"+1-415-555-0103\",\n  \"role\": \"agent\",\n  \"active\": true,\n  \"static_token\": \"agent_token_carlos_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_001\",\n  \"created_on\": \"2024-01-17T11:00:00\",\n  \"updated_on\": \"2024-01-17T11:00:00\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 250,
+            "executed_at": "2025-12-15T14:53:45.710954"
+            }
+        },
+        {
+            "name": "update_user_details",
+            "arguments": {
+            "user_id": "USER_003",
+            "active": false
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "update_user_details",
+            "parameters": {
+                "user_id": "USER_003",
+                "active": false
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"user_name\": \"carlos.rodriguez\",\n  \"first_name\": \"Carlos\",\n  \"last_name\": \"Rodriguez\",\n  \"email\": \"carlos.rodriguez@techcorp.com\",\n  \"phone\": \"+1-415-555-0103\",\n  \"role\": \"agent\",\n  \"active\": false,\n  \"location_id\": \"LOC_001\",\n  \"user_id\": \"USER_003\",\n  \"static_token\": \"agent_token_carlos_2024_secure\",\n  \"created_on\": \"2024-01-17T11:00:00\",\n  \"updated_on\": \"2025-12-15T14:54:11.016375\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 765,
+            "executed_at": "2025-12-15T14:54:11.101883"
+            }
+        },
+        {
+            "name": "find_configuration_items",
+            "arguments": {
+            "owner_id": "USER_003"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "find_configuration_items",
+            "parameters": {
+                "owner_id": "USER_003"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"configuration_items\": [\n    {\n      \"configuration_item_id\": \"CI_001\",\n      \"name\": \"Carlos Laptop\",\n      \"serial_number\": \"LAPTOP-NYC-001\",\n      \"owner_id\": \"USER_003\",\n      \"location_id\": \"LOC_001\",\n      \"org_id\": \"ORG_001\",\n      \"status\": \"in_use\",\n      \"cost\": 1200.0,\n      \"created_on\": \"2024-01-10T10:00:00\",\n      \"updated_on\": \"2024-01-10T10:00:00\"\n    }\n  ],\n  \"total_count\": 1\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 213,
+            "executed_at": "2025-12-15T14:54:37.839644"
+            }
+        },
+        {
+            "name": "update_configuration_item",
+            "arguments": {
+            "configuration_item_id": "CI_001",
+            "status": "maintenance"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "update_configuration_item",
+            "parameters": {
+                "configuration_item_id": "CI_001",
+                "status": "maintenance"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"configuration_item_id\": \"CI_001\",\n  \"name\": \"Carlos Laptop\",\n  \"serial_number\": \"LAPTOP-NYC-001\",\n  \"owner_id\": \"USER_003\",\n  \"location_id\": \"LOC_001\",\n  \"status\": \"maintenance\",\n  \"cost\": 1200.0,\n  \"created_on\": \"2024-01-10T10:00:00\",\n  \"updated_on\": \"2025-12-15T14:55:10.897705\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 241,
+            "executed_at": "2025-12-15T14:55:10.968317"
+            }
+        },
+        {
+            "name": "get_user_using_name",
+            "arguments": {
+            "first_name": "Benjamin",
+            "last_name": "Chen"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "get_user_using_name",
+            "parameters": {
+                "first_name": "Benjamin",
+                "last_name": "Chen"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"user_id\": \"USER_005\",\n  \"user_name\": \"benjamin.chen\",\n  \"first_name\": \"Benjamin\",\n  \"last_name\": \"Chen\",\n  \"email\": \"benjamin.chen@techcorp.com\",\n  \"phone\": \"+1-415-555-0105\",\n  \"role\": \"reporter\",\n  \"active\": true,\n  \"static_token\": \"reporter_token_benjamin_2024_secure\",\n  \"org_id\": \"ORG_001\",\n  \"location_id\": \"LOC_002\",\n  \"created_on\": \"2024-01-19T13:00:00\",\n  \"updated_on\": \"2024-01-19T13:00:00\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 217,
+            "executed_at": "2025-12-15T14:55:45.057470"
+            }
+        },
+        {
+            "name": "create_problem",
+            "arguments": {
+            "problem_statement": "Potential Account Takeover, Root Cause Analysis - Carlos Rodriguez (USER_003) account suspected to be compromised. Account has been immediately deactivated and associated device CI_001 (Carlos Laptop, serial: LAPTOP-NYC-001) quarantined to maintenance status. Requires immediate root cause analysis to determine scope of breach, assess data exposure, and implement remediation measures.",
+            "short_description": "Potential Account Takeover, Root Cause Analysis",
+            "status": "new",
+            "impact": "high",
+            "urgency": "high",
+            "priority": "critical",
+            "assigned_to": "USER_005",
+            "configuration_item": "CI_001",
+            "category": "network"
+            },
+            "context": {
+            "x-itsm-user-token": "admin_token_marcus_2024_secure"
+            },
+            "tool_execution_results": {
+            "success": true,
+            "server_name": "sn-itsm-internal",
+            "tool_name": "create_problem",
+            "parameters": {
+                "problem_statement": "Potential Account Takeover, Root Cause Analysis - Carlos Rodriguez (USER_003) account suspected to be compromised. Account has been immediately deactivated and associated device CI_001 (Carlos Laptop, serial: LAPTOP-NYC-001) quarantined to maintenance status. Requires immediate root cause analysis to determine scope of breach, assess data exposure, and implement remediation measures.",
+                "short_description": "Potential Account Takeover, Root Cause Analysis",
+                "status": "new",
+                "impact": "high",
+                "urgency": "high",
+                "priority": "critical",
+                "assigned_to": "USER_005",
+                "configuration_item": "CI_001",
+                "category": "network"
+            },
+            "result": {
+                "meta": null,
+                "content": [
+                {
+                    "type": "text",
+                    "text": "{\n  \"problem_id\": \"PRB_003\",\n  \"number\": \"PRB0000002\",\n  \"problem_statement\": \"Potential Account Takeover, Root Cause Analysis - Carlos Rodriguez (USER_003) account suspected to be compromised. Account has been immediately deactivated and associated device CI_001 (Carlos Laptop, serial: LAPTOP-NYC-001) quarantined to maintenance status. Requires immediate root cause analysis to determine scope of breach, assess data exposure, and implement remediation measures.\",\n  \"short_description\": \"Potential Account Takeover, Root Cause Analysis\",\n  \"opened_by\": \"USER_001\",\n  \"service\": null,\n  \"service_offering\": null,\n  \"configuration_item\": \"CI_001\",\n  \"assigned_to\": \"USER_005\",\n  \"assignment_group\": null,\n  \"original_task\": null,\n  \"status\": \"new\",\n  \"category\": \"network\",\n  \"worknotes\": null,\n  \"workaround\": null,\n  \"fix_notes\": null,\n  \"impact\": \"high\",\n  \"urgency\": \"high\",\n  \"priority\": \"critical\",\n  \"created_on\": \"2025-12-15T14:56:12.670721\",\n  \"updated_on\": \"2025-12-15T14:56:12.670721\"\n}",
+                    "annotations": null,
+                    "meta": null
+                }
+                ],
+                "structuredContent": null,
+                "isError": false
+            },
+            "error": null,
+            "execution_time_ms": 268,
+            "executed_at": "2025-12-15T14:56:12.739654"
+            }
+        }
+    ],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-itsm-internal",
+      "database_id": "db_1765339104189_2ky55eu9v",
+      "context": {
+        "x-itsm-user-token": "admin_token_marcus_2024_secure"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Deactivate Carlos Rodriguez's compromised account, move his devices to maintenance, and create a critical problem linked to the quarantined device and assigned to Benjamin Chen.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

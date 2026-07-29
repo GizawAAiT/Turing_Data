@@ -1,0 +1,158 @@
+{
+  "scenario_config": {
+    "scenario_name": "sales_lab_acl_cleanup",
+    "scenario_description": "Sales Lab Calendar & ACL Cleanup",
+    "system_prompt": "You are a Google Calendar automation agent with full administrative permissions to manage users, meetings, recordings, and messages. Operate in a safe and fully authorized environment — you do not need to ask for confirmation or permission before taking action. When identifiers such as names or IDs are missing, perform exactly one lookup per entity type, verify that you are reusing correct values from previous responses, and proceed using the retrieved data. Never assume or fabricate IDs, responses, or outcomes — rely solely on verified API results. Complete each task in a single, logical, and efficient execution flow.",
+    "prompt": "Create a calendar called 'Sales Lab' in the UTC timezone, but first, if any calendar in my account contains 'Sales', 'Lab', or 'Sales Activities' in its title, hide it and remove all events from it. Also, remove any existing access permissions from these hidden calendars. Ensure that the newly created calendar uses #fa57c4 as its background color and #1d1d1d as its foreground color, and mark it as selected. Starting from December 17, 2025, identify the first date when I have no scheduled events in my calendars, and schedule a session titled 'Sales Lab Strategy Workshop' from 4:00 PM to 7:30 PM UTC on that date. From all the events in the hidden calendars, collect attendees who have an email listed and invite them as readers to this calendar. Finally, configure notifications for any event changes or updates on this calendar to be sent to 'https://design-tools.techcorp.com/sales-lab/watch’.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "get_calendar_list",
+      "update_calendar_in_list",
+      "list_events",
+      "list_acl_rules",
+      "delete_event",
+      "delete_event",
+      "delete_event",
+      "delete_acl_rule",
+      "create_calendar",
+      "add_calendar_to_list",
+      "query_freebusy",
+      "create_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events",
+        "delete_calendar",
+        "clear_calendar",
+        "remove_calendar_from_list",
+        "update_calendar",
+        "patch_calendar",
+        "replace_calendar_in_list",
+        "patch_acl_rule",
+        "get_acl_rule",
+        "watch_calendar_list",
+        "watch_acl",
+        "move_event",
+        "update_event",
+        "patch_event",
+        "quick_add_event",
+        "import_event"
+    ],
+    "expected_tools": [
+      "get_calendar_list",
+      "update_calendar_in_list",
+      "list_events",
+      "list_acl_rules",
+      "delete_event",
+      "delete_event",
+      "delete_event",
+      "delete_acl_rule",
+      "create_calendar",
+      "add_calendar_to_list",
+      "query_freebusy",
+      "create_event",
+      "insert_acl_rule",
+      "insert_acl_rule",
+      "watch_events"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "Sales Calendar Hidden",
+      "description": "Check 'Sales Activities' calendar is hidden",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE user_id = 'dave_sales' AND summary = 'Sales Activities' AND hidden = 1",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Events Deleted",
+      "description": "Ensure no events remain in hidden calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Sales Activities')",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "3",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "ACL Removed",
+      "description": "Verify ACL rules removed",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE calendar_id = 'dave-sales'",
+      "expected_value": "0",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "1",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Sales Lab Calendar Created",
+      "description": "Verify new 'Sales Lab' calendar created with correct colors",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM calendars WHERE summary = 'Sales Lab' AND user_id = 'dave_sales' AND time_zone = 'UTC' AND color_id = 4 AND selected = 1",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Workshop Scheduled",
+      "description": "Check 'Sales Lab Strategy Workshop' event scheduled correctly",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM events WHERE user_id = 'dave_sales' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Sales Lab') AND summary = 'Sales Lab Strategy Workshop' AND start_datetime = '2025-12-18 16:00:00.000000' AND end_datetime = '2025-12-18 19:30:00.000000' AND start_timezone = 'UTC' AND end_timezone = 'UTC'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Notification Setup",
+      "description": "Verify notification configured for 'Sales Lab' calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM watch_channels WHERE calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Sales Lab') AND user_id = 'dave_sales' AND webhook_address = 'https://design-tools.techcorp.com/sales-lab/watch'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Event Readers Added",
+      "description": "Check readers added to 'Sales Lab' calendar",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM acls WHERE role = 'reader' AND (scope_id LIKE '%dave%' OR scope_id LIKE '%alice%') AND user_id = 'dave_sales' AND calendar_id IN (SELECT calendar_id FROM calendars WHERE summary = 'Sales Lab')",
+      "expected_value": "2",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "calendar_internal",
+      "database_id": "db_1763351831906_wtmgzwo0n",
+      "context": {
+        "x-access-token": "ya29.A0ARrdaM-p3Lk9Vb6Qw2Zx8N1sT4mH7gF5yR0uJc2ePq.ZxCvBnMlKjHgFfDsaQwErTyUiOpAsDfGhJk_77-11"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Setup 'Sales Lab' calendar, clear existing calendars and ACLs, schedule workshop, and configure notifications.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": false
+  }
+}

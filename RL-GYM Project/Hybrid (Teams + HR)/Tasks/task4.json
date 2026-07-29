@@ -1,0 +1,435 @@
+{
+  "scenario_config": {
+    "scenario_name": "hybrid_hr_hrportal_skill_routing_configuration",
+    "scenario_description": "Assign HR Systems skill to designated users, create an active assignment rule for high-priority HR portal cases, and announce the new routing configuration in the ServiceNow Community channel.",
+    "system_prompt": "",
+    "prompt": "We keep misrouting HR portal issues to the wrong queue. Find the HR Systems skill and assign it to John Ramirez and Carl Brown. Create an active assignment rule named \"HR Portal - HR Systems Coverage\" that routes high-priority cases to users with the HR Systems skill. Send a message in the product feedback channel of the ServiceNow Community team explaining the new routing configuration.",
+    "restricted_tools": [],
+    "selected_tools": [
+      "list_skills",
+      "get_user_using_name",
+      "get_user_using_name",
+      "add_new_skill_to_user",
+      "add_new_skill_to_user",
+      "add_new_assignment_rule",
+      "list_teams",
+      "list_channels",
+      "send_channel_message"
+    ],
+    "expected_tools": [
+      "list_skills",
+      "get_user_using_name",
+      "get_user_using_name",
+      "add_new_skill_to_user",
+      "add_new_skill_to_user",
+      "add_new_assignment_rule",
+      "list_teams",
+      "list_channels",
+      "send_channel_message"
+    ]
+  },
+  "verifier_configs": [
+    {
+      "name": "HR Systems Skill Assigned To John Ramirez",
+      "description": "Verify that the HR Systems skill is assigned to John Ramirez.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM user_skill WHERE skill = 12 AND user = 99",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "HR Systems Skill Assigned To Carl Brown",
+      "description": "Verify that the HR Systems skill is assigned to Carl Brown.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM user_skill WHERE skill = 12 AND user = 82",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "HR Portal Assignment Rule Created And Active",
+      "description": "Verify that an active assignment rule exists for routing high-priority HR portal cases based on the HR Systems skill.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM assignment_rules WHERE name = 'HR Portal - HR Systems Coverage' AND active = 1 AND based_on_priority = 'high' AND based_on_skills LIKE '%12%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "Routing Configuration Announcement Posted",
+      "description": "Verify that a message explaining the new routing configuration was posted in the product feedback channel.",
+      "type": "database_state",
+      "sql_query": "SELECT COUNT(*) AS count FROM channel_messages WHERE team_id = 'team_servicenow_public' AND channel_id = 'sn_public_standard_01' AND body_json LIKE '%Portal%' AND body_json LIKE '%Routing%' AND body_json LIKE '%Configuration%'",
+      "expected_value": "1",
+      "comparison_type": "equals",
+      "expected_response": "",
+      "original_value": "0",
+      "timeout_seconds": 30
+    }
+  ],
+  "tools": [
+  {
+    "name": "list_skills",
+    "arguments": {
+      "name": "HR Systems"
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "list_skills",
+      "parameters": {
+        "name": "HR Systems"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"skills\": [\n    {\n      \"skill_id\": 12,\n      \"name\": \"HR Systems\",\n      \"active\": true,\n      \"org_id\": 1,\n      \"created_at\": \"2023-01-01T00:00:00\",\n      \"updated_at\": \"2023-01-01T00:00:00\"\n    }\n  ],\n  \"count\": 1,\n  \"limit\": 50\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 208,
+      "executed_at": "2025-12-26T22:33:19.367418"
+    }
+  },
+  {
+    "name": "get_user_using_name",
+    "arguments": {
+      "first_name": "John",
+      "last_name": "Ramirez"
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "get_user_using_name",
+      "parameters": {
+        "first_name": "John",
+        "last_name": "Ramirez"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"user\": {\n    \"user_id\": 99,\n    \"first_name\": \"John\",\n    \"last_name\": \"Ramirez\",\n    \"email\": \"john.ramirez@vehementcap.com\",\n    \"phone\": \"+13059223174\",\n    \"role\": \"employee\",\n    \"active\": true,\n    \"org_id\": 13,\n    \"created_at\": \"2025-08-27T15:35:52\",\n    \"updated_at\": \"2025-11-05T14:58:05\"\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 188,
+      "executed_at": "2025-12-26T22:33:59.330419"
+    }
+  },
+  {
+    "name": "get_user_using_name",
+    "arguments": {
+      "first_name": "Carl",
+      "last_name": "Brown"
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "get_user_using_name",
+      "parameters": {
+        "first_name": "Carl",
+        "last_name": "Brown"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"user\": {\n    \"user_id\": 82,\n    \"first_name\": \"Carl\",\n    \"last_name\": \"Brown\",\n    \"email\": \"carl.brown91@cainryanandduncan.com\",\n    \"phone\": \"+441218703488\",\n    \"role\": \"employee\",\n    \"active\": true,\n    \"org_id\": 5,\n    \"created_at\": \"2025-08-27T15:48:38\",\n    \"updated_at\": \"2025-10-28T09:43:37\"\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 162,
+      "executed_at": "2025-12-26T22:34:37.708050"
+    }
+  },
+  {
+    "name": "add_new_skill_to_user",
+    "arguments": {
+      "skill": "12",
+      "user": "99"
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "add_new_skill_to_user",
+      "parameters": {
+        "skill": "12",
+        "user": "99"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"message\": \"Skill assigned to user successfully\",\n  \"user_skill\": {\n    \"user_skill_id\": 336,\n    \"skill\": 12,\n    \"skill_name\": \"HR Systems\",\n    \"user\": 99,\n    \"user_email\": \"john.ramirez@vehementcap.com\",\n    \"user_first_name\": \"John\",\n    \"user_last_name\": \"Ramirez\",\n    \"org_id\": 1,\n    \"created_at\": \"2025-12-26T22:35:21.641096\",\n    \"updated_at\": \"2025-12-26T22:35:21.641096\"\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 192,
+      "executed_at": "2025-12-26T22:35:21.695365"
+    }
+  },
+  {
+    "name": "add_new_skill_to_user",
+    "arguments": {
+      "skill": "12",
+      "user": "82"
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "add_new_skill_to_user",
+      "parameters": {
+        "skill": "12",
+        "user": "82"
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"message\": \"Skill assigned to user successfully\",\n  \"user_skill\": {\n    \"user_skill_id\": 337,\n    \"skill\": 12,\n    \"skill_name\": \"HR Systems\",\n    \"user\": 82,\n    \"user_email\": \"carl.brown91@cainryanandduncan.com\",\n    \"user_first_name\": \"Carl\",\n    \"user_last_name\": \"Brown\",\n    \"org_id\": 1,\n    \"created_at\": \"2025-12-26T22:36:05.403847\",\n    \"updated_at\": \"2025-12-26T22:36:05.403847\"\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 212,
+      "executed_at": "2025-12-26T22:36:05.462440"
+    }
+  },
+  {
+    "name": "add_new_assignment_rule",
+    "arguments": {
+      "name": "HR Portal - HR Systems Coverage",
+      "based_on_priority": "high",
+      "based_on_skills": [
+        12
+      ],
+      "users": [
+        99,
+        82
+      ],
+      "active": true
+    },
+    "context": {
+      "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "sn-hr-internal",
+      "tool_name": "add_new_assignment_rule",
+      "parameters": {
+        "name": "HR Portal - HR Systems Coverage",
+        "based_on_priority": "high",
+        "based_on_skills": [
+          12
+        ],
+        "users": [
+          99,
+          82
+        ],
+        "active": true
+      },
+      "result": {
+        "meta": null,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"success\": true,\n  \"message\": \"Assignment rule 'HR Portal - HR Systems Coverage' created successfully\",\n  \"assignment_rule\": {\n    \"assignment_rule_id\": 9,\n    \"name\": \"HR Portal - HR Systems Coverage\",\n    \"based_on_skills\": [\n      12\n    ],\n    \"based_on_country\": null,\n    \"based_on_priority\": \"high\",\n    \"active\": true,\n    \"user_group\": null,\n    \"users\": [\n      99,\n      82\n    ],\n    \"org_id\": 1\n  }\n}",
+            "annotations": null,
+            "meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 191,
+      "executed_at": "2025-12-26T22:36:46.390489"
+    }
+  },
+  {
+    "name": "list_teams",
+    "arguments": {
+      "_filter": "contains(displayName, 'ServiceNow Community')"
+    },
+    "context": {
+      "x-teams-access-token": "tok_f8682feab7cd_8f035a24fe41_51dee1a1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "teams-internal-prod",
+      "tool_name": "list_teams",
+      "parameters": {
+        "_filter": "contains(displayName, 'ServiceNow Community')"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#teams\",\n  \"value\": [\n    {\n      \"id\": \"team_servicenow_public\",\n      \"displayName\": \"ServiceNow Community (Public)\",\n      \"description\": \"Org-wide collaboration for ServiceNow\",\n      \"visibility\": \"public\",\n      \"specialization\": \"educationProfessionalLearningCommunity\",\n      \"isArchived\": false,\n      \"webUrl\": \"https://teams.microsoft.com/l/team/team_servicenow_public\",\n      \"createdDateTime\": \"2025-12-26T22:31:30\",\n      \"internalId\": \"team_servicenow_public\",\n      \"classification\": \"Low Business Impact\",\n      \"tenantId\": \"ten-servicenow\",\n      \"memberSettings\": {\n        \"allowCreateUpdateChannels\": true,\n        \"allowCreatePrivateChannels\": true,\n        \"allowDeleteChannels\": false,\n        \"allowAddRemoveApps\": true,\n        \"allowCreateUpdateRemoveTabs\": true,\n        \"allowCreateUpdateRemoveConnectors\": true\n      },\n      \"guestSettings\": {\n        \"allowCreateUpdateChannels\": false,\n        \"allowDeleteChannels\": false\n      },\n      \"messagingSettings\": {\n        \"allowUserEditMessages\": true,\n        \"allowUserDeleteMessages\": false,\n        \"allowOwnerDeleteMessages\": true,\n        \"allowTeamMentions\": true,\n        \"allowChannelMentions\": true\n      },\n      \"funSettings\": {\n        \"allowGiphy\": true,\n        \"giphyContentRating\": \"moderate\",\n        \"allowStickersAndMemes\": true,\n        \"allowCustomMemes\": true\n      },\n      \"discoverySettings\": {\n        \"showInTeamsSearchAndSuggestions\": true\n      },\n      \"incomingChannels\": [\n        {\n          \"id\": \"ch_servicenow_public\",\n          \"displayName\": \"General\",\n          \"description\": \"General\",\n          \"membershipType\": \"standard\",\n          \"tenantId\": \"ten-servicenow\"\n        }\n      ]\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 300,
+      "executed_at": "2025-12-26T22:37:37.238276"
+    }
+  },
+  {
+    "name": "list_channels",
+    "arguments": {
+      "teamId": "team_servicenow_public"
+    },
+    "context": {
+      "x-teams-access-token": "tok_f8682feab7cd_8f035a24fe41_51dee1a1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "teams-internal-prod",
+      "tool_name": "list_channels",
+      "parameters": {
+        "teamId": "team_servicenow_public"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#teams('team_servicenow_public')/channels\",\n  \"@odata.count\": 2,\n  \"value\": [\n    {\n      \"id\": \"sn_public_standard_01\",\n      \"displayName\": \"Product-Feedback\",\n      \"description\": \"Open channel for all users to submit product feedback.\",\n      \"membershipType\": \"standard\",\n      \"isFavoriteByDefault\": true,\n      \"tenantId\": \"ten-servicenow\",\n      \"teamId\": \"team_servicenow_public\",\n      \"isArchived\": false,\n      \"createdDateTime\": \"2025-12-26T22:31:30Z\",\n      \"@odata.id\": \"https://graph.microsoft.com/v1.0/tenants/ten-servicenow/teams/team_servicenow_public/channels/sn_public_standard_01\"\n    },\n    {\n      \"id\": \"sn_public_standard_02\",\n      \"displayName\": \"Announcements\",\n      \"description\": \"Official organizational announcements.\",\n      \"membershipType\": \"standard\",\n      \"isFavoriteByDefault\": true,\n      \"tenantId\": \"ten-servicenow\",\n      \"teamId\": \"team_servicenow_public\",\n      \"isArchived\": false,\n      \"createdDateTime\": \"2025-12-26T22:31:30Z\",\n      \"@odata.id\": \"https://graph.microsoft.com/v1.0/tenants/ten-servicenow/teams/team_servicenow_public/channels/sn_public_standard_02\"\n    }\n  ]\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 360,
+      "executed_at": "2025-12-26T22:38:17.087534"
+    }
+  },
+  {
+    "name": "send_channel_message",
+    "arguments": {
+      "teamId": "team_servicenow_public",
+      "channelId": "sn_public_standard_01",
+      "body": {
+        "contentType": "html",
+        "content": "<h2>New HR Portal Routing Configuration</h2><p><strong>Effective immediately</strong>, we have implemented an improved routing system for HR portal issues to reduce misrouting to wrong queues.</p><h3>Changes Made:</h3><ul><li><strong>Skill Assignment:</strong> The 'HR Systems' skill has been assigned to John Ramirez and Carl Brown</li><li><strong>New Assignment Rule:</strong> Created active rule 'HR Portal - HR Systems Coverage'</li><li><strong>Routing Logic:</strong> All high-priority HR cases requiring the HR Systems skill will now be automatically routed to these qualified agents</li></ul><p>This ensures that HR portal issues are handled by team members with the specific technical expertise needed, improving resolution time and accuracy.</p><p><em>Please direct any questions about this new configuration to the HR Systems team.</em></p>"
+      },
+      "importance": "high"
+    },
+    "context": {
+      "x-teams-access-token": "tok_f8682feab7cd_8f035a24fe41_51dee1a1"
+    },
+    "tool_execution_results": {
+      "success": true,
+      "server_name": "teams-internal-prod",
+      "tool_name": "send_channel_message",
+      "parameters": {
+        "teamId": "team_servicenow_public",
+        "channelId": "sn_public_standard_01",
+        "body": {
+          "contentType": "html",
+          "content": "<h2>New HR Portal Routing Configuration</h2><p><strong>Effective immediately</strong>, we have implemented an improved routing system for HR portal issues to reduce misrouting to wrong queues.</p><h3>Changes Made:</h3><ul><li><strong>Skill Assignment:</strong> The 'HR Systems' skill has been assigned to John Ramirez and Carl Brown</li><li><strong>New Assignment Rule:</strong> Created active rule 'HR Portal - HR Systems Coverage'</li><li><strong>Routing Logic:</strong> All high-priority HR cases requiring the HR Systems skill will now be automatically routed to these qualified agents</li></ul><p>This ensures that HR portal issues are handled by team members with the specific technical expertise needed, improving resolution time and accuracy.</p><p><em>Please direct any questions about this new configuration to the HR Systems team.</em></p>"
+        },
+        "importance": "high"
+      },
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"@odata.context\": \"https://graph.microsoft.com/v1.0/$metadata#teams('team_servicenow_public')/channels('sn_public_standard_01')/messages/$entity\",\n  \"id\": \"msg_8818fc3eb79d44c3a352cd6ecd29e366\",\n  \"replyToId\": null,\n  \"etag\": \"etag_msg_8818fc3eb79d44c3a352cd6ecd29e366\",\n  \"messageType\": \"message\",\n  \"createdDateTime\": \"2025-12-26T22:39:06.497710Z\",\n  \"lastModifiedDateTime\": \"2025-12-26T22:39:06.497710Z\",\n  \"lastEditedDateTime\": null,\n  \"deletedDateTime\": null,\n  \"subject\": null,\n  \"summary\": null,\n  \"chatId\": null,\n  \"importance\": \"high\",\n  \"locale\": \"en-us\",\n  \"webUrl\": \"https://teams.microsoft.com/l/message/sn_public_standard_01/msg_8818fc3eb79d44c3a352cd6ecd29e366\",\n  \"policyViolation\": null,\n  \"eventDetail\": null,\n  \"from\": {\n    \"application\": null,\n    \"device\": null,\n    \"user\": {\n      \"id\": \"karen.watkins\",\n      \"displayName\": \"Current User\",\n      \"userIdentityType\": \"aadUser\"\n    }\n  },\n  \"body\": {\n    \"contentType\": \"text\",\n    \"content\": \"<h2>New HR Portal Routing Configuration</h2><p><strong>Effective immediately</strong>, we have implemented an improved routing system for HR portal issues to reduce misrouting to wrong queues.</p><h3>Changes Made:</h3><ul><li><strong>Skill Assignment:</strong> The 'HR Systems' skill has been assigned to John Ramirez and Carl Brown</li><li><strong>New Assignment Rule:</strong> Created active rule 'HR Portal - HR Systems Coverage'</li><li><strong>Routing Logic:</strong> All high-priority HR cases requiring the HR Systems skill will now be automatically routed to these qualified agents</li></ul><p>This ensures that HR portal issues are handled by team members with the specific technical expertise needed, improving resolution time and accuracy.</p><p><em>Please direct any questions about this new configuration to the HR Systems team.</em></p>\"\n  },\n  \"channelIdentity\": {\n    \"teamId\": \"team_servicenow_public\",\n    \"channelId\": \"sn_public_standard_01\"\n  },\n  \"attachments\": [],\n  \"mentions\": [],\n  \"reactions\": [],\n  \"messageHistory\": []\n}"
+          }
+        ],
+        "isError": false
+      },
+      "error": null,
+      "execution_time_ms": 391,
+      "executed_at": "2025-12-26T22:39:06.569509"
+    }
+  }
+],
+  "gym_servers_config": [
+    {
+      "gym_server_id": "sn-hr-internal",
+      "database_id": "db_1766670202017_9egr44cnm",
+      "context": {
+        "x-hr-user-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVU0VSXzAzOSIsImlzcyI6Iml0c20ifQ.Ab6_dflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_yz1"
+      }
+    },
+    {
+      "gym_server_id": "teams-internal-prod",
+      "database_id": "db_1766670256421_azftg5r2e",
+      "context": {
+        "x-teams-access-token": "tok_f8682feab7cd_8f035a24fe41_51dee1a1"
+      }
+    }
+  ],
+  "priority": "medium",
+  "estimated_hours": 1,
+  "task_descriptions": "Correct HR portal routing by assigning HR Systems skills, configuring an AWA assignment rule, and communicating the change to stakeholders.",
+  "models_to_test": [],
+  "runs_per_prompt": 3,
+  "configs": {
+    "enableComments": true,
+    "enableGroundTruthComments": true,
+    "enableReview": true,
+    "enableToolCall": true,
+    "enableTaskMetadata": false,
+    "enableTaxonomy": true,
+    "enableVerifier": true
+  },
+  "L1": "Assignment & Automation",
+  "L2": "Advanced Work Assignment (AWA)",
+  "L3": "Assignment Rules & Skills"
+}
